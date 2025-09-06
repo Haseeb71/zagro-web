@@ -2,6 +2,7 @@
   "name": "zagro-web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -9,16 +10,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@reduxjs/toolkit": "^2.9.0",
     "aos": "^2.3.4",
     "axios": "^1.11.0",
+    "formik": "^2.4.6",
+    "libphonenumber-js": "^1.12.15",
     "next": "15.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.6.0",
+    "react-redux": "^9.2.0",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
     "three": "^0.175.0",
-    "toast": "^0.5.4"
+    "toast": "^0.5.4",
+    "yup": "^1.7.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

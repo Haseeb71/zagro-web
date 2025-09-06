@@ -160,7 +160,6 @@ export default function Product() {
               <a href="#" className="text-gray-700 hover:text-blue-600 transition">Men</a>
               <a href="#" className="text-gray-700 hover:text-blue-600 transition">Women</a>
               <a href="#" className="text-gray-700 hover:text-blue-600 transition">Kids</a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 transition">Collections</a>
             </div>
             <div className="flex items-center space-x-4">
               <button className="p-2 text-gray-700 hover:text-blue-600 transition">
@@ -756,7 +755,7 @@ export default function Product() {
                 placeholder="Enter your email"
                 className="px-4 py-3 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 flex-grow sm:rounded-r-none"
               />
-              <button className="mt-3 sm:mt-0 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md sm:rounded-l-none shadow-sm transition">
+              <button className="cursor-pointer mt-3 sm:mt-0 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md sm:rounded-l-none shadow-sm transition">
                 Subscribe
               </button>
             </div>

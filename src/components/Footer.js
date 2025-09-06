@@ -44,12 +44,10 @@ export default function Footer() {
           <div className="md:col-span-1">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Shop</h3>
             <ul className="space-y-2">
-              <li><Link href="/men" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Men's Shoes</Link></li>
-              <li><Link href="/women" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Women's Shoes</Link></li>
-              <li><Link href="/kids" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Kids' Shoes</Link></li>
-              <li><Link href="/new-arrivals" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">New Arrivals</Link></li>
-              <li><Link href="/bestsellers" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Bestsellers</Link></li>
-              <li><Link href="/collections" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">All Collections</Link></li>
+              <li><Link href="/categories/men" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Men's Shoes</Link></li>
+              <li><Link href="/categories/women" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Women's Shoes</Link></li>
+              <li><Link href="/categories/kids" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Kids' Shoes</Link></li>
+              <li><Link href="/categories/new-arrivals" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">New Arrivals</Link></li>
             </ul>
           </div>
 

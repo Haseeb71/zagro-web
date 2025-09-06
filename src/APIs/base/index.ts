@@ -60,13 +60,18 @@ const getMethod = async (endpoint: string, authentication = true, throwError = f
             "Authorization": `Bearer ${bearer_token}`
         }
     }
-    return await axios.get(endpoint, params)
-        .then((res) => {
-            return res
-        })
-        .catch((error) => {
-            consoleErrorPerformRedirection(error, throwError, errorToast)
-        })
+    try {
+        const res = await axios.get(endpoint, params);
+        return res;
+    } catch (error) {
+        consoleErrorPerformRedirection(error, throwError, errorToast);
+        // Return a structured error response
+        return {
+            data: null,
+            error: error,
+            success: false
+        };
+    }
 }
 
 // Post Method
@@ -143,6 +148,7 @@ const putMethod = async (endpoint: string, authentication = true, data: Record<s
     }
     if (multipart) {
         headers['content-type'] = 'multipart/form-data'
+
     }
     return await axios.put(endpoint, data, { headers })
         .then((res) => {

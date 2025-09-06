@@ -3,10 +3,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Slider from "react-slick";
-import Layout from "../components/Layout";
+import { useRouter } from "next/router";
+import { useAppDispatch } from "../redux/hooks";
+import { addToCart } from "../redux/slices/cartSlice";
+
 import Modal from "../components/Modal";
-import ProductQuickView from "../components/ProductQuickView";
 import productsAPI from "../APIs/eproducts";
+import categoriesAPI from "../APIs/categories";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,52 +23,61 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [productsByType, setProductsByType] = useState({});
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [BestsellersProducts, setBestsellersProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const res = await productsAPI.getLandingPageProducts();
-      console.log("fetching products ---", res.data.productsByType);
+      const newArrivals = await productsAPI.getNewArrivals();
+      const trendingProducts = await productsAPI.getTrendingProducts();
+      const BestsellersProducts = await productsAPI.getBestSellersProducts();
       
-      if (res && res.data.productsByType) {
-        // Convert array to object for easier access
-        const productsMap = {};
-        res.data.productsByType.forEach(item => {
-          productsMap[item.type] = item.products || [];
-        });
-        setProductsByType(productsMap);
-      }
+      console.log("fetching newArrivals products ---", newArrivals?.data?.products);
+      console.log("fetching trendingProduct products ---", trendingProducts?.data?.products);
+      console.log("fetching bestSellersProduct products ---", BestsellersProducts?.data?.products);
+      setNewArrivals(newArrivals?.data?.products);
+      setTrendingProducts(trendingProducts?.data?.products);
+      setBestsellersProducts(BestsellersProducts?.data?.products);
     } catch (error) {
+      setNewArrivals([]);
+      setTrendingProducts([]);
+      setBestsellersProducts([]);
       console.error("Error fetching products:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Helper function to get products by type
-  const getProductsByType = (type) => {
-    return productsByType[type] || [];
+  const fetchCategories = async () => {
+    const categories = await categoriesAPI.getAllCategories();
+    setCategories(categories?.data?.categories);
+    console.log("fetching categories ---", categories?.data?.categories);
+  }
+
+  // Add to cart function with essential data only
+  const handleAddToCart = (product) => {
+    const essentialData = {
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.images && product.images.length > 0 ? product.images[0].url : null,
+      quantity: 1
+    };
+    
+    dispatch(addToCart(essentialData));
   };
 
-  // Function to handle Quick View
-  const handleQuickView = (product) => {
-    setSelectedProduct(product);
-    setIsQuickViewOpen(true);
-  };
-
-  // Function to close Quick View
-  const handleCloseQuickView = () => {
-    setIsQuickViewOpen(false);
-    setSelectedProduct(null);
-  };
 
   // Banner slider settings
   const bannerSliderSettings = {
@@ -240,12 +252,48 @@ export default function Home() {
     return baseSettings;
   };
 
+  // Category slider settings
+  const getCategorySliderSettings = (categoryCount) => {
+    return {
+      dots: categoryCount > 1,
+      infinite: categoryCount > 1,
+      speed: 500,
+      slidesToShow: Math.min(categoryCount, 3),
+      slidesToScroll: 1,
+      autoplay: false,
+      centerMode: false,
+      centerPadding: '0px',
+      responsive: [
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: Math.min(categoryCount, 3),
+            slidesToScroll: 1,
+          }
+        },
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: Math.min(categoryCount, 2),
+            slidesToScroll: 1,
+          }
+        },
+        {
+          breakpoint: 480,
+          settings: {
+            slidesToShow: 1,
+            slidesToScroll: 1,
+          }
+        }
+      ]
+    };
+  };
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   return (
-    <Layout>
       <div className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* Custom CSS for enhanced animations */}
         <style jsx>{`
@@ -406,7 +454,7 @@ export default function Home() {
                 <p className="text-gray-600">Discover our latest collection of premium footwear</p>
               </div>
               <Link
-                href="/products"
+                href="/categories/new-arrivals"
                 className="group text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 transition-colors duration-300"
               >
                 View All
@@ -421,18 +469,18 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading products...</p>
               </div>
-            ) : getProductsByType('new').length > 0 ? (
+            ) : newArrivals.length > 0 ? (
               <div data-aos="fade-up" data-aos-delay="200">
-                <Slider {...getDynamicSliderSettings(getProductsByType('new').length)} className="product-slider">
-                  {getProductsByType('new').map((product, index) => (
+                <Slider {...getDynamicSliderSettings(newArrivals.length)} className="product-slider">
+                  {newArrivals.map((product, index) => (
                     <div key={product.id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
-                      <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-2 max-w-sm mx-auto">
+                      <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group transform cursor-pointer max-w-sm mx-auto">
                         <div className="relative h-64 overflow-hidden">
                           {/* Product Image */}
-                          {product.image ? (
+                          {product.images && product.images.length > 0 ? (
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_API_URL}${product.image}`}
-                              alt={product.name}
+                              src={product.images[0].url}
+                              alt={product.images[0].alt || product.name}
                               fill
                               className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
@@ -444,14 +492,14 @@ export default function Home() {
 
                           <div className="absolute top-4 right-4">
                             <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full">
-                              {product.category || 'New'}
+                              {product.brand || 'New'}
                             </span>
                           </div>
 
                           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <button 
-                              onClick={() => handleQuickView(product)}
-                              className="px-6 py-3 bg-white text-blue-900 font-semibold rounded-full shadow-lg transform -translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"
+                              onClick={() => router.push(`/products/${product._id}`)}
+                              className="cursor-pointer px-6 py-3 bg-white text-blue-900 font-semibold rounded-full shadow-lg transform -translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"
                             >
                               Quick View
                             </button>
@@ -459,8 +507,9 @@ export default function Home() {
                         </div>
 
                         <div className="p-6">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
-                            {product.name || 'Product Name'}
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300"
+                          onClick={() => router.push(`/products/${product._id}`)}>
+                            {product.name.length > 20 ? product.name.slice(0, 20) + '...' : product.name}
                           </h3>
                           <div className="flex items-center gap-2 mb-3">
                             <div className="flex text-yellow-400">
@@ -479,7 +528,10 @@ export default function Home() {
                                 <span className="ml-2 text-sm text-gray-500 line-through">${product.originalPrice}</span>
                               )}
                             </span>
-                            <button className="p-3 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-all duration-300 hover:scale-110">
+                            <button 
+                              onClick={() => handleAddToCart(product)}
+                              className="p-3 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-all duration-300 hover:scale-110"
+                            >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                               </svg>
@@ -505,7 +557,7 @@ export default function Home() {
             <div className="flex justify-between items-center mb-8" data-aos="fade-up">
               <h2 className="text-3xl font-bold text-gray-900">Bestsellers</h2>
               <Link
-                href="/bestsellers"
+                href="/categories/bestsellers"
                 className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
               >
                 View All
@@ -520,18 +572,18 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading products...</p>
               </div>
-            ) : getProductsByType('bestseller').length > 0 ? (
+            ) : BestsellersProducts.length > 0 ? (
               <div data-aos="fade-up" data-aos-delay="200">
-                <Slider {...getDynamicSliderSettings(getProductsByType('bestseller').length)} className="bestseller-slider">
-                  {getProductsByType('bestseller').map((product, index) => (
+                <Slider {...getDynamicSliderSettings(BestsellersProducts.length)} className="bestseller-slider">
+                  {BestsellersProducts.map((product, index) => (
                     <div key={product.id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
                       <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
                         <div className="relative h-64 overflow-hidden">
                           {/* Product Image */}
-                          {product.image ? (
+                          {product.images && product.images.length > 0 ? (
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_API_URL}${product.image}`}
-                              alt={product.name}
+                              src={product.images[0].url}
+                              alt={product.images[0].alt || product.name}
                               fill
                               className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
@@ -559,8 +611,8 @@ export default function Home() {
                           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <div className="flex gap-2">
                               <button 
-                                onClick={() => handleQuickView(product)}
-                                className="p-2 bg-white rounded-full shadow hover:bg-gray-50 transition"
+                                onClick={() => router.push(`/products/${product._id}`)}
+                                className="cursor-pointer p-2 bg-white rounded-full shadow hover:bg-gray-50 transition"
                                 title="Quick View"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
@@ -601,7 +653,10 @@ export default function Home() {
                                 <span className="ml-2 text-sm text-gray-500 line-through">${product.originalPrice}</span>
                               )}
                             </span>
-                            <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition flex items-center gap-1">
+                            <button 
+                              onClick={() => handleAddToCart(product)}
+                              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition flex items-center gap-1"
+                            >
                               Add
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -631,7 +686,7 @@ export default function Home() {
                 <p className="text-gray-600">Products that are currently trending among our customers</p>
               </div>
               <Link
-                href="/trending"
+                href="/categories/trending"
                 className="group text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 transition-colors duration-300"
               >
                 View All
@@ -646,16 +701,16 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading trending products...</p>
               </div>
-            ) : getProductsByType('trending').length > 0 ? (
+            ) : trendingProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" data-aos="fade-up" data-aos-delay="200">
-                {getProductsByType('trending').slice(0, 6).map((product, index) => (
+                {trendingProducts.slice(0, 6).map((product, index) => (
                   <div key={product.id || index} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
                     <div className="relative h-64 overflow-hidden">
                       {/* Product Image */}
-                      {product.image ? (
+                      {product.images && product.images.length > 0 ? (
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${product.image}`}
-                          alt={product.name}
+                          src={product.images[0].url}
+                          alt={product.images[0].alt || product.name}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
@@ -673,8 +728,8 @@ export default function Home() {
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
                         <button 
-                          onClick={() => handleQuickView(product)}
-                          className="px-6 py-2 bg-white text-purple-900 font-semibold rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"
+                          onClick={() => router.push(`/products/${product._id}`)}
+                          className="cursor-pointer px-6 py-2 bg-white text-purple-900 font-semibold rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"
                         >
                           Quick View
                         </button>
@@ -702,7 +757,10 @@ export default function Home() {
                             <span className="ml-2 text-sm text-gray-500 line-through">${product.originalPrice}</span>
                           )}
                         </span>
-                        <button className="p-3 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-full transition-all duration-300 hover:scale-110">
+                        <button 
+                          onClick={() => handleAddToCart(product)}
+                          className="p-3 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-full transition-all duration-300 hover:scale-110"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                           </svg>
@@ -728,18 +786,18 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading featured products...</p>
               </div>
-            ) : getProductsByType('featured').length > 0 ? (
+            ) : newArrivals.length > 0 ? (
               <Slider {...featuredSliderSettings} className="featured-slider">
-                {getProductsByType('featured').map((product) => (
+                {newArrivals.map((product) => (
                   <div key={product.id} className="relative">
                     <div className="relative h-[400px] w-full rounded-xl overflow-hidden shadow-lg">
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-transparent z-10"></div>
 
                       {/* Product Image */}
-                      {product.image ? (
+                      {product.images && product.images.length > 0 ? (
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${product.image}`}
-                          alt={product.name}
+                          src={product.images[0].url}
+                          alt={product.images[0].alt || product.name}
                           fill
                           className="object-cover"
                         />
@@ -755,7 +813,7 @@ export default function Home() {
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-2">{product.name || 'Product Name'}</h2>
                         <p className="text-xl text-white mb-4">${product.price || 0}</p>
-                        <p className="text-white mb-4">{product.description.slice(0, 100) || 'Product Description'}</p>
+                        <p className="text-white mb-4">{product.description ? product.description.slice(0, 100) : 'Product Description'}</p>
                         {/* {product.colors && product.colors.length > 0 && (
                           <div className="flex gap-2 mb-4">
                             {product.colors.map((color) => (
@@ -767,7 +825,8 @@ export default function Home() {
                             ))}
                           </div>
                         )} */}
-                        <button className="px-6 py-2 bg-white text-blue-900 font-semibold rounded-full shadow hover:bg-blue-50 transition">
+                        <button className="px-6 py-2 bg-white text-blue-900 font-semibold rounded-full shadow hover:bg-blue-50 transition"
+                        onClick={() => router.push(`/products/${product._id}`)}>
                           Shop Now
                         </button>
                       </div>
@@ -792,7 +851,7 @@ export default function Home() {
                 <p className="text-gray-600">Limited time deals and exclusive offers just for you</p>
               </div>
               <Link
-                href="/offers"
+                href="/products"
                 className="group text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2 transition-colors duration-300"
               >
                 View All
@@ -807,17 +866,18 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading special offers...</p>
               </div>
-            ) : (getProductsByType('special').length > 0 || getProductsByType('discounted').length > 0) ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="200">
-                {/* Combine special and discounted products */}
-                {[...getProductsByType('special'), ...getProductsByType('discounted')].slice(0, 8).map((product, index) => (
-                  <div key={product.id || index} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+            ) : (newArrivals.length > 0 || trendingProducts.length > 0) ? (
+              <div data-aos="fade-up" data-aos-delay="200">
+                <Slider {...getDynamicSliderSettings([...newArrivals, ...trendingProducts].slice(0, 8).length)} className="special-offers-slider">
+                  {[...newArrivals, ...trendingProducts].slice(0, 8).map((product, index) => (
+                    <div key={product.id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                      <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group transform hover:-translate-y-2 max-w-sm mx-auto">
                     <div className="relative h-48 overflow-hidden">
                       {/* Product Image */}
-                      {product.image ? (
+                          {product.images && product.images.length > 0 ? (
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${product.image}`}
-                          alt={product.name}
+                              src={product.images[0].url}
+                              alt={product.images[0].alt || product.name}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
@@ -838,8 +898,8 @@ export default function Home() {
 
                       <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <button 
-                          onClick={() => handleQuickView(product)}
-                          className="px-4 py-2 bg-white text-orange-900 font-semibold rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
+                              onClick={() => router.push(`/products/${product._id}`)}
+                              className="cursor-pointer px-4 py-2 bg-white text-orange-900 font-semibold rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
                         >
                           Quick View
                         </button>
@@ -848,7 +908,7 @@ export default function Home() {
 
                     <div className="p-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors duration-300 line-clamp-2">
-                        {product.name || 'Product Name'}
+                            {product.name.length > 20 ? product.name.slice(0, 20) + '...' : product.name}
                       </h3>
                       
                       <div className="flex justify-between items-center mb-3">
@@ -867,12 +927,17 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <button className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 transform hover:scale-105">
+                      <button 
+                        onClick={() => handleAddToCart(product)}
+                        className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 transform hover:scale-105"
+                      >
                         Add to Cart
                       </button>
+                        </div>
                     </div>
                   </div>
                 ))}
+                </Slider>
               </div>
             ) : (
               <div className="text-center py-12">
@@ -886,34 +951,52 @@ export default function Home() {
         <section className="py-12 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center" data-aos="fade-up">Shop by Category</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { name: "Running Collection", image: "/images/categories/running.jpg", color: "from-blue-400 to-blue-600" },
-                { name: "Casual Wear", image: "/images/categories/casual.jpg", color: "from-purple-400 to-purple-600" },
-                { name: "Athletic Performance", image: "/images/categories/athletic.jpg", color: "from-green-400 to-green-600" }
-              ].map((category, index) => (
-                <div
-                  key={index}
+            
+            {categories.length > 0 ? (
+              <div data-aos="fade-up" data-aos-delay="200">
+                <Slider {...getCategorySliderSettings(categories.length)} className="category-slider">
+                  {categories.map((category, index) => {              
+                    return (
+                      <div key={category._id || index} className="px-2" data-aos="fade-up" data-aos-delay={index * 100}>
+                        <div
                   className="relative h-80 rounded-xl overflow-hidden shadow-md group cursor-pointer"
-                  data-aos="fade-up"
-                  data-aos-delay={index * 100}
-                >
-                  {/* Replace with actual images */}
+                          onClick={() => router.push(`/categories/${category.slug}`)}
+                        >
+                          {/* Category Image */}
+                          {category.image ? (
+                            <Image
+                              src={category.image}
+                              alt={category.name}
+                              fill
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          ) : (
                   <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500">Image: {`${process.env.NEXT_PUBLIC_API_URL}${category.image}`}</span>
+                              <span className="text-gray-500">No Image</span>
                   </div>
+                          )}
 
-                  <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-60 group-hover:opacity-70 transition`}></div>
+                          <div className={`absolute inset-0 opacity-60 group-hover:opacity-70 transition`}></div>
 
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                     <h3 className="text-2xl font-bold text-white mb-2">{category.name}</h3>
-                    <button className="mt-4 px-6 py-2 bg-white text-gray-900 font-medium rounded-full shadow transform group-hover:scale-105 transition">
+                            <p className="text-white text-sm mb-4 opacity-90">{category.description}</p>
+                            <button className="cursor-pointer mt-4 px-6 py-2 bg-white text-gray-900 font-medium rounded-full shadow transform group-hover:scale-105 transition">
                       Explore
                     </button>
                   </div>
                 </div>
-              ))}
             </div>
+                    );
+                  })}
+                </Slider>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading categories...</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -995,7 +1078,7 @@ export default function Home() {
                   <span className="ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
                 </div>
 
-                <button className="px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-black text-lg font-semibold rounded-full shadow-lg hover:shadow-yellow-400/30 transition transform hover:scale-105">
+                <button className="cursor-pointer px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-black text-lg font-semibold rounded-full shadow-lg hover:shadow-yellow-400/30 transition transform hover:scale-105">
                   SHOP NOW
                 </button>
 
@@ -1025,26 +1108,14 @@ export default function Home() {
               <input
                 type="email"
                 placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-lg"
+                className="flex-1 px-6 py-4 text-black border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-lg"
               />
-              <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <button className="cursor-pointer px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                 Subscribe
               </button>
             </div>
           </div>
         </section>
       </div>
-
-      {/* Quick View Modal */}
-      <Modal 
-        isOpen={isQuickViewOpen} 
-        onClose={handleCloseQuickView}
-        size="xl"
-      >
-        {selectedProduct && (
-          <ProductQuickView product={selectedProduct} />
-        )}
-      </Modal>
-    </Layout>
   );
 }
