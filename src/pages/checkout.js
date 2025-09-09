@@ -7,6 +7,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import orderAPI from '../APIs/order/order';
+import Layout from '../components/Layout';
 // import OrderConfirmationModal from '../components/OrderConfirmationModal';
 
 // Helper function to format prices (e.g., 1000 to 1k)
@@ -333,36 +334,39 @@ const CheckoutPage = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-          <button
-            onClick={() => router.push('/')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Continue Shopping
-          </button>
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center pt-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
+            <button
+              onClick={() => router.push('/')}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Continue Shopping
+            </button>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <>
+    <Layout>
       <Head>
         <title>Checkout - Zagro Footwear</title>
         <meta name="description" content="Complete your order at Zagro Footwear" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-            <p className="text-gray-600 mt-2">
-              Complete your order for {totalItems} item{totalItems !== 1 ? 's' : ''}
-            </p>
-          </div>
+           {/* Header */}
+           <div className="mb-8 text-center">
+             <img src="/images/logo.png" alt="Logo" className="h-10 w-auto mb-4 mx-auto" />
+             <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+             <p className="text-gray-600 mt-2">
+               Complete your order for {totalItems} item{totalItems !== 1 ? 's' : ''}
+             </p>
+           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Checkout Form */}
@@ -914,7 +918,7 @@ const CheckoutPage = () => {
           </div>
         </div>
       )}
-    </>
+    </Layout>
   );
 };
 

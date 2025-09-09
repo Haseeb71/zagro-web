@@ -1,13 +1,36 @@
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import categoriesAPI from '../APIs/categories';
+
 
 export default function Footer() {
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  // Maximum categories to show initially
+  const MAX_VISIBLE_CATEGORIES = 3;
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      const response = await categoriesAPI.getAllCategories();
+      setCategories(response.data.categories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
   return (
     <footer className="bg-white py-12 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="md:col-span-1">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Zagro Footwear</h3>
+            <img src="/images/logo.png" alt="Logo" className="h-10 w-auto mb-4" />
             <p className="text-gray-600 mb-4">
               Premium shoes with cutting-edge technology for ultimate comfort and style.
             </p>
@@ -34,7 +57,7 @@ export default function Footer() {
               <Link href="#" className="text-gray-500 hover:text-blue-600 transition-colors duration-300">
                 <span className="sr-only">LinkedIn</span>
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                 </svg>
               </Link>
             </div>
@@ -44,11 +67,13 @@ export default function Footer() {
           <div className="md:col-span-1">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Shop</h3>
             <ul className="space-y-2">
-              <li><Link href="/men" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Men's Shoes</Link></li>
-              <li><Link href="/women" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Women's Shoes</Link></li>
-              <li><Link href="/kids" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Kids' Shoes</Link></li>
-              <li><Link href="/new-arrivals" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">New Arrivals</Link></li>
-              <li><Link href="/bestsellers" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Bestsellers</Link></li>
+              {categories.slice(0, MAX_VISIBLE_CATEGORIES).map((category) => (
+                <li key={category.id}>
+                  <Link href={`/category/${category.slug}`} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
               <li><Link href="/collections" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">All Collections</Link></li>
             </ul>
           </div>

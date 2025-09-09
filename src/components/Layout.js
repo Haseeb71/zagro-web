@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import CartSlider from './CartSlider';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
@@ -34,6 +35,7 @@ export default function Layout({ children }) {
       <Navigation />
       <main>{children}</main>
       <Footer />
+      <CartSlider />
     </div>
   );
 } 
