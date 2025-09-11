@@ -12,13 +12,14 @@ import Layout from "../components/Layout";
 
 import Modal from "../components/Modal";
 
-import ProductQuickView from "../components/ProductQuickView";
 
 import productsAPI from "../APIs/eproducts";
 
 import ProductCard from "../components/ProductCard";
 
 import PromotionModal from "../components/PromotionModal";
+
+import categoriesAPI from "../APIs/categories";
 
 
 
@@ -46,9 +47,6 @@ export default function Home() {
 
   const [isMounted, setIsMounted] = useState(false);
 
-  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const [productsByType, setProductsByType] = useState({});
 
@@ -56,11 +54,59 @@ export default function Home() {
 
   const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
 
+  const [categories, setCategories] = useState([]);
 
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Function to get dynamic background image and color based on category name
+  const getCategoryStyle = (categoryName) => {
+    const name = categoryName.toLowerCase();
+    
+    // Define color gradients based on category names
+    const colorMap = {
+      'men': 'from-blue-400 to-blue-600',
+      'women': 'from-pink-400 to-pink-600',
+      'kids': 'from-yellow-400 to-yellow-600',
+      'sports': 'from-green-400 to-green-600',
+      'running': 'from-blue-400 to-blue-600',
+      'casual': 'from-purple-400 to-purple-600',
+      'athletic': 'from-green-400 to-green-600',
+      'formal': 'from-gray-400 to-gray-600',
+      'sneakers': 'from-orange-400 to-orange-600',
+      'boots': 'from-brown-400 to-brown-600'
+    };
+
+    // Get color gradient or default
+    const color = Object.keys(colorMap).find(key => name.includes(key)) 
+      ? colorMap[Object.keys(colorMap).find(key => name.includes(key))]
+      : 'from-indigo-400 to-indigo-600';
+
+    // Generate dynamic background image URL based on category name
+    const imageUrl = `https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=600&fit=crop&crop=center&auto=format&q=80&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&text=${encodeURIComponent(categoryName)}`;
+
+    return { color, imageUrl };
+  };
+
+  // Function to fetch categories
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await categoriesAPI.getAllCategories();
+      if (response.success && response.categories) {
+        // Take only first 3 categories
+        setCategories(response.categories.slice(0, 3));
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   useEffect(() => {
 
     fetchProducts();
+    fetchCategories();
 
   }, []);
 
@@ -192,27 +238,6 @@ export default function Home() {
 
 
 
-  // Function to handle Quick View
-
-  const handleQuickView = (product) => {
-
-    setSelectedProduct(product);
-
-    setIsQuickViewOpen(true);
-
-  };
-
-
-
-  // Function to close Quick View
-
-  const handleCloseQuickView = () => {
-
-    setIsQuickViewOpen(false);
-
-    setSelectedProduct(null);
-
-  };
 
 
 
@@ -980,7 +1005,6 @@ export default function Home() {
 
                         product={product}
 
-                        onQuickView={handleQuickView}
 
                         className="max-w-sm mx-auto"
 
@@ -1066,7 +1090,6 @@ export default function Home() {
 
                         product={product}
 
-                        onQuickView={handleQuickView}
 
                         className="max-w-sm mx-auto"
 
@@ -1158,7 +1181,6 @@ export default function Home() {
 
                         product={product}
 
-                        onQuickView={handleQuickView}
 
                         className="max-w-sm mx-auto"
 
@@ -1256,7 +1278,7 @@ export default function Home() {
 
                         <h2 className="text-3xl font-bold text-white mb-2">{product.name || 'Product Name'}</h2>
 
-                        <p className="text-xl text-white mb-4">${product.price || 0}</p>
+                        <p className="text-xl text-white mb-4">PKR {product.price || 0}</p>
 
                         <p className="text-white mb-4">{product.description?.slice(0, 100) || 'Product Description'}</p>
 
@@ -1357,7 +1379,6 @@ export default function Home() {
 
                         product={product}
 
-                        onQuickView={handleQuickView}
 
                         className="max-w-sm mx-auto"
 
@@ -1395,61 +1416,58 @@ export default function Home() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center" data-aos="fade-up">Shop by Category</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-              {[
-
-                { name: "Running Collection", image: "/images/categories/running.jpg", color: "from-blue-400 to-blue-600" },
-
-                { name: "Casual Wear", image: "/images/categories/casual.jpg", color: "from-purple-400 to-purple-600" },
-
-                { name: "Athletic Performance", image: "/images/categories/athletic.jpg", color: "from-green-400 to-green-600" }
-
-              ].map((category, index) => (
-
-                <div
-
-                  key={index}
-
-                  className="relative h-80 rounded-xl overflow-hidden shadow-md group cursor-pointer"
-
-                  data-aos="fade-up"
-
-                  data-aos-delay={index * 100}
-
-                >
-
-                  {/* Replace with actual images */}
-
-                  <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-
-                    <span className="text-gray-500">Image: {`${process.env.NEXT_PUBLIC_API_URL}${category.image}`}</span>
-
+            {categoriesLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map((index) => (
+                  <div
+                    key={index}
+                    className="relative h-80 rounded-xl overflow-hidden shadow-md bg-gray-200 animate-pulse"
+                    data-aos="fade-up"
+                    data-aos-delay={index * 100}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 bg-gray-300 rounded-full"></div>
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {categories.map((category, index) => {
+                  const { color, imageUrl } = getCategoryStyle(category.name);
+                  return (
+                    <Link
+                      key={category._id || index}
+                      href={`/categories/${category.slug}`}
+                      className="relative h-80 rounded-xl overflow-hidden shadow-md group cursor-pointer"
+                      data-aos="fade-up"
+                      data-aos-delay={index * 100}
+                    >
+                      {/* Dynamic Background Image */}
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                        style={{
+                          backgroundImage: `url(${imageUrl})`
+                        }}
+                      ></div>
 
+                      {/* Gradient Overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-60 group-hover:opacity-70 transition`}></div>
 
-
-                  <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-60 group-hover:opacity-70 transition`}></div>
-
-
-
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-
-                    <h3 className="text-2xl font-bold text-white mb-2">{category.name}</h3>
-
-                    <button className="mt-4 px-6 py-2 bg-white text-gray-900 font-medium rounded-full shadow transform group-hover:scale-105 transition">
-
-                      Explore
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
+                      {/* Content */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                        <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">
+                          {category.name}
+                        </h3>
+                        <button className="mt-4 px-6 py-2 bg-white text-gray-900 font-medium rounded-full shadow transform group-hover:scale-105 transition">
+                          Explore
+                        </button>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
 
           </div>
 
@@ -1603,9 +1621,9 @@ export default function Home() {
 
                 <div className="mb-6">
 
-                  <span className="text-2xl font-bold">$149.99</span>
+                  <span className="text-2xl font-bold">PKR 149.99</span>
 
-                  <span className="ml-2 text-gray-400 line-through">$189.99</span>
+                  <span className="ml-2 text-gray-400 line-through">PKR 189.99</span>
 
                   <span className="ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
 
@@ -1693,25 +1711,7 @@ export default function Home() {
 
 
 
-      {/* Quick View Modal */}
 
-      <Modal 
-
-        isOpen={isQuickViewOpen} 
-
-        onClose={handleCloseQuickView}
-
-        size="xl"
-
-      >
-
-        {selectedProduct && (
-
-          <ProductQuickView product={selectedProduct} />
-
-        )}
-
-      </Modal>
 
 
 

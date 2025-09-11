@@ -24,7 +24,8 @@ export const ENDPOINT = {
         applyCoupon: `${BASE_URL}/coupon/validate`
     },
     orderCheckout: {
-        orderCheckout: `${BASE_URL}/checkout`
+        orderCheckout: `${BASE_URL}/checkout`,
+        orderStatus: `${BASE_URL}/checkout/order`
     }
 };
 

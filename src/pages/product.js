@@ -31,6 +31,139 @@ const getImageUrl = (imagePath) => {
   return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
 };
 
+// Comprehensive color mapping system
+const getColorHex = (colorName) => {
+  if (!colorName) return '#6B7280'; // Default gray
+  
+  const color = colorName.toLowerCase().trim();
+  
+  // Comprehensive color mapping
+  const colorMap = {
+    // Basic Colors
+    'red': '#EF4444',
+    'blue': '#3B82F6',
+    'green': '#10B981',
+    'yellow': '#F59E0B',
+    'orange': '#F97316',
+    'purple': '#8B5CF6',
+    'pink': '#EC4899',
+    'brown': '#A16207',
+    'black': '#1F2937',
+    'white': '#F9FAFB',
+    'gray': '#6B7280',
+    'grey': '#6B7280',
+    
+    // Extended Colors
+    'navy': '#1E3A8A',
+    'maroon': '#991B1B',
+    'olive': '#365314',
+    'lime': '#65A30D',
+    'cyan': '#06B6D4',
+    'magenta': '#D946EF',
+    'violet': '#7C3AED',
+    'indigo': '#4F46E5',
+    'teal': '#0D9488',
+    'emerald': '#059669',
+    'amber': '#D97706',
+    'rose': '#F43F5E',
+    'sky': '#0EA5E9',
+    'slate': '#475569',
+    'zinc': '#71717A',
+    'neutral': '#737373',
+    'stone': '#78716C',
+    
+    // Common Shoe Colors
+    'beige': '#F5F5DC',
+    'tan': '#D2B48C',
+    'khaki': '#F0E68C',
+    'cream': '#FFFDD0',
+    'ivory': '#FFFFF0',
+    'off-white': '#FAFAFA',
+    'charcoal': '#36454F',
+    'midnight': '#191970',
+    'royal': '#4169E1',
+    'forest': '#228B22',
+    'crimson': '#DC143C',
+    'burgundy': '#800020',
+    'wine': '#722F37',
+    'gold': '#FFD700',
+    'silver': '#C0C0C0',
+    'bronze': '#CD7F32',
+    'copper': '#B87333',
+    
+    // Multi-word colors
+    'dark blue': '#1E40AF',
+    'light blue': '#93C5FD',
+    'dark green': '#166534',
+    'light green': '#86EFAC',
+    'dark red': '#991B1B',
+    'light red': '#FCA5A5',
+    'dark gray': '#374151',
+    'light gray': '#D1D5DB',
+    'dark grey': '#374151',
+    'light grey': '#D1D5DB',
+    'royal blue': '#1D4ED8',
+    'navy blue': '#1E3A8A',
+    'sky blue': '#0EA5E9',
+    'forest green': '#166534',
+    'lime green': '#65A30D',
+    'bright red': '#DC2626',
+    'deep red': '#991B1B',
+    'bright blue': '#2563EB',
+    'deep blue': '#1E40AF',
+    'bright green': '#16A34A',
+    'deep green': '#166534',
+    
+    // Special cases and codes
+    'multi': '#8B5CF6', // Multi-color
+    'multicolor': '#8B5CF6',
+    'multicoloured': '#8B5CF6',
+    'multicolored': '#8B5CF6',
+    'rainbow': '#8B5CF6',
+    'clear': '#F9FAFB',
+    'transparent': '#F9FAFB',
+    'metallic': '#C0C0C0',
+    'shiny': '#C0C0C0',
+    'matte': '#6B7280',
+    'glossy': '#1F2937',
+    
+    // Common variations
+    'reddish': '#EF4444',
+    'bluish': '#3B82F6',
+    'greenish': '#10B981',
+    'yellowish': '#F59E0B',
+    'purplish': '#8B5CF6',
+    'pinkish': '#EC4899',
+    'brownish': '#A16207',
+    'blackish': '#1F2937',
+    'whitish': '#F9FAFB',
+    'grayish': '#6B7280',
+    'greyish': '#6B7280'
+  };
+
+  // Direct match
+  if (colorMap[color]) {
+    return colorMap[color];
+  }
+
+  // Partial match for compound colors
+  for (const [key, value] of Object.entries(colorMap)) {
+    if (color.includes(key) || key.includes(color)) {
+      return value;
+    }
+  }
+
+  // Generate a consistent color from the string if no match
+  let hash = 0;
+  for (let i = 0; i < color.length; i++) {
+    hash = color.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Convert hash to a color
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 50%)`;
+};
+
 export default function Product() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -350,27 +483,6 @@ export default function Product() {
                       </div>
                     )}
 
-                    {/* Navigation Arrows */}
-                    {productData.images && Array.isArray(productData.images) && productData.images.length > 1 && (
-                      <>
-                        <button
-                          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm text-gray-900 p-2 rounded-full hover:bg-white transition-colors shadow-sm"
-                          onClick={() => setCurrentImageIndex(currentImageIndex > 0 ? currentImageIndex - 1 : productData.images.length - 1)}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        <button
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm text-gray-900 p-2 rounded-full hover:bg-white transition-colors shadow-sm"
-                          onClick={() => setCurrentImageIndex(currentImageIndex < productData.images.length - 1 ? currentImageIndex + 1 : 0)}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
                   </div>
 
                   {/* 360 View Button */}
@@ -474,15 +586,15 @@ export default function Product() {
                 {/* Price */}
                 <div className="mb-6">
                   <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-gray-900">${productData.price || 0}</span>
+                    <span className="text-3xl font-bold text-gray-900">PKR {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
                       <>
-                        <span className="text-lg text-gray-500 line-through">${Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
-                        <span className="text-sm text-green-600 font-medium">Save ${Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
+                        <span className="text-lg text-gray-500 line-through">PKR {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
+                        <span className="text-sm text-green-600 font-medium">Save PKR {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
                       </>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over $75</p>
+                  <p className="text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over PKR 75</p>
                 </div>
 
                 {/* Color Selection */}
@@ -491,26 +603,46 @@ export default function Product() {
                     const colors = JSON.parse(productData.colorQuantities);
                     return Array.isArray(colors) && colors.length > 0 ? (
                       <div className="mb-6">
-                        <div className="flex justify-between items-center mb-2">
+                        <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-medium text-gray-900">Available Colors <span className="text-red-500">*</span></h3>
                         </div>
                         <div className="flex gap-3 flex-wrap">
                           {colors.map((colorData, index) => {
                             const isOutOfStock = colorData.quantity <= 0;
+                            const isSelected = selectedColor === index;
+                            const colorHex = getColorHex(colorData.color);
+                            
                             return (
                               <button
                                 key={index}
-                                className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition ${isOutOfStock
-                                    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                                    : selectedColor === index
-                                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                      : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                                  }`}
                                 onClick={() => !isOutOfStock && setSelectedColor(index)}
                                 disabled={isOutOfStock}
+                                className={`relative w-12 h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                  isSelected
+                                    ? 'border-gray-800 scale-110 shadow-lg'
+                                    : isOutOfStock
+                                    ? 'border-gray-200 cursor-not-allowed opacity-50'
+                                    : 'border-gray-300 hover:border-gray-400 shadow-sm'
+                                }`}
+                                style={{ 
+                                  backgroundColor: colorHex,
+                                  boxShadow: isSelected ? `0 0 0 2px ${colorHex}, 0 4px 12px rgba(0,0,0,0.15)` : undefined
+                                }}
+                                title={colorData.color} // Show color name on hover
                               >
-                                {colorData.color} ({colorData.quantity})
-                                {isOutOfStock && <span className="ml-1 text-xs">(Out of Stock)</span>}
+                                {/* Selection indicator - Simple white dot */}
+                                {isSelected && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-3 h-3 rounded-full bg-transparent shadow-lg"></div>
+                                  </div>
+                                )}
+                                
+                                {/* Disabled overlay - Red diagonal line with transparency */}
+                                {isOutOfStock && (
+                                  <div className="absolute inset-0 rounded-full bg-black backdrop-blur-sm flex items-center justify-center">
+                                    <div className="w-[-webkit-fill-available] rounded-full h-1 bg-red-500 transform rotate-45 shadow-sm"></div>
+                                  </div>
+                                )}
                               </button>
                             );
                           })}
@@ -676,7 +808,7 @@ export default function Product() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">Free shipping on orders over $75</p>
+                      <p className="text-sm text-gray-600">Free shipping on orders over PKR 75</p>
                     </div>
                   </div>
                   <div className="mb-4">
@@ -736,7 +868,7 @@ export default function Product() {
                         <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Details</h4>
                         <ul className="space-y-2 text-gray-700">
                           <li><strong>Category:</strong> {productData.category || 'N/A'}</li>
-                          <li><strong>Price:</strong> ${productData.price}</li>
+                          <li><strong>Price:</strong> PKR {productData.price}</li>
                           <li><strong>Quantity Available:</strong> {productData.quantity || 0}</li>
                           <li><strong>Created:</strong> {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}</li>
                         </ul>
@@ -964,7 +1096,7 @@ export default function Product() {
                         <div className="p-4">
                           <span className="text-xs font-medium text-blue-600">{product.category}</span>
                           <h3 className="mt-1 font-medium text-gray-900">{product.name}</h3>
-                          <p className="mt-1 font-semibold text-gray-900">${product.price}</p>
+                          <p className="mt-1 font-semibold text-gray-900">PKR {product.price}</p>
                           <button className="mt-3 w-full py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-md transition">
                             Add to Cart
                           </button>

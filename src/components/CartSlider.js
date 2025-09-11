@@ -156,38 +156,38 @@ const CartSlider = ({ onClose }) => {
 
   return (
     <>
-      {/* Backdrop with fade animation */}
+      {/* Backdrop with enhanced blur */}
       <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-[4px] transition-opacity duration-300 ease-in-out z-40 ${
-          isVisible ? 'bg-opacity-50' : 'bg-opacity-0'
+        className={`fixed inset-0 transition-opacity duration-300 ease-in-out z-40 ${
+          isVisible ? 'bg-opacity-60' : 'bg-opacity-0'
         }`}
         onClick={() => dispatch(closeCart())}
         style={{ zIndex: 9998 }}
       />
       
-      {/* Cart Slider with slide and fade animations */}
+      {/* Cart Slider with glassmorphism background */}
       <div 
-        className={`fixed right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 transform transition-all duration-300 ease-in-out flex flex-col ${
+        className={`fixed right-0 top-0 h-full w-full max-w-sm bg-black/40 backdrop-blur-[5px] shadow-2xl z-50 transform transition-all duration-300 ease-in-out flex flex-col border-l border-white/20 ${
           isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}
         style={{ zIndex: 9999 }}
         onMouseEnter={handleUserInteraction}
         onTouchStart={handleUserInteraction}
       >
-        {/* Header with gradient background - Fixed height */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex-shrink-0">
+        {/* Header with clean design */}
+        <div className="bg-transparent text-white p-6 flex-shrink-0 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold">Shopping Cart</h2>
-              <p className="text-blue-100 text-sm mt-1">
+              <h2 className="text-xl font-bold tracking-tight">Shopping Cart</h2>
+              <p className="text-white text-sm mt-1">
                 {totalItems} item{totalItems !== 1 ? 's' : ''} in cart
               </p>
             </div>
             <button
               onClick={() => dispatch(closeCart())}
-              className="text-white hover:text-blue-100 transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-full"
+              className="bg-white/40 text-white hover:bg-white/50 transition-all duration-300 p-2 rounded-full hover:scale-110"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -199,16 +199,16 @@ const CartSlider = ({ onClose }) => {
           {cleanCartItems.length === 0 ? (
             <div className="h-full flex items-center justify-center p-4">
               <div className="text-center py-12">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-white/40 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
-                <p className="text-gray-500 text-sm">Add some amazing products to get started</p>
+                <h3 className="text-lg font-semibold text-white mb-2">Your cart is empty</h3>
+                <p className="text-white text-sm mb-4">Add some amazing products to get started</p>
                 <button
                   onClick={() => dispatch(closeCart())}
-                  className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-white text-black px-6 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Start Shopping
                 </button>
@@ -233,7 +233,7 @@ const CartSlider = ({ onClose }) => {
                       {productItems.map((item, itemIndex) => (
                         <div 
                           key={item.id} 
-                          className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                          className="bg-white/40 border border-gray-200 rounded-2xl p-4 hover:border-blue-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 shadow-md"
                           style={{
                             animationDelay: `${(groupIndex * 100) + (itemIndex * 50)}ms`,
                             animation: 'fadeInUp 0.5s ease-out forwards'
@@ -247,22 +247,22 @@ const CartSlider = ({ onClose }) => {
                           <img
                             src={item.product.image}
                             alt={item.product.name}
-                            className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                            className="w-20 h-20 object-cover rounded-xl border border-gray-200 shadow-md"
                           />
                         ) : (
-                          <div className="w-20 h-20 bg-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
+                          <div className="w-20 h-20 bg-gray-200 rounded-xl border border-gray-200 flex items-center justify-center shadow-md">
                             <span className="text-xs text-gray-500">No Image</span>
                           </div>
                         )}
-                        <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          ${formatPrice(item.product.price)}
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
+                          PKR {formatPrice(item.product.price)}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 text-sm truncate mb-1">
                           {item.product.name}
                           {productItems.length > 1 && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
                               {productItems.length} variants
                             </span>
                           )}
@@ -341,28 +341,28 @@ const CartSlider = ({ onClose }) => {
           )}
         </div>
 
-        {/* Footer with sticky positioning - Fixed height */}
+        {/* Footer with clean styling */}
         {cleanCartItems.length > 0 && (
-          <div className="border-t border-gray-200 bg-white p-6 flex-shrink-0">
+          <div className="border-t border-gray-200 bg-white/40 p-6 flex-shrink-0">
             {/* Price Summary */}
             <div className="space-y-3 mb-6">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">${formatPrice(totalPrice)}</span>
+                <span className="text-black">Subtotal</span>
+                <span className="font-medium text-gray-900">PKR {formatPrice(totalPrice)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Shipping</span>
+                <span className="text-black">Shipping</span>
                 <span className="font-medium text-green-600">Free</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-medium text-gray-900">${formatPrice(totalPrice * 0.08)}</span>
+                <span className="text-black">Tax</span>
+                <span className="font-medium text-gray-900">PKR {formatPrice(totalPrice * 0.08)}</span>
               </div>
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
+                  <span className="text-lg font-bold text-black">Total</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    ${formatPrice(totalPrice * 1.08)}
+                    PKR {formatPrice(totalPrice * 1.08)}
                   </span>
                 </div>
               </div>
@@ -375,7 +375,7 @@ const CartSlider = ({ onClose }) => {
                 handleCheckout();
               }}
               disabled={isAnimating}
-              className={`cursor-pointer w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`cursor-pointer w-full border border-white text-white py-3 px-6 rounded-xl font-semibold text-lg hover:border-blue-300 transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                 isAnimating ? 'animate-pulse' : ''
               }`}
             >
@@ -388,7 +388,7 @@ const CartSlider = ({ onClose }) => {
                 handleUserInteraction();
                 dispatch(closeCart());
               }}
-              className="cursor-pointer w-full mt-3 text-gray-600 hover:text-blue-800 transition-colors text-sm font-medium"
+              className="cursor-pointer w-full mt-3 text-black hover:text-blue-800 transition-colors text-sm font-medium"
             >
               Continue Shopping
             </button>

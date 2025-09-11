@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
-import { clearCart } from '../redux/slices/cartSlice';
+import { clearCart, updateQuantity } from '../redux/slices/cartSlice';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
@@ -120,13 +120,6 @@ const CheckoutPage = () => {
     notes: ''
   };
 
-  // Redirect to home if cart is empty (but not if modal is showing)
-  useEffect(() => {
-    if (cartItems.length === 0 && !showOrderModal) {
-      router.push('/');
-    }
-  }, [cartItems.length, showOrderModal, router]);
-
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
   const [couponStatus, setCouponStatus] = useState(null);
@@ -137,6 +130,35 @@ const CheckoutPage = () => {
   // Customer and order state
   const [customerId, setCustomerId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+
+  // Redirect to home if cart is empty (but not if modal is showing)
+  useEffect(() => {
+    if (cartItems.length === 0 && !showOrderModal) {
+      router.push('/');
+    }
+  }, [cartItems.length, showOrderModal, router]);
+
+  // Handle ESC key to close image modal
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && showImageModal) {
+        setShowImageModal(false);
+        setPreviewImage(null);
+      }
+    };
+
+    if (showImageModal) {
+      document.addEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset'; // Restore scrolling
+    };
+  }, [showImageModal]);
 
   const subtotal = totalPrice; // Use Redux total price
   const shipping = 9.99;
@@ -357,68 +379,108 @@ const CheckoutPage = () => {
         <meta name="description" content="Complete your order at Zagro Footwear" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 py-8 pt-24">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           {/* Header */}
+           {/* Enhanced Header */}
            <div className="mb-8 text-center">
-             <img src="/images/logo.png" alt="Logo" className="h-10 w-auto mb-4 mx-auto" />
-             <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-             <p className="text-gray-600 mt-2">
-               Complete your order for {totalItems} item{totalItems !== 1 ? 's' : ''}
+             <div className="flex justify-center items-center mb-4">
+               <img 
+                 src="/images/logo.png" 
+                 alt="Zagro Footwear" 
+                 className="h-12 w-auto sm:h-14 md:h-16 transition-transform duration-300 hover:scale-105" 
+               />
+               </div>
+             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+               Checkout
+             </h1>
+             <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto">
+               Complete your order for <span className="font-semibold text-blue-600">{totalItems}</span> item{totalItems !== 1 ? 's' : ''}
              </p>
+             <div className="mt-4 flex justify-center">
+               <div className="w-16 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+             </div>
            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Checkout Form */}
-            <div className="space-y-8">
+            <div className="space-y-6 order-2 lg:order-1">
               <Formik
                 initialValues={initialValues}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
               >
                 {({ isSubmitting, isValid, dirty, values, errors, touched }) => (
-                  <Form>
+                  <Form className="space-y-6">
                     {/* Contact Information */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
+                      <div className="flex items-center mb-4">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Contact Information</h2>
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                        <div className="space-y-1">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">First Name</label>
                           <Field
                             type="text"
                             name="firstName"
-                            className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                            placeholder="Enter your first name"
                           />
-                          <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm mt-1" />
+                          <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </ErrorMessage>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
                           <Field
                             type="text"
                             name="lastName"
-                            className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                            placeholder="Enter your last name"
                           />
-                          <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1" />
+                          <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </ErrorMessage>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                           <Field
                             type="email"
                             name="email"
-                            className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                            placeholder="Enter your email address"
                           />
-                          <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                          <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </ErrorMessage>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
                           <Field
                             type="tel"
                             name="phone"
                             placeholder="+92 300 1234567 or 0300-1234567"
-                            className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                           />
-                          <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1" />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </ErrorMessage>
+                          <p className="text-xs text-gray-500 mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             Enter your phone number with country code (e.g., +92 300 1234567) or local format
                           </p>
                         </div>
@@ -426,63 +488,103 @@ const CheckoutPage = () => {
                     </div>
 
                     {/* Shipping Address */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Shipping Address</h2>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
+                      <div className="flex items-center mb-4">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Shipping Address</h2>
+                      </div>
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
                           <Field
                             type="text"
                             name="address"
                             placeholder="House/Flat No, Street Name, Area, Landmark"
-                            className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                           />
-                          <ErrorMessage name="address" component="div" className="text-red-500 text-sm mt-1" />
-                          <p className="text-xs text-gray-500 mt-1">
+                          <ErrorMessage name="address" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </ErrorMessage>
+                          <p className="text-xs text-gray-500 mt-1 flex items-center">
+                            <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             Include house number, street name, area, and any nearby landmarks
                           </p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
                             <Field
                               type="text"
                               name="city"
                               placeholder="e.g., Karachi, Lahore"
-                              className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                             />
-                            <ErrorMessage name="city" component="div" className="text-red-500 text-sm mt-1" />
+                            <ErrorMessage name="city" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </ErrorMessage>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">State/Province</label>
                             <Field
                               type="text"
                               name="state"
                               placeholder="e.g., Sindh, Punjab"
-                              className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                             />
-                            <ErrorMessage name="state" component="div" className="text-red-500 text-sm mt-1" />
+                            <ErrorMessage name="state" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </ErrorMessage>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">ZIP Code</label>
                             <Field
                               type="text"
                               name="zipCode"
                               placeholder="12345 or 12345-6789"
-                              className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                             />
-                            <ErrorMessage name="zipCode" component="div" className="text-red-500 text-sm mt-1" />
+                            <ErrorMessage name="zipCode" component="div" className="text-red-500 text-sm mt-1 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </ErrorMessage>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Payment Method */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Method</h2>
+                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
+                      <div className="flex items-center mb-4">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Payment Method</h2>
+                      </div>
                       <div className="space-y-4">
                         {/* Cash on Delivery - Available */}
-                        <div className="flex items-center space-x-3 p-4 border-2 border-green-200 bg-green-50 rounded-lg">
+                        <div className={`relative flex items-center space-x-3 p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
+                          paymentMethod === 'cash_on_delivery' 
+                            ? 'border-green-500 bg-green-50 shadow-lg' 
+                            : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
+                        }`}
+                        onClick={() => setPaymentMethod('cash_on_delivery')}
+                        >
                           <input
                             type="radio"
                             id="cash_on_delivery"
@@ -490,64 +592,73 @@ const CheckoutPage = () => {
                             value="cash_on_delivery"
                             checked={paymentMethod === 'cash_on_delivery'}
                             onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                            className="w-5 h-5 text-green-600 border-gray-300 focus:ring-green-500"
                           />
                           <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <label htmlFor="cash_on_delivery" className="text-sm font-medium text-gray-900 cursor-pointer">
+                            <div className="flex items-center justify-between mb-2">
+                              <label htmlFor="cash_on_delivery" className="text-base font-semibold text-gray-900 cursor-pointer flex items-center">
+                                <svg className="w-6 h-6 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                </svg>
                                 Cash on Delivery
                               </label>
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Available
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                ✓ Available
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">Pay with cash when your order is delivered.</p>
+                            <p className="text-gray-600">Pay with cash when your order is delivered at your doorstep.</p>
                           </div>
                         </div>
 
                         {/* Credit/Debit Cards - Coming Soon */}
-                        <div className="flex items-center space-x-3 p-4 border border-gray-200 bg-gray-50 rounded-lg opacity-60">
+                        <div className="flex items-center space-x-3 p-4 border-2 border-gray-200 bg-gray-50 rounded-xl opacity-60 cursor-not-allowed">
                           <input
                             type="radio"
                             id="credit_card"
                             name="paymentMethod"
                             value="credit_card"
                             disabled
-                            className="w-4 h-4 text-gray-400 border-gray-300"
+                            className="w-5 h-5 text-gray-400 border-gray-300"
                           />
                           <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <label htmlFor="credit_card" className="text-sm font-medium text-gray-500 cursor-not-allowed">
+                            <div className="flex items-center justify-between mb-2">
+                              <label htmlFor="credit_card" className="text-base font-semibold text-gray-500 cursor-not-allowed flex items-center">
+                                <svg className="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
                                 Credit/Debit Cards
                               </label>
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Coming Soon
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                ⏳ Coming Soon
                               </span>
                             </div>
-                            <p className="text-sm text-gray-400 mt-1">Online payment methods will be available soon.</p>
+                            <p className="text-gray-400">Online payment methods will be available soon.</p>
                           </div>
                         </div>
 
                         {/* Digital Wallets - Coming Soon */}
-                        <div className="flex items-center space-x-3 p-4 border border-gray-200 bg-gray-50 rounded-lg opacity-60">
+                        <div className="flex items-center space-x-3 p-4 border-2 border-gray-200 bg-gray-50 rounded-xl opacity-60 cursor-not-allowed">
                           <input
                             type="radio"
                             id="digital_wallet"
                             name="paymentMethod"
                             value="digital_wallet"
                             disabled
-                            className="w-4 h-4 text-gray-400 border-gray-300"
+                            className="w-5 h-5 text-gray-400 border-gray-300"
                           />
                           <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <label htmlFor="digital_wallet" className="text-sm font-medium text-gray-500 cursor-not-allowed">
+                            <div className="flex items-center justify-between mb-2">
+                              <label htmlFor="digital_wallet" className="text-base font-semibold text-gray-500 cursor-not-allowed flex items-center">
+                                <svg className="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
                                 Digital Wallets
                               </label>
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Coming Soon
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                ⏳ Coming Soon
                               </span>
                             </div>
-                            <p className="text-sm text-gray-400 mt-1">PayPal, Apple Pay, Google Pay and more.</p>
+                            <p className="text-gray-400">PayPal, Apple Pay, Google Pay and more.</p>
                           </div>
                         </div>
 
@@ -645,7 +756,7 @@ const CheckoutPage = () => {
                         !dirty ||
                         cartItems.some(item => !item.selectedSize || !item.selectedColor)
                       }
-                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors mt-6 ${isSubmitting ||
+                      className={`cursor-pointer w-full py-2.5 px-4 rounded-lg font-medium transition-colors mt-4 ${isSubmitting ||
                         isProcessing ||
                         !isValid ||
                         !dirty ||
@@ -662,11 +773,16 @@ const CheckoutPage = () => {
             </div>
 
             {/* Order Summary */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+            <div className="space-y-4 order-1 lg:order-2">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 sticky top-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Order Summary
+                </h2>
 
-                {/* Cart Items - Grouped by Product */}
+                {/* Cart Items - Enhanced Display */}
                 <div className="space-y-4 mb-4">
                   {(() => {
                     // Group items by product ID
@@ -680,74 +796,138 @@ const CheckoutPage = () => {
                     }, {});
 
                     return Object.values(groupedItems).map((productItems, groupIndex) => (
-                      <div key={groupIndex} className="border border-gray-200 rounded-lg p-3">
-                        {/* Product Header */}
-                        <div className="flex items-center space-x-3 mb-3">
+                      <div key={groupIndex} className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
+                        {/* Product Header with Larger Image */}
+                        <div className="flex items-start space-x-4 mb-4">
                           {productItems[0].product.image ? (
+                            <div 
+                              className="relative group cursor-pointer"
+                              onClick={() => {
+                                setPreviewImage(productItems[0].product.image);
+                                setShowImageModal(true);
+                              }}
+                            >
                             <img
                               src={productItems[0].product.image}
                               alt={productItems[0].product.name}
-                              className="w-12 h-12 object-cover rounded border border-gray-200"
-                            />
+                                className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:border-blue-400 group-hover:z-10"
+                              />
+                              {/* Simple hover tooltip */}
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50">
+                                <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                                  Click to view larger
+                                </div>
+                                {/* Arrow */}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
                           ) : (
-                            <div className="w-12 h-12 bg-gray-200 rounded border border-gray-200 flex items-center justify-center">
-                              <span className="text-xs text-gray-500">No Image</span>
+                            <div className="w-20 h-20 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center group hover:scale-105 transition-transform duration-300">
+                              <span className="text-xs text-gray-500 font-medium">No Image</span>
                             </div>
                           )}
-                          <div className="flex-1">
-                            <h3 className="font-medium text-gray-900 text-sm">{productItems[0].product.name}</h3>
-                            <p className="text-xs text-gray-500">${formatPrice(productItems[0].product.price)} each</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2">{productItems[0].product.name}</h3>
+                            <p className="text-sm text-gray-600 mb-2">PKR {formatPrice(productItems[0].product.price)} each</p>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                                {productItems[0].product.category?.name || 'General'}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Variants */}
-                        <div className="space-y-2">
+                        {/* Enhanced Variants with Quantity Controls */}
+                        <div className="space-y-3">
                           {productItems.map((item, itemIndex) => (
-                            <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded p-2">
+                            <div key={item.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                              <div className="flex items-center justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center space-x-4 text-xs">
-                                  <span className="font-medium text-gray-900">
-                                    Size: {item.selectedSize || 'Pending'}
+                                  <div className="flex items-center space-x-4 mb-2">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Size:</span>
+                                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                                        {item.selectedSize || 'Pending'}
                                   </span>
-                                  <span className="font-medium text-gray-900">
-                                    Color: {item.selectedColor || 'Pending'}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Color:</span>
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
+                                        {item.selectedColor || 'Pending'}
                                   </span>
-                                  <span className="text-gray-600">
-                                    Qty: {item.quantity}
-                                  </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Quantity Controls */}
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Quantity:</span>
+                                    <div className="flex items-center space-x-2">
+                                      <button
+                                        onClick={() => {
+                                          if (item.quantity > 1) {
+                                            dispatch(updateQuantity({ itemId: item.id, quantity: item.quantity - 1 }));
+                                          }
+                                        }}
+                                        disabled={item.quantity <= 1}
+                                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                                      >
+                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                        </svg>
+                                      </button>
+                                      <span className="w-8 text-center font-semibold text-gray-900">{item.quantity}</span>
+                                      <button
+                                        onClick={() => {
+                                          dispatch(updateQuantity({ itemId: item.id, quantity: item.quantity + 1 }));
+                                        }}
+                                        className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                      </button>
+                                    </div>
                                 </div>
 
                                 {/* Warning for missing size/color */}
                                 {(!item.selectedSize || !item.selectedColor) && (
-                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-xs">
-                                    <div className="flex items-center text-yellow-800">
-                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="red" viewBox="0 0 24 24">
+                                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                                      <div className="flex items-center text-red-800">
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                       </svg>
-                                      <span className="font-medium">Size/Color not selected</span>
+                                        <span className="font-medium text-sm">Size/Color not selected</span>
                                     </div>
                                     <button
-                                      onClick={() => router.push(`/products/${item.product._id}`)}
-                                      className="cursor-pointer mt-1 text-red-600 hover:text-blue-800 underline text-xs"
+                                        onClick={() => router.push(`/product?id=${item.product._id}`)}
+                                        className="mt-1 text-red-600 hover:text-blue-800 underline text-sm font-medium"
                                     >
                                       Click to select size & color
                                     </button>
                                   </div>
                                 )}
                               </div>
-                              <span className="font-semibold text-gray-900 text-sm">
-                                ${formatPrice(item.product.price * item.quantity)}
-                              </span>
+                                
+                                {/* Price Display */}
+                                <div className="text-right">
+                                  <div className="text-lg font-bold text-gray-900">
+                                    PKR {formatPrice(item.product.price * item.quantity)}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    PKR {formatPrice(item.product.price)} × {item.quantity}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
 
                         {/* Product Total */}
-                        <div className="mt-3 pt-2 border-t border-gray-200">
-                          <div className="flex text-gray-900 justify-between items-center text-sm font-medium">
-                            <span>Subtotal for this product:</span>
-                            <span>
-                              ${formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-semibold text-gray-700">Subtotal for this product:</span>
+                            <span className="text-lg font-bold text-gray-900">
+                              PKR {formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}
                             </span>
                           </div>
                         </div>
@@ -840,25 +1020,25 @@ const CheckoutPage = () => {
                 <div className="border-t border-gray-200 pt-4 space-y-2">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
-                    <span>${formatPrice(subtotal)}</span>
+                    <span>PKR {formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Shipping</span>
-                    <span>${formatPrice(shipping)}</span>
+                    <span>PKR {formatPrice(shipping)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Tax</span>
-                    <span>${formatPrice(tax)}</span>
+                    <span>PKR {formatPrice(tax)}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Discount ({couponDetails?.code})</span>
-                      <span>-${formatPrice(discount)}</span>
+                      <span>-PKR {formatPrice(discount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-semibold text-gray-900 border-t border-gray-200 pt-2">
                     <span>Total</span>
-                    <span>${formatPrice(total)}</span>
+                    <span>PKR {formatPrice(total)}</span>
                   </div>
                 </div>
 
@@ -870,7 +1050,7 @@ const CheckoutPage = () => {
 
       {/* Order Confirmation Modal */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="text-center">
               {orderResult.isSuccess ? (
@@ -883,7 +1063,45 @@ const CheckoutPage = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Order Placed Successfully!</h3>
                   <p className="text-gray-600 mb-4">{orderResult.message}</p>
                   {orderResult.orderNumber && (
-                    <p className="text-sm text-gray-500 mb-4">Order Number: {orderResult.orderNumber}</p>
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-500 mb-2">Order Number: {orderResult.orderNumber}</p>
+                      
+                      {/* Order Status Info Section */}
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Track Your Order</h4>
+                        <p className="text-xs text-gray-600 mb-3">
+                          Visit our Order Status page and enter your order number to check the status anytime.
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={orderResult.orderNumber}
+                            readOnly
+                            className="flex-1 text-xs bg-white border border-gray-300 rounded px-2 py-1 font-mono text-gray-700"
+                          />
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(orderResult.orderNumber);
+                              // Show a brief success message
+                              const button = event.target;
+                              const originalText = button.textContent;
+                              button.textContent = 'Copied!';
+                              button.className = 'px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors';
+                              setTimeout(() => {
+                                button.textContent = originalText;
+                                button.className = 'px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors';
+                              }, 2000);
+                            }}
+                            className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                          >
+                            Copy Order #
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Save this order number to check your order status later.
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </>
               ) : (
@@ -898,21 +1116,79 @@ const CheckoutPage = () => {
                 </>
               )}
               
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleCloseOrderModal}
-                  className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Close
-                </button>
+              <div className="flex flex-col space-y-2">
                 {orderResult.isSuccess && (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        window.open('/order-status', '_blank');
+                      }}
+                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      View Order Status
+                    </button>
                   <button
                     onClick={handleContinueShopping}
                     className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Continue Shopping
                   </button>
+                  </div>
                 )}
+                <button
+                  onClick={handleCloseOrderModal}
+                  className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {showImageModal && previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+          onClick={() => {
+            setShowImageModal(false);
+            setPreviewImage(null);
+          }}
+        >
+          <div 
+            className="relative max-w-4xl max-h-[90vh] w-full animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowImageModal(false);
+                setPreviewImage(null);
+              }}
+              className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 hover:bg-white text-gray-800 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 animate-fadeInRight"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Image container */}
+            <div className="relative bg-white rounded-xl overflow-hidden shadow-2xl animate-slideUp">
+              <img
+                src={previewImage}
+                alt="Product preview"
+                className="w-full h-auto max-h-[80vh] object-contain transition-all duration-500 hover:scale-105"
+              />
+              
+              {/* Image info overlay */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 animate-fadeInUp">
+                <p className="text-white text-sm font-medium">
+                  Click outside or press ESC to close
+                </p>
               </div>
             </div>
           </div>

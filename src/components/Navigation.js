@@ -446,6 +446,9 @@ export default function Navigation() {
               <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Home
               </Link>
+              <Link href="/order-status" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
+                Order Status
+              </Link>
               
               {/* Dynamic Categories */}
               {isLoadingCategories ? (
@@ -574,6 +577,9 @@ export default function Navigation() {
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <Link href="/" className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300">
                   Home
+                </Link>
+                <Link href="/order-status" className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300">
+                  Order Status
                 </Link>
                 
                 {/* Dynamic Categories for Mobile */}

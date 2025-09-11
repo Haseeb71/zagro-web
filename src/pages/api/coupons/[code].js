@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       'SAVE20': {
         code: 'SAVE20',
         title: 'Save More',
-        details: '20% off on orders over $100',
+        details: '20% off on orders over PKR 100',
         discountPercentage: 20,
         isActive: true,
         validFrom: new Date('2024-01-01').toISOString(),

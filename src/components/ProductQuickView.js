@@ -92,9 +92,9 @@ export default function ProductQuickView({ product }) {
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-3xl font-bold text-gray-900">${product.price}</span>
+                <span className="text-3xl font-bold text-gray-900">PKR {product.price}</span>
                 {product.originalPrice && (
-                  <span className="text-xl text-gray-500 line-through">${product.originalPrice}</span>
+                  <span className="text-xl text-gray-500 line-through">PKR {product.originalPrice}</span>
                 )}
               </div>
               {product.category && (
@@ -207,7 +207,7 @@ export default function ProductQuickView({ product }) {
                 onClick={handleAddToCart}
                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
-                Add to Cart - ${(product.price * quantity).toFixed(2)}
+                Add to Cart - PKR {(product.price * quantity).toFixed(2)}
               </button>
               
               <div className="grid grid-cols-2 gap-3">
@@ -231,7 +231,7 @@ export default function ProductQuickView({ product }) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Features</h3>
               <div className="space-y-3">
                 {[
-                  { icon: '🚚', text: 'Free shipping on orders over $100' },
+                  { icon: '🚚', text: 'Free shipping on orders over PKR 100' },
                   { icon: '↩️', text: '30-day return policy' },
                   { icon: '🛡️', text: '1-year warranty included' },
                   { icon: '💎', text: 'Premium materials and craftsmanship' }
