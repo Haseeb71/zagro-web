@@ -15,7 +15,11 @@ export default function Navigation() {
   const [hoveredCategory, setHoveredCategory] = useState(null);
   const [subCategories, setSubCategories] = useState({});
   const [isLoadingSubCategories, setIsLoadingSubCategories] = useState({});
+  const [hoveredSecondaryCategory, setHoveredSecondaryCategory] = useState(null);
+  const [secondarySubCategories, setSecondarySubCategories] = useState({});
+  const [isLoadingSecondarySubCategories, setIsLoadingSecondarySubCategories] = useState({});
   const dropdownTimeoutRef = useRef(null);
+  const secondaryDropdownTimeoutRef = useRef(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -39,8 +43,47 @@ export default function Navigation() {
       if (dropdownTimeoutRef.current) {
         clearTimeout(dropdownTimeoutRef.current);
       }
+      if (secondaryDropdownTimeoutRef.current) {
+        clearTimeout(secondaryDropdownTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check if click is outside navigation elements
+      const navElement = document.querySelector('nav');
+      const secondaryNavElement = document.querySelector('.fixed.top-16');
+      
+      if (navElement && !navElement.contains(event.target) && 
+          secondaryNavElement && !secondaryNavElement.contains(event.target)) {
+        forceCloseDropdown();
+      }
+    };
+
+    if (hoveredCategory) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [hoveredCategory]);
+
+  // Safety mechanism - force close dropdown after 10 seconds
+  useEffect(() => {
+    if (hoveredCategory) {
+      const safetyTimeout = setTimeout(() => {
+        console.warn('Dropdown stuck open, forcing close');
+        forceCloseDropdown();
+      }, 10000); // 10 seconds
+
+      return () => {
+        clearTimeout(safetyTimeout);
+      };
+    }
+  }, [hoveredCategory]);
 
   const fetchCategories = async () => {
     try {
@@ -101,6 +144,9 @@ export default function Navigation() {
 
   // Handle category leave
   const handleCategoryLeave = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
     dropdownTimeoutRef.current = setTimeout(() => {
       setHoveredCategory(null);
     }, 200); // Small delay to allow moving to dropdown
@@ -110,11 +156,15 @@ export default function Navigation() {
   const handleDropdownHover = () => {
     if (dropdownTimeoutRef.current) {
       clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
     }
   };
 
   // Handle dropdown leave - close dropdown
   const handleDropdownLeave = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
     dropdownTimeoutRef.current = setTimeout(() => {
       setHoveredCategory(null);
     }, 200);
@@ -122,7 +172,79 @@ export default function Navigation() {
 
   // Manual close function
   const closeDropdown = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
     setHoveredCategory(null);
+  };
+
+  // Force close dropdown - for cleanup
+  const forceCloseDropdown = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setHoveredCategory(null);
+  };
+
+  // Fetch subcategories for secondary navigation
+  const fetchSecondarySubCategories = async (categoryId) => {
+    if (secondarySubCategories[categoryId] || isLoadingSecondarySubCategories[categoryId]) {
+      return; // Already loaded or loading
+    }
+
+    try {
+      setIsLoadingSecondarySubCategories(prev => ({ ...prev, [categoryId]: true }));
+      const response = await categoriesAPI.getAllSubCategoriesByCategory(categoryId);
+      
+      if (response?.data?.subCategories) {
+        setSecondarySubCategories(prev => ({ 
+          ...prev, 
+          [categoryId]: response.data.subCategories 
+        }));
+      } else if (response?.data) {
+        setSecondarySubCategories(prev => ({ 
+          ...prev, 
+          [categoryId]: Array.isArray(response.data) ? response.data : [] 
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching secondary subcategories:', error);
+      setSecondarySubCategories(prev => ({ ...prev, [categoryId]: [] }));
+    } finally {
+      setIsLoadingSecondarySubCategories(prev => ({ ...prev, [categoryId]: false }));
+    }
+  };
+
+  // Handle secondary category hover
+  const handleSecondaryCategoryHover = (category) => {
+    if (secondaryDropdownTimeoutRef.current) {
+      clearTimeout(secondaryDropdownTimeoutRef.current);
+    }
+    setHoveredSecondaryCategory(category);
+    fetchSecondarySubCategories(category.id || category._id);
+  };
+
+  // Handle secondary category leave
+  const handleSecondaryCategoryLeave = () => {
+    secondaryDropdownTimeoutRef.current = setTimeout(() => {
+      setHoveredSecondaryCategory(null);
+    }, 200); // Small delay to allow moving to dropdown
+  };
+
+  // Handle secondary dropdown hover - keep it open
+  const handleSecondaryDropdownHover = () => {
+    if (secondaryDropdownTimeoutRef.current) {
+      clearTimeout(secondaryDropdownTimeoutRef.current);
+    }
+  };
+
+  // Handle secondary dropdown leave - close dropdown
+  const handleSecondaryDropdownLeave = () => {
+    secondaryDropdownTimeoutRef.current = setTimeout(() => {
+      setHoveredSecondaryCategory(null);
+    }, 200);
   };
 
   // Search products using API
@@ -406,6 +528,48 @@ export default function Navigation() {
           to { transform: rotate(360deg); }
         }
         
+         .scrollbar-hide {
+           -ms-overflow-style: none;
+           scrollbar-width: none;
+         }
+         
+         .scrollbar-hide::-webkit-scrollbar {
+           display: none;
+         }
+         
+         .secondary-nav-item {
+           position: relative;
+           transition: all 0.3s ease;
+         }
+         
+         .secondary-nav-item::after {
+           content: '';
+           position: absolute;
+           bottom: -2px;
+           left: 0;
+           width: 0;
+           height: 2px;
+           background: #3b82f6;
+           transition: width 0.3s ease;
+         }
+         
+         .secondary-nav-item:hover::after {
+           width: 100%;
+         }
+         
+         .secondary-nav-dropdown {
+           transform: translateY(-10px);
+           opacity: 0;
+           visibility: hidden;
+           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+         }
+         
+         .secondary-nav-group:hover .secondary-nav-dropdown {
+           transform: translateY(0);
+           opacity: 1;
+           visibility: visible;
+         }
+         
          @media (max-width: 768px) {
            .category-dropdown {
              position: static;
@@ -427,11 +591,11 @@ export default function Navigation() {
              padding: 10px 16px;
              font-size: 14px;
            }
-        }
+         }
       `}</style>
 
       {/* Navigation - Fixed Header */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -483,45 +647,6 @@ export default function Navigation() {
                     );
                   })}
                 </>
-              )}
-              
-              {/* Global Dropdown - positioned at navigation level */}
-              {hoveredCategory && (
-                <div 
-                  className={`category-dropdown ${hoveredCategory ? 'show' : ''}`}
-                  onMouseEnter={handleDropdownHover}
-                  onMouseLeave={handleDropdownLeave}
-                >
-                  {/* Dropdown Content */}
-                  {(() => {
-                    const categoryId = hoveredCategory.id || hoveredCategory._id;
-                    const categorySubCategories = subCategories[categoryId] || [];
-                    const isLoadingSubs = isLoadingSubCategories[categoryId];
-                    
-                    return isLoadingSubs ? (
-                      <div className="flex items-center justify-center p-12">
-                        <div className="loading-spinner"></div>
-                        <span className="ml-3 text-gray-500 text-sm">Loading subcategories...</span>
-                      </div>
-                    ) : categorySubCategories.length > 0 ? (
-                      <div className="subcategory-grid">
-                        {categorySubCategories.map((subCategory, subIndex) => (
-                          <Link
-                            key={subCategory.id || subCategory._id || subIndex}
-                            href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
-                            className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium subcategory-item"
-                          >
-                            {subCategory.name}
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-12 text-center text-gray-500">
-                        <p className="text-sm">No subcategories available</p>
-                      </div>
-                    );
-                  })()}
-                </div>
               )}
             </div>
 
@@ -885,6 +1010,107 @@ export default function Navigation() {
           </div>
         )}
       </nav>
+
+      {/* Secondary Navigation Bar - Show Subcategories when Category is Hovered */}
+      {hoveredCategory && (() => {
+        const categoryId = hoveredCategory.id || hoveredCategory._id;
+        const categorySubCategories = subCategories[categoryId] || [];
+        const isLoadingSubs = isLoadingSubCategories[categoryId];
+        
+        return (
+          <div 
+            className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm transition-all duration-300"
+            onMouseEnter={handleDropdownHover}
+            onMouseLeave={handleDropdownLeave}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center justify-center space-x-8 py-3">
+                {isLoadingSubs ? (
+                  // Loading skeleton for subcategories
+                  <div className="flex items-center justify-center w-full py-4">
+                    <div className="loading-spinner"></div>
+                    <span className="ml-3 text-gray-500 text-sm">Loading subcategories...</span>
+                  </div>
+                ) : categorySubCategories.length > 0 ? (
+                  <>
+                    {/* Show subcategories */}
+                    {categorySubCategories.slice(0, MAX_VISIBLE_CATEGORIES).map((subCategory, index) => (
+                      <Link
+                        key={subCategory.id || subCategory._id || index}
+                        href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
+                        className="secondary-nav-item text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-sm uppercase tracking-wide"
+                        onMouseEnter={handleDropdownHover}
+                        onMouseLeave={handleDropdownLeave}
+                      >
+                        {subCategory.name}
+                      </Link>
+                    ))}
+                    
+                    {/* Special highlight items */}
+                    {/* <Link 
+                      href="/categories/sale" 
+                      className="text-white hover:text-gray-100 transition-colors duration-300 font-bold text-sm uppercase tracking-wide bg-gradient-to-r from-red-500 to-red-600 px-4 py-2 rounded-full shadow-lg hover:shadow-xl"
+                      onMouseEnter={handleDropdownHover}
+                      onMouseLeave={handleDropdownLeave}
+                    >
+                      SALE
+                    </Link> */}
+                  </>
+                ) : (
+                  // No subcategories available
+                  <div className="flex items-center justify-center w-full py-4">
+                    <span className="text-gray-500 text-sm">No subcategories available for {hoveredCategory.name}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Navigation */}
+              <div className="md:hidden py-3">
+                <div className="flex items-center justify-between space-x-2 overflow-x-auto scrollbar-hide">
+                  {isLoadingSubs ? (
+                    // Loading skeleton for mobile
+                    <div className="flex items-center justify-center w-full py-2">
+                      <div className="loading-spinner"></div>
+                      <span className="ml-2 text-gray-500 text-sm">Loading...</span>
+                    </div>
+                  ) : categorySubCategories.length > 0 ? (
+                    <>
+                      {/* Show subcategories for mobile */}
+                      {categorySubCategories.slice(0, MAX_VISIBLE_CATEGORIES).map((subCategory, index) => (
+                        <Link
+                          key={subCategory.id || subCategory._id || index}
+                          href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
+                          className="secondary-nav-item text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-xs uppercase tracking-wide whitespace-nowrap px-2 py-1 flex-shrink-0"
+                          onMouseEnter={handleDropdownHover}
+                          onMouseLeave={handleDropdownLeave}
+                        >
+                          {subCategory.name}
+                        </Link>
+                      ))}
+                      
+                      {/* Special highlight items for mobile */}
+                      <Link 
+                        href="/categories/sale" 
+                        className="text-white hover:text-gray-100 transition-colors duration-300 font-bold text-xs uppercase tracking-wide whitespace-nowrap px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex-shrink-0"
+                        onMouseEnter={handleDropdownHover}
+                        onMouseLeave={handleDropdownLeave}
+                      >
+                        SALE
+                      </Link>
+                    </>
+                  ) : (
+                    // No subcategories available for mobile
+                    <div className="flex items-center justify-center w-full py-2">
+                      <span className="text-gray-500 text-xs">No subcategories available</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 } 

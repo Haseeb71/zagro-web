@@ -188,9 +188,10 @@ const ProductCard = ({
     return price;
   };
 
-  // Image carousel logic with smooth transitions
+  // Image carousel logic - only on hover
   useEffect(() => {
-    if (product.images && product.images.length > 1) {
+    if (isHovered && product.images && product.images.length > 1) {
+      // Start the image transition loop on hover
       intervalRef.current = setInterval(() => {
         setIsTransitioning(true);
         setTimeout(() => {
@@ -198,29 +199,27 @@ const ProductCard = ({
             (prevIndex + 1) % product.images.length
           );
           setIsTransitioning(false);
-        }, 300); // Half of the transition duration
-      }, imageChangeInterval);
+        }, 200); // Half of the transition duration
+      }, 1000); // Transition every second
 
       return () => {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
         }
       };
+    } else {
+      // Clear interval when not hovering and reset to first image
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      // Reset to first image when hover ends
+      if (!isHovered) {
+        setCurrentImageIndex(0);
+        setIsTransitioning(false);
+      }
     }
-  }, [product.images, imageChangeInterval]);
-
-  // Pause carousel on hover
-  useEffect(() => {
-    if (isHovered && intervalRef.current) {
-      clearInterval(intervalRef.current);
-    } else if (!isHovered && product.images && product.images.length > 1) {
-      intervalRef.current = setInterval(() => {
-        setCurrentImageIndex((prevIndex) => 
-          (prevIndex + 1) % product.images.length
-        );
-      }, imageChangeInterval);
-    }
-  }, [isHovered, product.images, imageChangeInterval]);
+  }, [isHovered, product.images]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -382,7 +381,7 @@ const ProductCard = ({
           </h3>
           <div className="flex items-center justify-between">
             <span className={`${currentVariant.priceSize} font-bold text-blue-600`}>
-              PKR {formatPrice(product.price)}
+              Rs {formatPrice(product.price)}
             </span>
           </div>
         </div>
@@ -392,26 +391,26 @@ const ProductCard = ({
 
   return (
     <div 
-      className={`relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 group transform hover:-translate-y-2 ${className}`}
+      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-white ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background Image with Carousel */}
-      <div className={`relative ${currentVariant.imageSize} overflow-hidden`}>
+      {/* Product Image Container */}
+      <div className={`relative ${currentVariant.imageSize} overflow-hidden rounded-t-2xl`}>
         {product.images && product.images.length > 0 ? (
           <>
             <img 
               src={getImageUrl(product.images[currentImageIndex])} 
               alt={product.name}
-              className={`w-full h-full object-cover transition-all duration-700 ease-in-out group-hover:scale-105 ${
-                isTransitioning ? 'animate-fadeOutLeft' : 'animate-fadeInRight'
+              className={`w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
+                isTransitioning ? 'animate-smoothFade' : ''
               }`}
               loading="lazy"
               decoding="async"
             />
-            {/* Image indicators */}
+            {/* Image indicators - only show on hover */}
             {product.images.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+              <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 {product.images.map((_, index) => (
                   <div
                     key={index}
@@ -431,43 +430,26 @@ const ProductCard = ({
           </div>
         )}
 
-        {/* Stronger Gradient Overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-        
-        {/* Additional overlay for hover state */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
         {/* Discount Badge */}
         {product.discountPercentage > 0 && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm px-4 py-2 rounded-2xl font-bold shadow-2xl transform -rotate-2 hover:rotate-0 transition-all duration-300 border border-red-400/30">
+          <div className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-bold shadow-lg">
             -{product.discountPercentage}%
           </div>
         )}
 
-        {/* Stock Status Badge */}
-        <div className="absolute top-4 right-4 z-10">
-          <span className={`text-xs px-4 py-2 rounded-2xl font-bold shadow-2xl ${
-            product.quantity > 0 
-              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-400/30' 
-              : 'bg-gradient-to-r from-red-500 to-red-600 text-white border border-red-400/30'
-          }`}>
-            {product.quantity > 0 ? 'In Stock' : 'Out of Stock'}
-          </span>
-        </div>
-
         {/* Hover Overlay with Action Buttons */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-          <div className="flex space-x-3">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="flex space-x-2">
             {/* Quick View Button */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleQuickView(e);
               }}
-              className="bg-black/40 backdrop-blur-lg text-white w-12 h-12 rounded-full font-semibold shadow-2xl hover:bg-black/60 hover:scale-110 transition-all duration-300 flex items-center justify-center border border-white/20"
+              className="bg-white/90 text-gray-800 w-10 h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center"
               aria-label={`Quick view ${product.name}`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
@@ -477,10 +459,10 @@ const ProductCard = ({
             <button
               onClick={handleCartIconClick}
               disabled={product.quantity === 0}
-              className="bg-black/40 backdrop-blur-lg text-white w-12 h-12 rounded-full font-semibold shadow-2xl hover:bg-black/60 hover:scale-110 transition-all duration-300 flex items-center justify-center border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="bg-white/90 text-gray-800 w-10 h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               aria-label={`Add ${product.name} to cart`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
               </svg>
             </button>
@@ -488,51 +470,49 @@ const ProductCard = ({
         </div>
       </div>
 
-      {/* Product Info Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-20">
+      {/* Product Info - Below Image */}
+      <div className="p-4 space-y-2">
         {/* Brand */}
         {product.brand && (
-          <p className="text-sm font-semibold uppercase tracking-widest text-white/90 mb-2 drop-shadow-2xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
             {product.brand}
           </p>
         )}
 
         {/* Product Name */}
         <h3 
-          className={`${currentVariant.titleSize} font-black mb-3 line-clamp-2 drop-shadow-2xl text-white leading-tight cursor-pointer hover:text-blue-300 transition-colors duration-300 hover:scale-105 transform`}
+          className={`${currentVariant.titleSize} font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200`}
           onClick={handleProductClick}
           onKeyDown={handleKeyDown}
           role="button"
           tabIndex={0}
           aria-label={`View product: ${product.name}`}
         >
-          {product.name}
+          {product.name.length > 10 ? product.name.slice(0, 12) + '...' : product.name}
         </h3>
 
         {/* Rating */}
         {currentVariant.showRating && (
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="drop-shadow-2xl">
+          <div className="flex items-center space-x-2">
+            <div>
               <RatingStars rating={product.rating} size="sm" showRating={false} />
             </div>
-            <span className="text-sm text-white/90 drop-shadow-2xl font-medium">
+            <span className="text-sm text-gray-500 font-medium">
               ({product.reviewCount || 0})
             </span>
           </div>
         )}
 
         {/* Price Section */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className={`${currentVariant.priceSize} font-black text-white drop-shadow-2xl`}>
-              PKR {formatPrice(product.price)}
+        <div className="flex items-center space-x-3">
+          <span className={`${currentVariant.priceSize} font-bold text-red-600`}>
+            Rs {formatPrice(product.price)}
+          </span>
+          {product.discountPercentage > 0 && (
+            <span className="text-lg text-gray-500 line-through font-medium">
+              Rs {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
             </span>
-            {product.discountPercentage > 0 && (
-              <span className="text-lg text-white/80 line-through drop-shadow-2xl font-semibold">
-                PKR {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
-              </span>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
@@ -564,15 +544,15 @@ const ProductCard = ({
                   {product.discountPercentage > 0 ? (
                     <>
                       <span className="text-lg text-gray-500 line-through">
-                        PKR {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
+                        Rs {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
                       </span>
                       <span className="text-xl font-bold text-red-600">
-                        PKR {formatPrice(product.price)}
+                        Rs {formatPrice(product.price)}
                       </span>
                     </>
                   ) : (
                     <span className="text-xl font-bold text-gray-900">
-                      PKR {formatPrice(product.price)}
+                      Rs {formatPrice(product.price)}
                     </span>
                   )}
                 </div>

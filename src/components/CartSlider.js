@@ -254,8 +254,8 @@ const CartSlider = ({ onClose }) => {
                             <span className="text-xs text-gray-500">No Image</span>
                           </div>
                         )}
-                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
-                          PKR {formatPrice(item.product.price)}
+                        <div className="absolute -top-1 -right-0 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg">
+                          Rs {formatPrice(item.product.price)}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -285,9 +285,22 @@ const CartSlider = ({ onClose }) => {
                           <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                             Size: {item.selectedSize || 'Pending'}
                           </span>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                            Color: {item.selectedColor ? (typeof item.selectedColor === 'string' ? item.selectedColor : item.selectedColor?.name) : 'Pending'}
-                          </span>
+                          <div className="flex items-center space-x-1 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            <span>Color:</span>
+                            {item.selectedColor ? (
+                              <div 
+                                className="w-3 h-3 rounded-full border border-gray-300 shadow-sm"
+                                style={{ 
+                                  backgroundColor: typeof item.selectedColor === 'string' 
+                                    ? item.selectedColor 
+                                    : item.selectedColor?.hex || item.selectedColor?.code || item.selectedColor?.name || '#ccc'
+                                }}
+                                title={typeof item.selectedColor === 'string' ? item.selectedColor : item.selectedColor?.name}
+                              />
+                            ) : (
+                              <span className="text-gray-400">Pending</span>
+                            )}
+                          </div>
                         </div>
                         
                         {/* Quantity Controls */}
@@ -348,7 +361,7 @@ const CartSlider = ({ onClose }) => {
             <div className="space-y-3 mb-6">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-black">Subtotal</span>
-                <span className="font-medium text-gray-900">PKR {formatPrice(totalPrice)}</span>
+                <span className="font-medium text-gray-900">Rs {formatPrice(totalPrice)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-black">Shipping</span>
@@ -356,13 +369,13 @@ const CartSlider = ({ onClose }) => {
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-black">Tax</span>
-                <span className="font-medium text-gray-900">PKR {formatPrice(totalPrice * 0.08)}</span>
+                <span className="font-medium text-gray-900">Rs {formatPrice(totalPrice * 0.08)}</span>
               </div>
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-black">Total</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    PKR {formatPrice(totalPrice * 1.08)}
+                    Rs {formatPrice(totalPrice * 1.08)}
                   </span>
                 </div>
               </div>

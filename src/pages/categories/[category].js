@@ -201,15 +201,15 @@ export default function CategoryPage() {
       const newFilters = { ...filters };
       
       // Check for filter parameters in URL
-      if (urlParams.get('isFeatured') === 'true') newFilters.isFeatured = 'true';
-      if (urlParams.get('isBestSeller') === 'true') newFilters.isBestSeller = 'true';
-      if (urlParams.get('isTrending') === 'true') newFilters.isTrending = 'true';
-      if (urlParams.get('isSpecial') === 'true') newFilters.isSpecial = 'true';
-      if (urlParams.get('isDiscounted') === 'true') newFilters.isDiscounted = 'true';
-      if (urlParams.get('color')) newFilters.color = urlParams.get('color');
-      if (urlParams.get('size')) newFilters.size = urlParams.get('size');
-      if (urlParams.get('inStock') === 'true') newFilters.inStock = 'true';
-      if (urlParams.get('sortBy')) newFilters.sortBy = urlParams.get('sortBy');
+      if (urlParams.get('isFeatured') === 'true') newFilteRsisFeatured = 'true';
+      if (urlParams.get('isBestSeller') === 'true') newFilteRsisBestSeller = 'true';
+      if (urlParams.get('isTrending') === 'true') newFilteRsisTrending = 'true';
+      if (urlParams.get('isSpecial') === 'true') newFilteRsisSpecial = 'true';
+      if (urlParams.get('isDiscounted') === 'true') newFilteRsisDiscounted = 'true';
+      if (urlParams.get('color')) newFilteRscolor = urlParams.get('color');
+      if (urlParams.get('size')) newFilteRssize = urlParams.get('size');
+      if (urlParams.get('inStock') === 'true') newFilteRsinStock = 'true';
+      if (urlParams.get('sortBy')) newFilteRssortBy = urlParams.get('sortBy');
       
       // Only update if there are changes
       if (JSON.stringify(newFilters) !== JSON.stringify(filters)) {

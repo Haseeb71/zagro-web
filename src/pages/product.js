@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from 'next/router';
-import { Geist, Geist_Mono } from "next/font/google";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Slider from "react-slick";
@@ -13,16 +12,6 @@ import Layout from '../components/Layout';
 import { useAppDispatch } from '../redux/hooks';
 import { addToCart, openCart } from '../redux/slices/cartSlice';
 import { toast } from 'react-hot-toast';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 // Helper function to get proper image URL
 const getImageUrl = (imagePath) => {
@@ -183,24 +172,13 @@ export default function Product() {
 
   // Image gallery settings
   const gallerySettings = {
-    dots: true,
+    dots: false,
     infinite: true,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    arrows: true,
+    arrows: false,
     fade: true,
-    customPaging: function (i) {
-      return (
-        <div className="mt-2">
-          <div className="w-12 h-12 mx-1 rounded-md overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all">
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-xs text-gray-500">Image {i + 1}</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
   };
 
   // Related products slider settings
@@ -210,24 +188,30 @@ export default function Product() {
     speed: 500,
     slidesToShow: 4,
     slidesToScroll: 1,
-    arrows: true,
+    arrows: false,
     responsive: [
       {
         breakpoint: 1024,
         settings: {
           slidesToShow: 3,
+          arrows: false,
+          dots: false,
         }
       },
       {
         breakpoint: 768,
         settings: {
           slidesToShow: 2,
+          arrows: false,
+          dots: false,
         }
       },
       {
         breakpoint: 640,
         settings: {
           slidesToShow: 1,
+          arrows: false,
+          dots: false,
         }
       }
     ]
@@ -263,7 +247,7 @@ export default function Product() {
     if (productData.colorQuantities) {
       try {
         const colors = JSON.parse(productData.colorQuantities);
-        if (Array.isArray(colors) && colors.length > 0) {
+        if (Array.isArray(colors) && coloRslength > 0) {
           if (selectedColor === null || selectedColor === undefined) return false;
 
           // Check if selected color has stock
@@ -301,7 +285,7 @@ export default function Product() {
     if (productData.colorQuantities) {
       try {
         const colors = JSON.parse(productData.colorQuantities);
-        if (Array.isArray(colors) && colors.length > 0) {
+        if (Array.isArray(colors) && coloRslength > 0) {
           if (selectedColor === null || selectedColor === undefined) {
             toast.error('Please select a color');
             return;
@@ -390,7 +374,7 @@ export default function Product() {
   // Loading state
   if (loading) {
     return (
-      <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-white flex items-center justify-center`}>
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading product...</p>
@@ -402,7 +386,7 @@ export default function Product() {
   // Error state
   if (error || !productData) {
     return (
-      <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-white flex items-center justify-center`}>
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,7 +405,7 @@ export default function Product() {
 
   return (
     <Layout>
-      <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-white`}>
+      <div className="min-h-screen bg-white">
 
         {/* Breadcrumbs */}
         <div className="bg-gray-50 py-3">
@@ -586,28 +570,28 @@ export default function Product() {
                 {/* Price */}
                 <div className="mb-6">
                   <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-gray-900">PKR {productData.price || 0}</span>
+                    <span className="text-3xl font-bold text-gray-900">Rs {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
                       <>
-                        <span className="text-lg text-gray-500 line-through">PKR {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
-                        <span className="text-sm text-green-600 font-medium">Save PKR {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
+                        <span className="text-lg text-gray-500 line-through">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
+                        <span className="text-sm text-green-600 font-medium">Save Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
                       </>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over PKR 75</p>
+                  <p className="text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over Rs 75</p>
                 </div>
 
                 {/* Color Selection */}
                 {productData.colorQuantities && (() => {
                   try {
                     const colors = JSON.parse(productData.colorQuantities);
-                    return Array.isArray(colors) && colors.length > 0 ? (
+                    return Array.isArray(colors) && coloRslength > 0 ? (
                       <div className="mb-6">
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-medium text-gray-900">Available Colors <span className="text-red-500">*</span></h3>
                         </div>
                         <div className="flex gap-3 flex-wrap">
-                          {colors.map((colorData, index) => {
+                          {coloRsmap((colorData, index) => {
                             const isOutOfStock = colorData.quantity <= 0;
                             const isSelected = selectedColor === index;
                             const colorHex = getColorHex(colorData.color);
@@ -808,7 +792,7 @@ export default function Product() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">Free shipping on orders over PKR 75</p>
+                      <p className="text-sm text-gray-600">Free shipping on orders over Rs 75</p>
                     </div>
                   </div>
                   <div className="mb-4">
@@ -868,7 +852,7 @@ export default function Product() {
                         <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Details</h4>
                         <ul className="space-y-2 text-gray-700">
                           <li><strong>Category:</strong> {productData.category || 'N/A'}</li>
-                          <li><strong>Price:</strong> PKR {productData.price}</li>
+                          <li><strong>Price:</strong> Rs {productData.price}</li>
                           <li><strong>Quantity Available:</strong> {productData.quantity || 0}</li>
                           <li><strong>Created:</strong> {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}</li>
                         </ul>
@@ -1096,7 +1080,7 @@ export default function Product() {
                         <div className="p-4">
                           <span className="text-xs font-medium text-blue-600">{product.category}</span>
                           <h3 className="mt-1 font-medium text-gray-900">{product.name}</h3>
-                          <p className="mt-1 font-semibold text-gray-900">PKR {product.price}</p>
+                          <p className="mt-1 font-semibold text-gray-900">Rs {product.price}</p>
                           <button className="mt-3 w-full py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-md transition">
                             Add to Cart
                           </button>

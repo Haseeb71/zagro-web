@@ -33,7 +33,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      <main>{children}</main>
+      <main className="pt-15">{children}</main>
       <Footer />
       <CartSlider />
     </div>

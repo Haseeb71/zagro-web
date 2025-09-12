@@ -386,7 +386,7 @@ const OrderStatusPage = () => {
                             <div className="text-gray-600 text-xs space-y-1">
                               <div>Size: {item.size} | Color: {item.color}</div>
                               <div>Quantity: {item.quantity}</div>
-                              <div className="font-semibold text-gray-900">PKR {formatPrice(item.totalPrice)}</div>
+                              <div className="font-semibold text-gray-900">Rs {formatPrice(item.totalPrice)}</div>
                             </div>
                           </div>
                         </div>
@@ -402,26 +402,26 @@ const OrderStatusPage = () => {
                 <div className="space-y-2 text-sm text-gray-700">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span className="text-gray-900">PKR {formatPrice(orderData.checkout.subtotal)}</span>
+                    <span className="text-gray-900">Rs {formatPrice(orderData.checkout.subtotal)}</span>
                   </div>
                   {orderData.checkout.discountAmount > 0 && (
                     <div className="flex justify-between text-green-700">
                       <span>Discount ({orderData.checkout.couponCode}):</span>
-                      <span>-PKR {formatPrice(orderData.checkout.discountAmount)}</span>
+                      <span>-Rs {formatPrice(orderData.checkout.discountAmount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>Shipping:</span>
-                    <span className="text-gray-900">PKR {formatPrice(orderData.checkout.shippingAmount)}</span>
+                    <span className="text-gray-900">Rs {formatPrice(orderData.checkout.shippingAmount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax:</span>
-                    <span className="text-gray-900">PKR {formatPrice(orderData.checkout.taxAmount)}</span>
+                    <span className="text-gray-900">Rs {formatPrice(orderData.checkout.taxAmount)}</span>
                   </div>
                   <div className="border-t border-gray-300 pt-2 mt-3">
                     <div className="flex justify-between text-lg font-bold text-gray-900">
                       <span>Total:</span>
-                      <span>PKR {formatPrice(orderData.checkout.totalAmount)}</span>
+                      <span>Rs {formatPrice(orderData.checkout.totalAmount)}</span>
                     </div>
                   </div>
                 </div>

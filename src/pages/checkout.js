@@ -12,14 +12,23 @@ import Layout from '../components/Layout';
 
 // Helper function to format prices (e.g., 1000 to 1k)
 const formatPrice = (price) => {
-  if (!price || price < 1000) return price;
-  if (price >= 1000000) {
-    return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else if (price >= 1000) {
-    return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  if (!price) return 0;
+
+  // Fix floating point issue
+  const fixedPrice = Number(price.toFixed(2));
+
+  if (fixedPrice < 1000) {
+    return fixedPrice; // return normally if < 1000
   }
-  return price;
+  if (fixedPrice >= 1000000) {
+    return (fixedPrice / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  } else if (fixedPrice >= 1000) {
+    return (fixedPrice / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+
+  return fixedPrice;
 };
+
 
 // Helper function to count words
 const countWords = (text) => {
@@ -49,18 +58,18 @@ const validationSchema = Yup.object({
     .matches(/^[\+]?[0-9\s\-\(\)]+$/, 'Phone number can only contain digits, spaces, hyphens, parentheses, and + sign')
     .test('phone-format', 'Please enter a valid phone number', function (value) {
       if (!value) return false;
-      
+
       // Remove all non-digit characters for basic validation
       const digitsOnly = value.replace(/\D/g, '');
-      
+
       // Check if it's a reasonable length (10-13 digits)
       if (digitsOnly.length < 10 || digitsOnly.length > 13) {
         return false;
       }
-      
+
       // Try to parse with libphonenumber-js for more validation
       try {
-        const phoneNumber = parsePhoneNumber(value, 'PK');
+        const phoneNumber = parsePhoneNumber(value, 'Rs');
         return phoneNumber && phoneNumber.isValid();
       } catch (error) {
         try {
@@ -126,7 +135,7 @@ const CheckoutPage = () => {
   const [couponDetails, setCouponDetails] = useState(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [orderResult, setOrderResult] = useState({ isSuccess: false, message: '', orderNumber: null });
-  
+
   // Customer and order state
   const [customerId, setCustomerId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -191,7 +200,7 @@ const CheckoutPage = () => {
 
       if (couponResponseData && couponResponseData.isValid) {
         const coupon = couponResponseData.coupon;
-        
+
         // Coupon is valid
         setCouponStatus('applied');
         setCouponDetails(coupon);
@@ -381,25 +390,25 @@ const CheckoutPage = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           {/* Enhanced Header */}
-           <div className="mb-8 text-center">
-             <div className="flex justify-center items-center mb-4">
-               <img 
-                 src="/images/logo.png" 
-                 alt="Zagro Footwear" 
-                 className="h-12 w-auto sm:h-14 md:h-16 transition-transform duration-300 hover:scale-105" 
-               />
-               </div>
-             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-               Checkout
-             </h1>
-             <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto">
-               Complete your order for <span className="font-semibold text-blue-600">{totalItems}</span> item{totalItems !== 1 ? 's' : ''}
-             </p>
-             <div className="mt-4 flex justify-center">
-               <div className="w-16 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-             </div>
-           </div>
+          {/* Enhanced Header */}
+          <div className="mb-8 text-center">
+            <div className="flex justify-center items-center mb-4">
+              <img
+                src="/images/logo.png"
+                alt="Zagro Footwear"
+                className="h-12 w-auto sm:h-14 md:h-16 transition-transform duration-300 hover:scale-105"
+              />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+              Checkout
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto">
+              Complete your order for <span className="font-semibold text-blue-600">{totalItems}</span> item{totalItems !== 1 ? 's' : ''}
+            </p>
+            <div className="mt-4 flex justify-center">
+              <div className="w-16 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Checkout Form */}
@@ -410,6 +419,7 @@ const CheckoutPage = () => {
                 onSubmit={handleSubmit}
               >
                 {({ isSubmitting, isValid, dirty, values, errors, touched }) => (
+                  
                   <Form className="space-y-6">
                     {/* Contact Information */}
                     <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
@@ -469,7 +479,7 @@ const CheckoutPage = () => {
                           <Field
                             type="tel"
                             name="phone"
-                            placeholder="+92 300 1234567 or 0300-1234567"
+                            placeholder="+92 300 1234567"
                             className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                           />
                           <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1 flex items-center">
@@ -481,7 +491,7 @@ const CheckoutPage = () => {
                             <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Enter your phone number with country code (e.g., +92 300 1234567) or local format
+                            Enter your phone number (e.g., +92 300 1234567)
                           </p>
                         </div>
                       </div>
@@ -553,7 +563,7 @@ const CheckoutPage = () => {
                             <Field
                               type="text"
                               name="zipCode"
-                              placeholder="12345 or 12345-6789"
+                              placeholder="5400"
                               className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                             />
                             <ErrorMessage name="zipCode" component="div" className="text-red-500 text-sm mt-1 flex items-center">
@@ -578,12 +588,11 @@ const CheckoutPage = () => {
                       </div>
                       <div className="space-y-4">
                         {/* Cash on Delivery - Available */}
-                        <div className={`relative flex items-center space-x-3 p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${
-                          paymentMethod === 'cash_on_delivery' 
-                            ? 'border-green-500 bg-green-50 shadow-lg' 
-                            : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
-                        }`}
-                        onClick={() => setPaymentMethod('cash_on_delivery')}
+                        <div className={`relative flex items-center space-x-3 p-4 border-2 rounded-xl transition-all duration-300 cursor-pointer ${paymentMethod === 'cash_on_delivery'
+                          ? 'border-green-500 bg-green-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
+                          }`}
+                          onClick={() => setPaymentMethod('cash_on_delivery')}
                         >
                           <input
                             type="radio"
@@ -800,16 +809,16 @@ const CheckoutPage = () => {
                         {/* Product Header with Larger Image */}
                         <div className="flex items-start space-x-4 mb-4">
                           {productItems[0].product.image ? (
-                            <div 
+                            <div
                               className="relative group cursor-pointer"
                               onClick={() => {
                                 setPreviewImage(productItems[0].product.image);
                                 setShowImageModal(true);
                               }}
                             >
-                            <img
-                              src={productItems[0].product.image}
-                              alt={productItems[0].product.name}
+                              <img
+                                src={productItems[0].product.image}
+                                alt={productItems[0].product.name}
                                 className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:border-blue-400 group-hover:z-10"
                               />
                               {/* Simple hover tooltip */}
@@ -828,7 +837,7 @@ const CheckoutPage = () => {
                           )}
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2">{productItems[0].product.name}</h3>
-                            <p className="text-sm text-gray-600 mb-2">PKR {formatPrice(productItems[0].product.price)} each</p>
+                            <p className="text-sm text-gray-600 mb-2">Rs {formatPrice(productItems[0].product.price)} each</p>
                             <div className="flex items-center space-x-2">
                               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
                                 {productItems[0].product.category?.name || 'General'}
@@ -842,19 +851,31 @@ const CheckoutPage = () => {
                           {productItems.map((item, itemIndex) => (
                             <div key={item.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                               <div className="flex items-center justify-between">
-                              <div className="flex-1">
+                                <div className="flex-1">
                                   <div className="flex items-center space-x-4 mb-2">
                                     <div className="flex items-center space-x-2">
                                       <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Size:</span>
                                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
                                         {item.selectedSize || 'Pending'}
-                                  </span>
+                                      </span>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                       <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Color:</span>
-                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
-                                        {item.selectedColor || 'Pending'}
-                                  </span>
+                                      <span className="px-2 py-1 bg-transparent text-green-800 rounded-md text-sm font-medium">
+                                        {item.selectedColor ? (
+                                          <div
+                                            className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
+                                            style={{
+                                              backgroundColor: typeof item.selectedColor === 'string'
+                                                ? item.selectedColor
+                                                : item.selectedColor?.hex || item.selectedColor?.code || item.selectedColor?.name || '#ccc'
+                                            }}
+                                            title={typeof item.selectedColor === 'string' ? item.selectedColor : item.selectedColor?.name}
+                                          />
+                                        ) : (
+                                          <span className="text-gray-400">Pending</span>
+                                        )}
+                                      </span>
                                     </div>
                                   </div>
 
@@ -887,34 +908,34 @@ const CheckoutPage = () => {
                                         </svg>
                                       </button>
                                     </div>
-                                </div>
+                                  </div>
 
-                                {/* Warning for missing size/color */}
-                                {(!item.selectedSize || !item.selectedColor) && (
+                                  {/* Warning for missing size/color */}
+                                  {(!item.selectedSize || !item.selectedColor) && (
                                     <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
                                       <div className="flex items-center text-red-800">
                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                      </svg>
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
                                         <span className="font-medium text-sm">Size/Color not selected</span>
-                                    </div>
-                                    <button
+                                      </div>
+                                      <button
                                         onClick={() => router.push(`/product?id=${item.product._id}`)}
                                         className="mt-1 text-red-600 hover:text-blue-800 underline text-sm font-medium"
-                                    >
-                                      Click to select size & color
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                                
+                                      >
+                                        Click to select size & color
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+
                                 {/* Price Display */}
                                 <div className="text-right">
                                   <div className="text-lg font-bold text-gray-900">
-                                    PKR {formatPrice(item.product.price * item.quantity)}
+                                    Rs {formatPrice(item.product.price * item.quantity)}
                                   </div>
                                   <div className="text-xs text-gray-500">
-                                    PKR {formatPrice(item.product.price)} × {item.quantity}
+                                    Rs {formatPrice(item.product.price)} × {item.quantity}
                                   </div>
                                 </div>
                               </div>
@@ -927,7 +948,7 @@ const CheckoutPage = () => {
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-semibold text-gray-700">Subtotal for this product:</span>
                             <span className="text-lg font-bold text-gray-900">
-                              PKR {formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}
+                              Rs {formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}
                             </span>
                           </div>
                         </div>
@@ -1020,25 +1041,25 @@ const CheckoutPage = () => {
                 <div className="border-t border-gray-200 pt-4 space-y-2">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
-                    <span>PKR {formatPrice(subtotal)}</span>
+                    <span>Rs {formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Shipping</span>
-                    <span>PKR {formatPrice(shipping)}</span>
+                    <span>Rs {formatPrice(shipping)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Tax</span>
-                    <span>PKR {formatPrice(tax)}</span>
+                    <span>Rs {formatPrice(tax)}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Discount ({couponDetails?.code})</span>
-                      <span>-PKR {formatPrice(discount)}</span>
+                      <span>-Rs {formatPrice(discount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-semibold text-gray-900 border-t border-gray-200 pt-2">
                     <span>Total</span>
-                    <span>PKR {formatPrice(total)}</span>
+                    <span>Rs {formatPrice(total)}</span>
                   </div>
                 </div>
 
@@ -1050,34 +1071,34 @@ const CheckoutPage = () => {
 
       {/* Order Confirmation Modal */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="text-center">
               {orderResult.isSuccess ? (
                 <>
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Order Placed Successfully!</h3>
-                  <p className="text-gray-600 mb-4">{orderResult.message}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Order Placed Successfully!</h3>
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 px-2">{orderResult.message}</p>
                   {orderResult.orderNumber && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500 mb-2">Order Number: {orderResult.orderNumber}</p>
-                      
+                    <div className="mb-3 sm:mb-4">
+                      <p className="text-xs sm:text-sm text-gray-500 mb-2">Order Number: {orderResult.orderNumber}</p>
+
                       {/* Order Status Info Section */}
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Track Your Order</h4>
-                        <p className="text-xs text-gray-600 mb-3">
+                      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+                        <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Track Your Order</h4>
+                        <p className="text-xs text-gray-600 mb-3 leading-relaxed">
                           Visit our Order Status page and enter your order number to check the status anytime.
                         </p>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                           <input
                             type="text"
                             value={orderResult.orderNumber}
                             readOnly
-                            className="flex-1 text-xs bg-white border border-gray-300 rounded px-2 py-1 font-mono text-gray-700"
+                            className="flex-1 text-xs bg-white border border-gray-300 rounded px-2 py-2 sm:py-1 font-mono text-gray-700 break-all"
                           />
                           <button
                             onClick={() => {
@@ -1086,13 +1107,13 @@ const CheckoutPage = () => {
                               const button = event.target;
                               const originalText = button.textContent;
                               button.textContent = 'Copied!';
-                              button.className = 'px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors';
+                              button.className = 'px-3 py-2 sm:px-2 sm:py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors whitespace-nowrap';
                               setTimeout(() => {
                                 button.textContent = originalText;
-                                button.className = 'px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors';
+                                button.className = 'px-3 py-2 sm:px-2 sm:py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors whitespace-nowrap';
                               }, 2000);
                             }}
-                            className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                            className="px-3 py-2 sm:px-2 sm:py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors whitespace-nowrap"
                           >
                             Copy Order #
                           </button>
@@ -1106,41 +1127,41 @@ const CheckoutPage = () => {
                 </>
               ) : (
                 <>
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Order Failed</h3>
-                  <p className="text-gray-600 mb-4">{orderResult.message}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Order Failed</h3>
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 px-2">{orderResult.message}</p>
                 </>
               )}
-              
-              <div className="flex flex-col space-y-2">
+
+              <div className="flex flex-col space-y-2 sm:space-y-3">
                 {orderResult.isSuccess && (
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <button
                       onClick={() => {
                         window.open('/order-status', '_blank');
                       }}
-                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                      className="flex-1 bg-green-600 text-white py-3 sm:py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-sm sm:text-base"
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
-                      View Order Status
+                      <span className="truncate">View Order Status</span>
                     </button>
-                  <button
-                    onClick={handleContinueShopping}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Continue Shopping
-                  </button>
+                    <button
+                      onClick={handleContinueShopping}
+                      className="flex-1 bg-blue-600 text-white py-3 sm:py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                    >
+                      Continue Shopping
+                    </button>
                   </div>
                 )}
                 <button
                   onClick={handleCloseOrderModal}
-                  className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="w-full bg-gray-600 text-white py-3 sm:py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
                 >
                   Close
                 </button>
@@ -1152,14 +1173,14 @@ const CheckoutPage = () => {
 
       {/* Image Preview Modal */}
       {showImageModal && previewImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
           onClick={() => {
             setShowImageModal(false);
             setPreviewImage(null);
           }}
         >
-          <div 
+          <div
             className="relative max-w-4xl max-h-[90vh] w-full animate-scaleIn"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1175,7 +1196,7 @@ const CheckoutPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
+
             {/* Image container */}
             <div className="relative bg-white rounded-xl overflow-hidden shadow-2xl animate-slideUp">
               <img
@@ -1183,7 +1204,7 @@ const CheckoutPage = () => {
                 alt="Product preview"
                 className="w-full h-auto max-h-[80vh] object-contain transition-all duration-500 hover:scale-105"
               />
-              
+
               {/* Image info overlay */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 animate-fadeInUp">
                 <p className="text-white text-sm font-medium">

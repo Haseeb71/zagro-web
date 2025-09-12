@@ -1,7 +1,5 @@
 import Image from "next/image";
 
-import { Geist, Geist_Mono } from "next/font/google";
-
 import { useEffect, useState } from "react";
 
 import Link from "next/link";
@@ -23,26 +21,6 @@ import categoriesAPI from "../APIs/categories";
 
 
 
-const geistSans = Geist({
-
-  variable: "--font-geist-sans",
-
-  subsets: ["latin"],
-
-});
-
-
-
-const geistMono = Geist_Mono({
-
-  variable: "--font-geist-mono",
-
-  subsets: ["latin"],
-
-});
-
-
-
 export default function Home() {
 
   const [isMounted, setIsMounted] = useState(false);
@@ -61,7 +39,7 @@ export default function Home() {
   // Function to get dynamic background image and color based on category name
   const getCategoryStyle = (categoryName) => {
     const name = categoryName.toLowerCase();
-    
+
     // Define color gradients based on category names
     const colorMap = {
       'men': 'from-blue-400 to-blue-600',
@@ -77,7 +55,7 @@ export default function Home() {
     };
 
     // Get color gradient or default
-    const color = Object.keys(colorMap).find(key => name.includes(key)) 
+    const color = Object.keys(colorMap).find(key => name.includes(key))
       ? colorMap[Object.keys(colorMap).find(key => name.includes(key))]
       : 'from-indigo-400 to-indigo-600';
 
@@ -156,7 +134,7 @@ export default function Home() {
 
       setIsLoading(true);
 
-      
+
 
       // Fetch products by different types
 
@@ -180,7 +158,7 @@ export default function Home() {
 
       console.log("fetching products ---", { featuredRes, newRes, bestsellerRes, trendingRes, specialRes, discountedRes });
 
-      
+
 
       // Set products by type
 
@@ -255,7 +233,7 @@ export default function Home() {
 
   const bannerSliderSettings = {
 
-    dots: true,
+    dots: false,
 
     infinite: true,
 
@@ -269,17 +247,11 @@ export default function Home() {
 
     autoplaySpeed: 5000,
 
-    arrows: true,
+    arrows: false,
 
     fade: true,
 
     cssEase: 'cubic-bezier(0.4, 0, 0.2, 1)',
-
-    prevArrow: <CustomPrevArrow />,
-
-    nextArrow: <CustomNextArrow />,
-
-    dotsClass: 'slick-dots custom-dots',
 
     pauseOnHover: true,
 
@@ -351,69 +323,6 @@ export default function Home() {
 
 
 
-  // Custom Arrow Components
-
-  function CustomPrevArrow(props) {
-
-    const { className, style, onClick } = props;
-
-    return (
-
-      <div
-
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 cursor-pointer group"
-
-        onClick={onClick}
-
-      >
-
-        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 group-hover:scale-110">
-
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-
-          </svg>
-
-        </div>
-
-      </div>
-
-    );
-
-  }
-
-
-
-  function CustomNextArrow(props) {
-
-    const { className, style, onClick } = props;
-
-    return (
-
-      <div
-
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 cursor-pointer group"
-
-        onClick={onClick}
-
-      >
-
-        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 group-hover:scale-110">
-
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-
-          </svg>
-
-        </div>
-
-      </div>
-
-    );
-
-  }
 
 
 
@@ -435,7 +344,7 @@ export default function Home() {
 
     autoplaySpeed: 5000,
 
-    arrows: true,
+    arrows: false,
 
   };
 
@@ -443,7 +352,7 @@ export default function Home() {
 
   const productSliderSettings = {
 
-    dots: true,
+    dots: false,
 
     infinite: true,
 
@@ -505,7 +414,7 @@ export default function Home() {
 
     const baseSettings = {
 
-      dots: false, // No dots on desktop - always show 4 products
+      dots: false, // No dots on any screen size
 
       infinite: false, // No infinite scroll on desktop
 
@@ -516,6 +425,8 @@ export default function Home() {
       slidesToScroll: 1,
 
       autoplay: false,
+
+      arrows: false, // No arrows on any screen size
 
       centerMode: false,
 
@@ -532,6 +443,8 @@ export default function Home() {
             slidesToShow: 4, // Always show 4 products on large screens
 
             dots: false, // Never show dots on large screens
+
+            arrows: false, // Never show arrows on large screens
 
             infinite: false, // Never infinite scroll on large screens
 
@@ -551,7 +464,9 @@ export default function Home() {
 
             slidesToShow: 3, // Show 3 products on tablet
 
-            dots: productCount > 3, // Dots only if more than 3 products
+            dots: false, // No dots on any screen size
+
+            arrows: false, // No arrows on any screen size
 
             infinite: productCount > 3,
 
@@ -571,7 +486,9 @@ export default function Home() {
 
             slidesToShow: 2, // Show 2 products on mobile
 
-            dots: productCount > 2, // Dots only if more than 2 products
+            dots: false, // No dots on any screen size
+
+            arrows: false, // No arrows on any screen size
 
             infinite: productCount > 2,
 
@@ -591,7 +508,9 @@ export default function Home() {
 
             slidesToShow: 1, // Show 1 product on small mobile
 
-            dots: productCount > 1, // Dots only if more than 1 product
+            dots: false, // No dots on any screen size
+
+            arrows: false, // No arrows on any screen size
 
             infinite: productCount > 1,
 
@@ -641,53 +560,12 @@ export default function Home() {
 
     <Layout>
 
-      <div className={`${geistSans.variable} ${geistMono.variable}`}>
+      <div>
 
         {/* Custom CSS for enhanced animations */}
 
         <style jsx>{`
 
-          .custom-dots {
-
-            bottom: 30px !important;
-
-          }
-
-          .custom-dots li {
-
-            margin: 0 8px;
-
-          }
-
-          .custom-dots li button {
-
-            width: 12px;
-
-            height: 12px;
-
-            border-radius: 50%;
-
-            background: rgba(255, 255, 255, 0.5);
-
-            border: none;
-
-            transition: all 0.3s ease;
-
-          }
-
-          .custom-dots li.slick-active button {
-
-            background: white;
-
-            transform: scale(1.3);
-
-          }
-
-          .custom-dots li button:hover {
-
-            background: rgba(255, 255, 255, 0.8);
-
-          }
 
           .banner-content {
 
@@ -783,9 +661,9 @@ export default function Home() {
 
                 {/* Gradient overlay - separate from background image */}
 
-                <div 
+                <div
 
-                  className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent"
+                  className="absolute inset-0 bg-transparent"
 
                 />
 
@@ -793,9 +671,9 @@ export default function Home() {
 
                 {/* Animated overlay patterns */}
 
-                <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-50" />
+                <div className="absolute inset-0 bg-transparent" />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-transparent" />
 
 
 
@@ -811,7 +689,7 @@ export default function Home() {
 
                       <div className="slide-in-left mb-6">
 
-                        <span className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-medium">
+                        <span className="inline-flex items-center px-4 py-2 bg-transparent border border-white/20 rounded-full text-white text-sm font-medium">
 
                           <span className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></span>
 
@@ -871,7 +749,7 @@ export default function Home() {
 
                         </button>
 
-                        <button className="group px-8 py-4 bg-transparent border-2 backdrop-blur-sm bg-white/10 border-white/30 hover:border-white/70 hover:bg-white/20 text-white text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <button className="group px-8 py-4 bg-transparent border-2 border-white/30 hover:border-white/70 hover:bg-transparent text-white text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
 
                           <span className="flex items-center gap-2">
 
@@ -947,7 +825,7 @@ export default function Home() {
 
         <section className="py-20 bg-gray-50">
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
 
             <div className="flex justify-between items-center mb-12" data-aos="fade-up">
 
@@ -999,9 +877,9 @@ export default function Home() {
 
                   {getProductsByType('new').map((product, index) => (
 
-                    <div key={product._id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                    <div key={product._id || index} className="px-0" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
 
-                      <ProductCard 
+                      <ProductCard
 
                         product={product}
 
@@ -1038,7 +916,7 @@ export default function Home() {
 
         <section className="py-12 bg-white">
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
 
             <div className="flex justify-between items-center mb-8" data-aos="fade-up">
 
@@ -1084,9 +962,9 @@ export default function Home() {
 
                   {getProductsByType('bestseller').map((product, index) => (
 
-                    <div key={product._id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
 
-                      <ProductCard 
+                      <ProductCard
 
                         product={product}
 
@@ -1123,7 +1001,7 @@ export default function Home() {
 
         <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
 
             <div className="flex justify-between items-center mb-12" data-aos="fade-up">
 
@@ -1175,9 +1053,9 @@ export default function Home() {
 
                   {getProductsByType('trending').map((product, index) => (
 
-                    <div key={product._id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
 
-                      <ProductCard 
+                      <ProductCard
 
                         product={product}
 
@@ -1212,105 +1090,105 @@ export default function Home() {
 
         {/* Featured Products Hero Slider - COMMENTED OUT */}
         {false && (
-        <section className="py-8 bg-white">
+          <section className="py-8 bg-white">
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" data-aos="fade-up">
+            <div className="px-4 sm:px-6 lg:px-8" data-aos="fade-up">
 
-            {isLoading ? (
+              {isLoading ? (
 
-              <div className="text-center py-12">
+                <div className="text-center py-12">
 
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
 
-                <p className="mt-4 text-gray-600">Loading featured products...</p>
+                  <p className="mt-4 text-gray-600">Loading featured products...</p>
 
-              </div>
+                </div>
 
-            ) : getProductsByType('featured').length > 0 ? (
+              ) : getProductsByType('featured').length > 0 ? (
 
-              <Slider {...featuredSliderSettings} className="featured-slider">
+                <Slider {...featuredSliderSettings} className="featured-slider">
 
-                {getProductsByType('featured').map((product) => (
+                  {getProductsByType('featured').map((product) => (
 
-                  <div key={product._id} className="relative">
+                    <div key={product._id} className="relative">
 
-                    <div className="relative h-[400px] w-full rounded-xl overflow-hidden shadow-lg">
+                      <div className="relative h-[400px] w-full rounded-xl overflow-hidden shadow-lg">
 
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-transparent z-10"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-transparent z-10"></div>
 
 
 
-                      {/* Product Image */}
+                        {/* Product Image */}
 
-                      {product.images && product.images.length > 0 ? (
+                        {product.images && product.images.length > 0 ? (
 
-                        <Image
+                          <Image
 
-                          src={getImageUrl(product.images[0])}
+                            src={getImageUrl(product.images[0])}
 
-                          alt={product.name}
+                            alt={product.name}
 
-                          fill
+                            fill
 
-                          className="object-cover"
+                            className="object-cover"
 
-                        />
+                          />
 
-                      ) : (
+                        ) : (
 
-                        <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
 
-                          <span className="text-gray-500">No Image</span>
+                            <span className="text-gray-500">No Image</span>
+
+                          </div>
+
+                        )}
+
+
+
+                        <div className="absolute left-8 bottom-8 z-20 max-w-lg">
+
+                          <div className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full mb-3">
+
+                            Featured
+
+                          </div>
+
+                          <h2 className="text-3xl font-bold text-white mb-2">{product.name || 'Product Name'}</h2>
+
+                          <p className="text-xl text-white mb-4">Rs {product.price || 0}</p>
+
+                          <p className="text-white mb-4">{product.description?.slice(0, 100) || 'Product Description'}</p>
+
+                          <button className="px-6 py-2 bg-white text-blue-900 font-semibold rounded-full shadow hover:bg-blue-50 transition">
+
+                            Shop Now
+
+                          </button>
 
                         </div>
-
-                      )}
-
-
-
-                      <div className="absolute left-8 bottom-8 z-20 max-w-lg">
-
-                        <div className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full mb-3">
-
-                          Featured
-
-                        </div>
-
-                        <h2 className="text-3xl font-bold text-white mb-2">{product.name || 'Product Name'}</h2>
-
-                        <p className="text-xl text-white mb-4">PKR {product.price || 0}</p>
-
-                        <p className="text-white mb-4">{product.description?.slice(0, 100) || 'Product Description'}</p>
-
-                        <button className="px-6 py-2 bg-white text-blue-900 font-semibold rounded-full shadow hover:bg-blue-50 transition">
-
-                          Shop Now
-
-                        </button>
 
                       </div>
 
                     </div>
 
-                  </div>
+                  ))}
 
-                ))}
+                </Slider>
 
-              </Slider>
+              ) : (
 
-            ) : (
+                <div className="text-center py-12">
 
-              <div className="text-center py-12">
+                  <p className="text-gray-600">No featured products available at the moment.</p>
 
-                <p className="text-gray-600">No featured products available at the moment.</p>
+                </div>
 
-              </div>
+              )}
 
-            )}
+            </div>
 
-          </div>
-
-        </section>
+          </section>
         )}
 
 
@@ -1319,7 +1197,7 @@ export default function Home() {
 
         <section className="py-16 bg-gradient-to-r from-orange-50 to-red-50">
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
 
             <div className="flex justify-between items-center mb-12" data-aos="fade-up">
 
@@ -1359,7 +1237,7 @@ export default function Home() {
 
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
 
-                <p className="mt-4 text-gray-600">Loading special offers...</p>
+                <p className="mt-4 text-gray-600">Loading special offeRs..</p>
 
               </div>
 
@@ -1373,9 +1251,9 @@ export default function Home() {
 
                   {[...getProductsByType('special'), ...getProductsByType('discounted')].map((product, index) => (
 
-                    <div key={product._id || index} className="px-2" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
 
-                      <ProductCard 
+                      <ProductCard
 
                         product={product}
 
@@ -1408,11 +1286,11 @@ export default function Home() {
 
 
 
-        {/* Category Banners */}
+        {/* Category Banners
 
         <section className="py-12 bg-gray-50">
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
 
             <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center" data-aos="fade-up">Shop by Category</h2>
 
@@ -1444,26 +1322,26 @@ export default function Home() {
                       data-aos-delay={index * 100}
                     >
                       {/* Dynamic Background Image */}
-                      <div 
+        {/* <div 
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                         style={{
                           backgroundImage: `url(${imageUrl})`
                         }}
-                      ></div>
+                      ></div> */}
 
-                      {/* Gradient Overlay */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-60 group-hover:opacity-70 transition`}></div>
+        {/* Gradient Overlay
+                      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-60 group-hover:opacity-70 transition`}></div> */}
 
-                      {/* Content */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+        {/* Content */}
+        {/* <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                         <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">
                           {category.name}
                         </h3>
                         <button className="mt-4 px-6 py-2 bg-white text-gray-900 font-medium rounded-full shadow transform group-hover:scale-105 transition">
                           Explore
                         </button>
-                      </div>
-                    </Link>
+                      </div> */}
+        {/* </Link>
                   );
                 })}
               </div>
@@ -1471,7 +1349,7 @@ export default function Home() {
 
           </div>
 
-        </section>
+        </section> */}
 
 
 
@@ -1513,7 +1391,7 @@ export default function Home() {
 
                 <Image
 
-                  src="/images/shoes/featured-shoe.png"
+                  src="data:image/jpeg;base64,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"
 
                   alt="EVAPOR8 2.0"
 
@@ -1529,11 +1407,11 @@ export default function Home() {
 
                 <div className="absolute bottom-0 left-0 right-0 text-center">
 
-                  <div className="inline-block bg-black/80 backdrop-blur-sm px-6 py-2 rounded-full">
+                  <div className="inline-block bg-transparent px-6 py-2 rounded-full">
 
                     <Image
 
-                      src="/images/logo-evapor8.png"
+                      src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAJQAlAMBIgACEQEDEQH/xAAbAAEAAQUBAAAAAAAAAAAAAAAAAwIEBQYHAf/EAEAQAAIBAwEEBQkDCgcAAAAAAAABAgMEEQUGEiExIkFRYXETFDJCgZGx0eGCocEHFRYzU3KSk9LwIyREVGOywv/EABYBAQEBAAAAAAAAAAAAAAAAAAABAv/EABcRAQEBAQAAAAAAAAAAAAAAAAARASH/2gAMAwEAAhEDEQA/AO4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFMZwnnclGWHh4ecAVAAACG7uqNpQlWuasadOPOUnwK6NWnWpRqUpxnCSypReUwKwAAAAAAAAAAAAAAAAABaavCpU0q9hReKsqE1B9+68HIdNr1dNdOvZVZ05JLiur5ruZ2atJRpTk+Si39xxSlUlvZkt3PZ1dxB1PZraCjrNviSVO7pr/Fpf+l3GaycaScJwqUakqc4+i4trd8GiSte6jJJVNRvJZ5LzmY7g2L8pdxCF5pdNV8yUardBSy89DEt1ce1Z72a5YahqFnKpKzuJ2/lUt9Rw845MtYUYxlOSXSn6UnxcvF82SpcCarZLLbPULXFO8jC6i+KnPoSS9i4+43PQ9YttYso3FtLiuE4PnB/3yOVb29HdajLsbXFe0kta1xYylVsrmVKckuMPSz15XZlDNR2IGjaft1NOnDUrVJZ3alWk/Rfbu/I2WltDpFSSitQt4t4wqk9zOerj19xoZQHiaaymmu1HoAAAAAAAAAAAYzaW68z0G+rJ7slScYvvfBfE4zCo609/Lxl4Ov7Y2Ub/AGcvaTc95U3KmovjKaXBe1nIacHTk4OMoyjwcZLDRBdwnPqm0uwkWXxk8sjppouFRqOKlGnUcXye6+IFBUUrmVxIrzBTgrZSSD1yc8eU6cV6r6ylwhNKnLO4+D3uk39x6OvJRkNL12+0lJUa0ZQfOm8uH3/Q2vT9trOriN7RnRk/Wh0o/P4mhyjldXEo3MdQqOv2mqWF5jza7o1G/VU1ve7mXaeTi0Xu8Vw7y/tNc1Cyadvd1Ul6rlmPufAtHWwYjZnVpavpqr1YxjWi92aj195lygAAAAAxWuV+hC3j6UmpS8F9fgY+WnWl3hXVtTrN8nKPH39RJr+n37r+e6ZUjKeEqlCrHMZ96a4p/cYmltHdWnQ1HQ7yk1wcqS34v+/EgvvzBo9hGV1O1c/J+p0p48F1k1vqF9cSqwoWkYunJJRk8NJ5xnj3fQtI7aaRBrziVxQf/JSwW9htRo1K7uqtS8jGFeWYPGeCbzw9qCspqGzunX9V1alOVKo/TdFqO8+9Ywy1ex2nNcK10vtR/pJ/0v0F/wCviuzMWex2t0GXBajT9sZfICynsXatdC7rL96KZZ1diqm9mlfx+1S+pnFtRoT4LU6GefHK/Aq/SHR3xWoUH4Nga3LY7UF6FW2l9pr8CJ7I6t1Roy8Kn0Nne0ujQ56hS9ik/wACl7X6FB4/OFNvuTEGtLZPVW8OnSS7XURLHY2+l+suLaPg5P8AAy1xt5s/STbvFJrqWPmYm6/KVpceFra3dznl5OlKX/VMQXFHYyKebi9b7VThj4mQobPaXZre8gptLLlVlvfHgatV261++e7pWzd6k+U6lvJY7+PyM1oUdUvHGrq2jVqs+f8AmanRXhH0V7hEbFotSNSrUlbrNBRwpxXQb7u32GYIqLk4Lfp7jx6OSUoAAAAAAAA8KXSg+cI+4rAEfkaf7OH8KHkaf7OH8KJABE7ei+dGm/sIpdnavnb0f5aJwBb+Y2n+1ofy4/IkhQo0/wBXShD92KRIAPMHoAA8wegAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//Z"
 
                       alt="EVAPOR8 2.0"
 
@@ -1621,9 +1499,9 @@ export default function Home() {
 
                 <div className="mb-6">
 
-                  <span className="text-2xl font-bold">PKR 149.99</span>
+                  <span className="text-2xl font-bold">Rs 149.99</span>
 
-                  <span className="ml-2 text-gray-400 line-through">PKR 189.99</span>
+                  <span className="ml-2 text-gray-400 line-through">Rs 189.99</span>
 
                   <span className="ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
 
@@ -1691,7 +1569,7 @@ export default function Home() {
 
                 placeholder="Enter your email address"
 
-                className="flex-1 px-6 py-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-lg"
+                className="flex-1 text-black outline-none px-6 py-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-lg"
 
               />
 
@@ -1717,9 +1595,9 @@ export default function Home() {
 
       {/* Promotion Modal */}
 
-      <PromotionModal 
+      <PromotionModal
 
-        isOpen={isPromotionModalOpen} 
+        isOpen={isPromotionModalOpen}
 
         onClose={handleClosePromotionModal}
 
