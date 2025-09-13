@@ -9,6 +9,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import eproductsAPI from '../APIs/eproducts';
 import Layout from '../components/Layout';
+import ProductCard from '../components/ProductCard';
 import { useAppDispatch } from '../redux/hooks';
 import { addToCart, openCart } from '../redux/slices/cartSlice';
 import { toast } from 'react-hot-toast';
@@ -169,6 +170,8 @@ export default function Product() {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [similarProducts, setSimilarProducts] = useState([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(true);
 
   // Image gallery settings
   const gallerySettings = {
@@ -183,6 +186,42 @@ export default function Product() {
 
   // Related products slider settings
   const relatedProductsSettings = {
+    dots: false,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    arrows: false,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          arrows: false,
+          dots: false,
+        }
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+          arrows: false,
+          dots: false,
+        }
+      },
+      {
+        breakpoint: 640,
+        settings: {
+          slidesToShow: 1,
+          arrows: false,
+          dots: false,
+        }
+      }
+    ]
+  };
+
+  // Similar products slider settings
+  const similarProductsSettings = {
     dots: false,
     infinite: true,
     speed: 500,
@@ -247,7 +286,7 @@ export default function Product() {
     if (productData.colorQuantities) {
       try {
         const colors = JSON.parse(productData.colorQuantities);
-        if (Array.isArray(colors) && coloRslength > 0) {
+        if (Array.isArray(colors) && colors.length > 0) {
           if (selectedColor === null || selectedColor === undefined) return false;
 
           // Check if selected color has stock
@@ -285,7 +324,7 @@ export default function Product() {
     if (productData.colorQuantities) {
       try {
         const colors = JSON.parse(productData.colorQuantities);
-        if (Array.isArray(colors) && coloRslength > 0) {
+        if (Array.isArray(colors) && colors.length > 0) {
           if (selectedColor === null || selectedColor === undefined) {
             toast.error('Please select a color');
             return;
@@ -330,6 +369,28 @@ export default function Product() {
     toast.success(`${productData.name} added to cart!`);
   };
 
+  // Fetch similar products
+  const fetchSimilarProducts = async (productId) => {
+    if (!productId) return;
+
+    try {
+      setLoadingSimilar(true);
+      const response = await eproductsAPI.getSimilarProducts(productId, {
+        page: 1,
+        perPage: 8,
+        type: '' // You can customize this based on product type
+      });
+      
+      if (response && response.data && response.data.products) {
+        setSimilarProducts(response.data.products);
+      }
+    } catch (err) {
+      console.error('Error fetching similar products:', err);
+    } finally {
+      setLoadingSimilar(false);
+    }
+  };
+
   // Fetch product data
   useEffect(() => {
     const fetchProduct = async () => {
@@ -344,6 +405,8 @@ export default function Product() {
         if (response && response.data && response.data.product) {
           console.log('Product Data:', response.data.product);
           setProductData(response.data.product);
+          // Fetch similar products after getting product data
+          fetchSimilarProducts(response.data.product._id);
         } else {
           console.log('No product data found in response');
           setError('Product not found');
@@ -514,7 +577,7 @@ export default function Product() {
               {/* Product Info */}
               <div data-aos="fade-left">
                 {/* Product badges */}
-                <div className="flex gap-2 mb-3 flex-wrap">
+                {/* <div className="flex gap-2 mb-3 flex-wrap">
                   {productData.isFeatured === true && (
                     <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
                       Featured
@@ -543,7 +606,7 @@ export default function Product() {
                   <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                     In Stock ({productData.quantity || 0})
                   </span>
-                </div>
+                </div> */}
 
                 {/* Product title */}
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{productData.name}</h1>
@@ -570,11 +633,11 @@ export default function Product() {
                 {/* Price */}
                 <div className="mb-6">
                   <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-gray-900">Rs {productData.price || 0}</span>
+                    <span className="text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
                       <>
-                        <span className="text-lg text-gray-500 line-through">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
-                        <span className="text-sm text-green-600 font-medium">Save Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
+                        <span className="text-xl text-gray-500 line-through font-alumni">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
+                        <span className="text-sm text-green-600 font-medium font-alumni">Save Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
                       </>
                     )}
                   </div>
@@ -585,13 +648,13 @@ export default function Product() {
                 {productData.colorQuantities && (() => {
                   try {
                     const colors = JSON.parse(productData.colorQuantities);
-                    return Array.isArray(colors) && coloRslength > 0 ? (
+                    return Array.isArray(colors) && colors.length > 0 ? (
                       <div className="mb-6">
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-medium text-gray-900">Available Colors <span className="text-red-500">*</span></h3>
                         </div>
                         <div className="flex gap-3 flex-wrap">
-                          {coloRsmap((colorData, index) => {
+                          {colors.map((colorData, index) => {
                             const isOutOfStock = colorData.quantity <= 0;
                             const isSelected = selectedColor === index;
                             const colorHex = getColorHex(colorData.color);
@@ -852,7 +915,7 @@ export default function Product() {
                         <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Details</h4>
                         <ul className="space-y-2 text-gray-700">
                           <li><strong>Category:</strong> {productData.category || 'N/A'}</li>
-                          <li><strong>Price:</strong> Rs {productData.price}</li>
+                          <li><strong>Price:</strong> <span className="font-alumni">Rs {productData.price}</span></li>
                           <li><strong>Quantity Available:</strong> {productData.quantity || 0}</li>
                           <li><strong>Created:</strong> {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}</li>
                         </ul>
@@ -1061,40 +1124,39 @@ export default function Product() {
           </div>
         </section>
 
-        {/* Related Products */}
-        <section className="py-12">
+        {/* You May Also Like Section */}
+        <section className="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8" data-aos="fade-up">You Might Also Like</h2>
+            <div className="flex justify-between items-center mb-12" data-aos="fade-up">
+              <div>
+                <h2 className="text-4xl font-bold text-gray-900 mb-2">You May Also Like</h2>
+                <p className="text-gray-600">Discover similar products that match your style</p>
+              </div>
+            </div>
 
-            <div data-aos="fade-up">
-              {productData.relatedProducts && Array.isArray(productData.relatedProducts) && productData.relatedProducts.length > 0 ? (
-                <Slider {...relatedProductsSettings} className="related-products-slider -mx-2">
-                  {productData.relatedProducts.map((product) => (
-                    <div key={product.id} className="px-2">
-                      <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-transform hover:scale-105 duration-300">
-                        <div className="relative aspect-square bg-gray-200">
-                          <div className="flex items-center justify-center h-full">
-                            <span className="text-gray-500">Image: {product.image}</span>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <span className="text-xs font-medium text-blue-600">{product.category}</span>
-                          <h3 className="mt-1 font-medium text-gray-900">{product.name}</h3>
-                          <p className="mt-1 font-semibold text-gray-900">Rs {product.price}</p>
-                          <button className="mt-3 w-full py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-md transition">
-                            Add to Cart
-                          </button>
-                        </div>
-                      </div>
+            {loadingSimilar ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading similar products...</p>
+              </div>
+            ) : similarProducts.length > 0 ? (
+              <div data-aos="fade-up" data-aos-delay="200">
+                <Slider {...similarProductsSettings} className="similar-products-slider">
+                  {similarProducts.map((product, index) => (
+                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                      <ProductCard
+                        product={product}
+                        className="max-w-sm mx-auto"
+                      />
                     </div>
                   ))}
                 </Slider>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No related products available at the moment.</p>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No similar products available at the moment.</p>
+              </div>
+            )}
           </div>
         </section>
 

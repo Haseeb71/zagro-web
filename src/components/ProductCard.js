@@ -18,6 +18,8 @@ const ProductCard = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [nextImageIndex, setNextImageIndex] = useState(0);
+  const [showNextImage, setShowNextImage] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
@@ -193,14 +195,22 @@ const ProductCard = ({
     if (isHovered && product.images && product.images.length > 1) {
       // Start the image transition loop on hover
       intervalRef.current = setInterval(() => {
-        setIsTransitioning(true);
-        setTimeout(() => {
-          setCurrentImageIndex((prevIndex) => 
-            (prevIndex + 1) % product.images.length
-          );
-          setIsTransitioning(false);
-        }, 200); // Half of the transition duration
-      }, 1000); // Transition every second
+        setCurrentImageIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % product.images.length;
+          setNextImageIndex(nextIndex);
+          setShowNextImage(true);
+          setIsTransitioning(true);
+          
+          // After slide animation completes, update current image
+          setTimeout(() => {
+            setCurrentImageIndex(nextIndex);
+            setShowNextImage(false);
+            setIsTransitioning(false);
+          }, 1200); // Match slideOutToLeft animation duration
+          
+          return prevIndex; // Don't update immediately, let the animation handle it
+        });
+      }, 3000); // Transition every 3 seconds to allow for longer animation
 
       return () => {
         if (intervalRef.current) {
@@ -216,6 +226,8 @@ const ProductCard = ({
       // Reset to first image when hover ends
       if (!isHovered) {
         setCurrentImageIndex(0);
+        setNextImageIndex(0);
+        setShowNextImage(false);
         setIsTransitioning(false);
       }
     }
@@ -232,18 +244,18 @@ const ProductCard = ({
   
   const variants = {
     default: {
-      imageSize: 'w-full h-80 sm:h-72 md:h-80 lg:h-96',
+      imageSize: 'w-full h-100 sm:h-72 md:h-80 lg:h-100',
       cardPadding: 'p-0',
-      titleSize: 'text-lg sm:text-xl md:text-2xl',
-      priceSize: 'text-xl sm:text-2xl md:text-3xl',
+      titleSize: 'text-sm sm:text-base md:text-lg',
+      priceSize: 'text-base sm:text-lg md:text-xl',
       showRating: true,
       showActions: true
     },
     compact: {
       imageSize: 'w-20 h-20',
       cardPadding: 'p-3',
-      titleSize: 'text-sm',
-      priceSize: 'text-base',
+      titleSize: 'text-xs',
+      priceSize: 'text-sm',
       showRating: true,
       showActions: false
     },
@@ -251,7 +263,7 @@ const ProductCard = ({
       imageSize: 'w-16 h-16',
       cardPadding: 'p-2',
       titleSize: 'text-xs',
-      priceSize: 'text-sm',
+      priceSize: 'text-xs',
       showRating: false,
       showActions: false
     }
@@ -349,6 +361,7 @@ const ProductCard = ({
   }, []);
 
 
+
   if (variant === 'compact' || variant === 'minimal') {
     // Keep original design for compact and minimal variants
     return (
@@ -370,18 +383,18 @@ const ProductCard = ({
         </div>
         <div className="space-y-2">
           <h3 
-            className={`${currentVariant.titleSize} font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2 cursor-pointer hover:scale-105 transform`}
+            className={`${currentVariant.titleSize} font-product font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2 cursor-pointer hover:scale-105 transform`}
             onClick={handleProductClick}
             onKeyDown={handleKeyDown}
             role="button"
             tabIndex={0}
             aria-label={`View product: ${product.name}`}
           >
-            {product.name.length > 16 ? product.name.slice(0, 16) + '...' : product.name}
+            {product.name.length > 10 ? product.name.slice(0, 10) + '...' : product.name}
           </h3>
           <div className="flex items-center justify-between">
-            <span className={`${currentVariant.priceSize} font-bold text-blue-600`}>
-              Rs {formatPrice(product.price)}
+            <span className={`${currentVariant.priceSize} font-product font-bold text-blue-600`}>
+              <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>
             </span>
           </div>
         </div>
@@ -391,39 +404,36 @@ const ProductCard = ({
 
   return (
     <div 
-      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-white ${className}`}
+      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-transparent ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Product Image Container */}
       <div className={`relative ${currentVariant.imageSize} overflow-hidden rounded-t-2xl`}>
         {product.images && product.images.length > 0 ? (
-          <>
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Current Image */}
             <img 
               src={getImageUrl(product.images[currentImageIndex])} 
               alt={product.name}
-              className={`w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
-                isTransitioning ? 'animate-smoothFade' : ''
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
+                isTransitioning && showNextImage ? 'animate-slideOutToLeft' : ''
               }`}
               loading="lazy"
               decoding="async"
             />
-            {/* Image indicators - only show on hover */}
-            {product.images.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {product.images.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentImageIndex 
-                        ? 'bg-white scale-125 shadow-lg' 
-                        : 'bg-white/50 hover:bg-white/75'
-                    }`}
-                  />
-                ))}
-              </div>
+            
+            {/* Next Image - only shown during transition */}
+            {isTransitioning && showNextImage && (
+              <img 
+                src={getImageUrl(product.images[nextImageIndex])} 
+                alt={product.name}
+                className="absolute inset-0 w-full h-full object-cover animate-slideInFromRight group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
+              />
             )}
-          </>
+          </div>
         ) : (
           <div className={`${currentVariant.imageSize} bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center`}>
             <span className="text-gray-500 text-lg font-medium">No Image</span>
@@ -432,7 +442,7 @@ const ProductCard = ({
 
         {/* Discount Badge */}
         {product.discountPercentage > 0 && (
-          <div className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-bold shadow-lg">
+          <div className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-product font-bold shadow-lg">
             -{product.discountPercentage}%
           </div>
         )}
@@ -481,35 +491,45 @@ const ProductCard = ({
 
         {/* Product Name */}
         <h3 
-          className={`${currentVariant.titleSize} font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200`}
+          className={`${currentVariant.titleSize} font-product font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200`}
           onClick={handleProductClick}
           onKeyDown={handleKeyDown}
           role="button"
           tabIndex={0}
           aria-label={`View product: ${product.name}`}
         >
-          {product.name.length > 10 ? product.name.slice(0, 12) + '...' : product.name}
+          {/* {product.name.length > 10 ? product.name.slice(0, 20) + '...' : product.name} */}
+          {product.name}
         </h3>
 
         {/* Rating */}
         {currentVariant.showRating && (
           <div className="flex items-center space-x-2">
             <div>
-              <RatingStars rating={product.rating} size="sm" showRating={false} />
+              <RatingStars 
+                rating={product.rating} 
+                size="lg" 
+                showRating={false} 
+                interactive={true}
+                onRatingChange={(rating) => {
+                  console.log(`Rating changed to: ${rating}`);
+                  // You can add your rating submission logic here
+                }}
+              />
             </div>
-            <span className="text-sm text-gray-500 font-medium">
+            {/* <span className="text-sm text-gray-500 font-medium">
               ({product.reviewCount || 0})
-            </span>
+            </span> */}
           </div>
         )}
 
         {/* Price Section */}
         <div className="flex items-center space-x-3">
-          <span className={`${currentVariant.priceSize} font-bold text-red-600`}>
-            Rs {formatPrice(product.price)}
+          <span className={`${currentVariant.priceSize} font-product font-medium text-black`}>
+            <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>
           </span>
           {product.discountPercentage > 0 && (
-            <span className="text-lg text-gray-500 line-through font-medium">
+            <span className="text-sm text-red-500 line-through font-medium font-alumni">
               Rs {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
             </span>
           )}
@@ -543,16 +563,16 @@ const ProductCard = ({
                 <div className="flex items-center space-x-2">
                   {product.discountPercentage > 0 ? (
                     <>
-                      <span className="text-lg text-gray-500 line-through">
+                      <span className="text-sm text-gray-500 line-through font-alumni">
                         Rs {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
                       </span>
-                      <span className="text-xl font-bold text-red-600">
-                        Rs {formatPrice(product.price)}
+                      <span className="text-lg font-product font-bold text-red-600">
+                        <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>
                       </span>
                     </>
                   ) : (
-                    <span className="text-xl font-bold text-gray-900">
-                      Rs {formatPrice(product.price)}
+                    <span className="text-lg font-product font-bold text-gray-900">
+                      <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>
                     </span>
                   )}
                 </div>
@@ -632,7 +652,7 @@ const ProductCard = ({
                             {/* Disabled overlay - Red diagonal line with transparency */}
                             {isDisabled && (
                               <div className="absolute inset-0 rounded-full bg-black backdrop-blur-sm flex items-center justify-center">
-                                <div className="w-[-webkit-fill-available] rounded-full h-1 bg-red-500 transform rotate-45 shadow-sm"></div>
+                                <div className="w-full rounded-full h-1 bg-red-500 transform rotate-45 shadow-sm"></div>
                               </div>
                             )}
                           </button>

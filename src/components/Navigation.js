@@ -8,7 +8,7 @@ import { openCart } from '../redux/slices/cartSlice';
 export default function Navigation() {
   const dispatch = useAppDispatch();
   const { totalItems } = useAppSelector(state => state.cart);
-  
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
@@ -28,7 +28,7 @@ export default function Navigation() {
   const [searchPage, setSearchPage] = useState(1);
   const [hasMoreSearchResults, setHasMoreSearchResults] = useState(true);
   const [isLoadingMoreSearch, setIsLoadingMoreSearch] = useState(false);
-  
+
   // Maximum categories to show initially
   const MAX_VISIBLE_CATEGORIES = 3;
 
@@ -55,9 +55,9 @@ export default function Navigation() {
       // Check if click is outside navigation elements
       const navElement = document.querySelector('nav');
       const secondaryNavElement = document.querySelector('.fixed.top-16');
-      
-      if (navElement && !navElement.contains(event.target) && 
-          secondaryNavElement && !secondaryNavElement.contains(event.target)) {
+
+      if (navElement && !navElement.contains(event.target) &&
+        secondaryNavElement && !secondaryNavElement.contains(event.target)) {
         forceCloseDropdown();
       }
     };
@@ -89,7 +89,7 @@ export default function Navigation() {
     try {
       setIsLoadingCategories(true);
       const response = await categoriesAPI.getAllCategories();
-      
+
       if (response?.data?.categories) {
         setCategories(response.data.categories);
       } else if (response?.data) {
@@ -113,16 +113,16 @@ export default function Navigation() {
     try {
       setIsLoadingSubCategories(prev => ({ ...prev, [categoryId]: true }));
       const response = await categoriesAPI.getAllSubCategoriesByCategory(categoryId);
-      
+
       if (response?.data?.subCategories) {
-        setSubCategories(prev => ({ 
-          ...prev, 
-          [categoryId]: response.data.subCategories 
+        setSubCategories(prev => ({
+          ...prev,
+          [categoryId]: response.data.subCategories
         }));
       } else if (response?.data) {
-        setSubCategories(prev => ({ 
-          ...prev, 
-          [categoryId]: Array.isArray(response.data) ? response.data : [] 
+        setSubCategories(prev => ({
+          ...prev,
+          [categoryId]: Array.isArray(response.data) ? response.data : []
         }));
       }
     } catch (error) {
@@ -197,16 +197,16 @@ export default function Navigation() {
     try {
       setIsLoadingSecondarySubCategories(prev => ({ ...prev, [categoryId]: true }));
       const response = await categoriesAPI.getAllSubCategoriesByCategory(categoryId);
-      
+
       if (response?.data?.subCategories) {
-        setSecondarySubCategories(prev => ({ 
-          ...prev, 
-          [categoryId]: response.data.subCategories 
+        setSecondarySubCategories(prev => ({
+          ...prev,
+          [categoryId]: response.data.subCategories
         }));
       } else if (response?.data) {
-        setSecondarySubCategories(prev => ({ 
-          ...prev, 
-          [categoryId]: Array.isArray(response.data) ? response.data : [] 
+        setSecondarySubCategories(prev => ({
+          ...prev,
+          [categoryId]: Array.isArray(response.data) ? response.data : []
         }));
       }
     } catch (error) {
@@ -296,7 +296,7 @@ export default function Navigation() {
           setSearchResults(newProducts);
         }
         setSearchError(null);
-        
+
         // Check if there are more results
         const totalPages = response.data.totalPages || 1;
         setHasMoreSearchResults(page < totalPages);
@@ -351,12 +351,12 @@ export default function Navigation() {
         return getImageUrl(image.path);
       }
     }
-    
+
     // Fallback to other possible image fields
     if (product.image) {
       return getImageUrl(product.image);
     }
-    
+
     return null;
   };
 
@@ -613,7 +613,7 @@ export default function Navigation() {
               <Link href="/order-status" className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium">
                 Order Status
               </Link>
-              
+
               {/* Dynamic Categories */}
               {isLoadingCategories ? (
                 // Loading skeleton
@@ -629,18 +629,18 @@ export default function Navigation() {
                     const isHovered = hoveredCategory && (hoveredCategory.id || hoveredCategory._id) === categoryId;
                     const categorySubCategories = subCategories[categoryId] || [];
                     const isLoadingSubs = isLoadingSubCategories[categoryId];
-                    
+
                     return (
-                      <div 
+                      <div
                         key={categoryId || index}
                         className="category-container"
                         onMouseEnter={() => handleCategoryHover(category)}
                         onMouseLeave={handleCategoryLeave}
                       >
-                    <Link 
-                      href={`/categories/${category.slug || category.name?.toLowerCase() || 'category'}`}
-                      className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium flex items-center space-x-1"
-                    >
+                        <Link
+                          href={`/categories/${category.slug || category.name?.toLowerCase() || 'category'}`}
+                          className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium flex items-center space-x-1"
+                        >
                           <span>{category.name}</span>
                         </Link>
                       </div>
@@ -653,7 +653,7 @@ export default function Navigation() {
             {/* Action Buttons */}
             <div className="flex items-center space-x-4">
               {/* Search Button */}
-              <button 
+              <button
                 className="p-2 text-gray-700 hover:text-blue-600 transition-colors duration-300 hover:scale-110 hover:bg-blue-50 rounded-full"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
@@ -663,7 +663,7 @@ export default function Navigation() {
               </button>
 
               {/* Cart Button */}
-              <button 
+              <button
                 onClick={() => dispatch(openCart())}
                 className="p-2 text-gray-700 hover:text-blue-600 transition-colors duration-300 hover:scale-110 hover:bg-blue-50 rounded-full relative"
               >
@@ -685,7 +685,7 @@ export default function Navigation() {
               </button>
 
               {/* Mobile Menu Button */}
-              <button 
+              <button
                 className="md:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors duration-300"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
@@ -706,83 +706,46 @@ export default function Navigation() {
                 <Link href="/order-status" className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300">
                   Order Status
                 </Link>
-                
+
                 {/* Dynamic Categories for Mobile */}
                 {isLoadingCategories ? (
                   // Loading skeleton for mobile
                   <>
-                  {[...Array(3)].map((_, index) => (
+                    {[...Array(3)].map((_, index) => (
                       <div key={index} className="h-8 w-24 bg-gray-200 rounded animate-pulse mx-3"></div>
                     ))}
                   </>
                 ) : (
                   <>
-                  {categories.slice(0, MAX_VISIBLE_CATEGORIES).map((category, index) => {
+                    {categories.slice(0, MAX_VISIBLE_CATEGORIES).map((category, index) => {
                       const categoryId = category.id || category._id;
                       const isHovered = hoveredCategory && (hoveredCategory.id || hoveredCategory._id) === categoryId;
                       const categorySubCategories = subCategories[categoryId] || [];
                       const isLoadingSubs = isLoadingSubCategories[categoryId];
-                      
+
                       return (
                         <div key={categoryId || index}>
-                           <div 
-                             className="flex items-center justify-between px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 cursor-pointer"
-                             onClick={() => {
-                               if (isHovered) {
-                                 closeDropdown();
-                               } else {
-                                 handleCategoryHover(category);
-                                 if (categorySubCategories.length === 0) {
-                                   fetchSubCategories(categoryId);
-                                 }
-                               }
-                             }}
-                           >
-                      <Link 
-                        href={`/categories/${category.slug || category.name?.toLowerCase() || 'category'}`}
+                          <div
+                            className="flex items-center justify-between px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-300 cursor-pointer"
+                            onClick={() => {
+                              if (isHovered) {
+                                closeDropdown();
+                              } else {
+                                handleCategoryHover(category);
+                                if (categorySubCategories.length === 0) {
+                                  fetchSubCategories(categoryId);
+                                }
+                              }
+                            }}
+                          >
+                            <Link
+                              href={`/categories/${category.slug || category.name?.toLowerCase() || 'category'}`}
                               className="flex-1"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {category.name}
-                      </Link>
-                            {categorySubCategories.length > 0 && (
-                              <svg 
-                                className={`w-4 h-4 transition-transform duration-200 ${isHovered ? 'rotate-180' : ''}`}
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            )}
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              {category.name}
+                            </Link>
                           </div>
-                          
-                          {/* Mobile Subcategories */}
-                          {isHovered && (
-                            <div className="ml-4 mt-1 space-y-1">
-                              {isLoadingSubs ? (
-                                <div className="flex items-center px-3 py-2">
-                                  <div className="loading-spinner"></div>
-                                  <span className="ml-2 text-gray-500 text-sm">Loading...</span>
-                                </div>
-                               ) : categorySubCategories.length > 0 ? (
-                                 categorySubCategories.map((subCategory, subIndex) => (
-                                   <Link
-                                     key={subCategory.id || subCategory._id || subIndex}
-                                     href={`/categories/${category.slug || category.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
-                                     className="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors duration-300"
-                                     onClick={() => setIsMenuOpen(false)}
-                                   >
-                                     {subCategory.name}
-                                   </Link>
-                                 ))
-                              ) : (
-                                <div className="px-3 py-2 text-sm text-gray-500">
-                                  No subcategories available
-                                </div>
-                              )}
-                            </div>
-                          )}
                         </div>
                       );
                     })}
@@ -962,7 +925,7 @@ export default function Navigation() {
                             </div>
                           ))}
                         </div>
-                        
+
                         {/* Load More Button */}
                         {hasMoreSearchResults && (
                           <div className="mt-4 text-center">
@@ -1016,9 +979,9 @@ export default function Navigation() {
         const categoryId = hoveredCategory.id || hoveredCategory._id;
         const categorySubCategories = subCategories[categoryId] || [];
         const isLoadingSubs = isLoadingSubCategories[categoryId];
-        
+
         return (
-          <div 
+          <div
             className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm transition-all duration-300"
             onMouseEnter={handleDropdownHover}
             onMouseLeave={handleDropdownLeave}
@@ -1046,7 +1009,7 @@ export default function Navigation() {
                         {subCategory.name}
                       </Link>
                     ))}
-                    
+
                     {/* Special highlight items */}
                     {/* <Link 
                       href="/categories/sale" 
@@ -1088,10 +1051,10 @@ export default function Navigation() {
                           {subCategory.name}
                         </Link>
                       ))}
-                      
+
                       {/* Special highlight items for mobile */}
-                      <Link 
-                        href="/categories/sale" 
+                      <Link
+                        href="/categories/sale"
                         className="text-white hover:text-gray-100 transition-colors duration-300 font-bold text-xs uppercase tracking-wide whitespace-nowrap px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex-shrink-0"
                         onMouseEnter={handleDropdownHover}
                         onMouseLeave={handleDropdownLeave}

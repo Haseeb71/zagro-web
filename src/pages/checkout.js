@@ -8,6 +8,9 @@ import * as Yup from 'yup';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import orderAPI from '../APIs/order/order';
 import Layout from '../components/Layout';
+import FormField from '../components/FormField';
+import ErrorSummary from '../components/ErrorSummary';
+import SubmitButton from '../components/SubmitButton';
 // import OrderConfirmationModal from '../components/OrderConfirmationModal';
 
 // Helper function to format prices (e.g., 1000 to 1k)
@@ -421,6 +424,12 @@ const CheckoutPage = () => {
                 {({ isSubmitting, isValid, dirty, values, errors, touched }) => (
                   
                   <Form className="space-y-6">
+                    {/* Error Summary */}
+                    <ErrorSummary 
+                      errors={errors} 
+                      touched={touched} 
+                      isSubmitting={isSubmitting} 
+                    />
                     {/* Contact Information */}
                     <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
                       <div className="flex items-center mb-4">
@@ -432,61 +441,31 @@ const CheckoutPage = () => {
                         <h2 className="text-lg font-semibold text-gray-900">Contact Information</h2>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">First Name</label>
-                          <Field
-                            type="text"
-                            name="firstName"
-                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                            placeholder="Enter your first name"
-                          />
-                          <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </ErrorMessage>
-                        </div>
+                        <FormField
+                          name="firstName"
+                          type="text"
+                          label="First Name"
+                          placeholder="Enter your first name"
+                        />
+                        <FormField
+                          name="lastName"
+                          type="text"
+                          label="Last Name"
+                          placeholder="Enter your last name"
+                        />
+                        <FormField
+                          name="email"
+                          type="email"
+                          label="Email"
+                          placeholder="Enter your email address"
+                        />
                         <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
-                          <Field
-                            type="text"
-                            name="lastName"
-                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                            placeholder="Enter your last name"
-                          />
-                          <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </ErrorMessage>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                          <Field
-                            type="email"
-                            name="email"
-                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                            placeholder="Enter your email address"
-                          />
-                          <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </ErrorMessage>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
-                          <Field
-                            type="tel"
+                          <FormField
                             name="phone"
+                            type="tel"
+                            label="Phone"
                             placeholder="+92 300 1234567"
-                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                           />
-                          <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </ErrorMessage>
                           <p className="text-xs text-gray-500 mt-1 flex items-center">
                             <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -509,69 +488,37 @@ const CheckoutPage = () => {
                         <h2 className="text-lg font-semibold text-gray-900">Shipping Address</h2>
                       </div>
                       <div className="space-y-6">
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
-                          <Field
-                            type="text"
-                            name="address"
-                            placeholder="House/Flat No, Street Name, Area, Landmark"
-                            className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                          />
-                          <ErrorMessage name="address" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </ErrorMessage>
-                          <p className="text-xs text-gray-500 mt-1 flex items-center">
-                            <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Include house number, street name, area, and any nearby landmarks
-                          </p>
-                        </div>
+                        <FormField
+                          name="address"
+                          type="text"
+                          label="Address"
+                          placeholder="House/Flat No, Street Name, Area, Landmark"
+                        />
+                        <p className="text-xs text-gray-500 mt-1 flex items-center">
+                          <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Include house number, street name, area, and any nearby landmarks
+                        </p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
-                            <Field
-                              type="text"
-                              name="city"
-                              placeholder="e.g., Karachi, Lahore"
-                              className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                            />
-                            <ErrorMessage name="city" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </ErrorMessage>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">State/Province</label>
-                            <Field
-                              type="text"
-                              name="state"
-                              placeholder="e.g., Sindh, Punjab"
-                              className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                            />
-                            <ErrorMessage name="state" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </ErrorMessage>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">ZIP Code</label>
-                            <Field
-                              type="text"
-                              name="zipCode"
-                              placeholder="5400"
-                              className="w-full text-gray-900 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                            />
-                            <ErrorMessage name="zipCode" component="div" className="text-red-500 text-sm mt-1 flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </ErrorMessage>
-                          </div>
+                          <FormField
+                            name="city"
+                            type="text"
+                            label="City"
+                            placeholder="e.g., Karachi, Lahore"
+                          />
+                          <FormField
+                            name="state"
+                            type="text"
+                            label="State/Province"
+                            placeholder="e.g., Sindh, Punjab"
+                          />
+                          <FormField
+                            name="zipCode"
+                            type="text"
+                            label="ZIP Code"
+                            placeholder="5400"
+                          />
                         </div>
                       </div>
                     </div>
@@ -703,7 +650,7 @@ const CheckoutPage = () => {
                           name="notes"
                           rows={4}
                           placeholder="Please provide detailed instructions for your order (minimum 10 words, maximum 250 words). Include any special delivery requirements, gift messages, or other important notes..."
-                          className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                          className="outline-none w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                         />
                         <ErrorMessage name="notes" component="div" className="text-red-500 text-sm mt-1" />
                         <div className="flex justify-between items-center mt-1">
@@ -756,26 +703,15 @@ const CheckoutPage = () => {
                     )}
 
                     {/* Place Order Button */}
-                    <button
-                      type="submit"
-                      disabled={
-                        isSubmitting ||
-                        isProcessing ||
-                        !isValid ||
-                        !dirty ||
-                        cartItems.some(item => !item.selectedSize || !item.selectedColor)
-                      }
-                      className={`cursor-pointer w-full py-2.5 px-4 rounded-lg font-medium transition-colors mt-4 ${isSubmitting ||
-                        isProcessing ||
-                        !isValid ||
-                        !dirty ||
-                        cartItems.some(item => !item.selectedSize || !item.selectedColor)
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
-                    >
-                      {isSubmitting || isProcessing ? 'Processing...' : 'Place Order'}
-                    </button>
+                    <SubmitButton
+                      isSubmitting={isSubmitting}
+                      isProcessing={isProcessing}
+                      isValid={isValid}
+                      dirty={dirty}
+                      errors={errors}
+                      touched={touched}
+                      cartItems={cartItems}
+                    />
                   </Form>
                 )}
               </Formik>
@@ -837,7 +773,7 @@ const CheckoutPage = () => {
                           )}
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2">{productItems[0].product.name}</h3>
-                            <p className="text-sm text-gray-600 mb-2">Rs {formatPrice(productItems[0].product.price)} each</p>
+                            <p className="text-base text-gray-600 mb-2 font-alumni-lg">Rs {formatPrice(productItems[0].product.price)} each</p>
                             <div className="flex items-center space-x-2">
                               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
                                 {productItems[0].product.category?.name || 'General'}
@@ -948,7 +884,7 @@ const CheckoutPage = () => {
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-semibold text-gray-700">Subtotal for this product:</span>
                             <span className="text-lg font-bold text-gray-900">
-                              Rs {formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}
+                              <span className="font-alumni-xl">Rs {formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}</span>
                             </span>
                           </div>
                         </div>
@@ -968,12 +904,12 @@ const CheckoutPage = () => {
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="Enter coupon code"
-                      className="flex-1 text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="outline-none flex-1 text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       onKeyPress={(e) => e.key === 'Enter' && validateAndApplyCoupon()}
                     />
                     <button
                       onClick={validateAndApplyCoupon}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                     >
                       Apply
                     </button>

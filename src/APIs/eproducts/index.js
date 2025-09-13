@@ -94,9 +94,26 @@ const getProductById = async (id) => {
   return response;
 }
 
+const getSimilarProducts = async (id, params = {}) => {
+  const { page = 1, perPage = 10, type = "", search = "" } = params;
+
+  const payload = {
+    page,
+    perPage
+  };
+
+  // Only add optional parameters to payload if they have values
+  if (type !== "") payload.type = type;
+  if (search !== "") payload.search = search;
+
+  const response = await API.postMethod(`${ENDPOINT.products.getSimilarProducts.replace(':id', id)}`, false, payload);
+  return response;
+}
+
 export default {
   getLandingPageProducts,
   getProducts,
   getProductsByFilters,
-  getProductById
+  getProductById,
+  getSimilarProducts
 }

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Layout from '../../components/Layout';
 import ProductCard from '../../components/ProductCard';
+import Dropdown from '../../components/dropdown/dropdown';
 import eproductsAPI from '../../APIs/eproducts';
 import categoriesAPI from '../../APIs/categories';
 
@@ -201,15 +202,15 @@ export default function CategoryPage() {
       const newFilters = { ...filters };
       
       // Check for filter parameters in URL
-      if (urlParams.get('isFeatured') === 'true') newFilteRsisFeatured = 'true';
-      if (urlParams.get('isBestSeller') === 'true') newFilteRsisBestSeller = 'true';
-      if (urlParams.get('isTrending') === 'true') newFilteRsisTrending = 'true';
-      if (urlParams.get('isSpecial') === 'true') newFilteRsisSpecial = 'true';
-      if (urlParams.get('isDiscounted') === 'true') newFilteRsisDiscounted = 'true';
-      if (urlParams.get('color')) newFilteRscolor = urlParams.get('color');
-      if (urlParams.get('size')) newFilteRssize = urlParams.get('size');
-      if (urlParams.get('inStock') === 'true') newFilteRsinStock = 'true';
-      if (urlParams.get('sortBy')) newFilteRssortBy = urlParams.get('sortBy');
+      if (urlParams.get('isFeatured') === 'true') newFilters.isFeatured = 'true';
+      if (urlParams.get('isBestSeller') === 'true') newFilters.isBestSeller = 'true';
+      if (urlParams.get('isTrending') === 'true') newFilters.isTrending = 'true';
+      if (urlParams.get('isSpecial') === 'true') newFilters.isSpecial = 'true';
+      if (urlParams.get('isDiscounted') === 'true') newFilters.isDiscounted = 'true';
+      if (urlParams.get('color')) newFilters.color = urlParams.get('color');
+      if (urlParams.get('size')) newFilters.size = urlParams.get('size');
+      if (urlParams.get('inStock') === 'true') newFilters.inStock = 'true';
+      if (urlParams.get('sortBy')) newFilters.sortBy = urlParams.get('sortBy');
       
       // Only update if there are changes
       if (JSON.stringify(newFilters) !== JSON.stringify(filters)) {
@@ -244,8 +245,8 @@ export default function CategoryPage() {
         <div className="min-h-screen bg-gray-50">
           {/* Header Section */}
           <div className="bg-white border-b border-gray-200 pt-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex items-center justify-between">
+            <div className="px-4 sm:px-6 lg:px-8 py-8">
+              <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 capitalize">
                     {categoryInfo?.name || category}
@@ -258,26 +259,42 @@ export default function CategoryPage() {
                 {/* Sort Dropdown */}
                 <div className="flex items-center space-x-4">
                   <div className="relative">
-                    <select
-                      value={filters.sortBy}
-                      onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                      className="border text-gray-900 placeholder-gray-500 border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none pr-8"
-                      style={{ color: '#111827' }}
-                    >
-                    <option value="featured">Featured</option>
-                    <option value="bestSelling">Best Selling</option>
-                    <option value="a-z">A-Z</option>
-                    <option value="z-a">Z-A</option>
-                    <option value="lowestPrice">Lowest Price</option>
-                    <option value="highestPrice">Highest Price</option>
-                    <option value="newest">New to Old</option>
-                    <option value="oldest">Old to New</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+                    <Dropdown
+                      options={[
+                        "Featured",
+                        "Best Selling", 
+                        "A-Z",
+                        "Z-A",
+                        "Lowest Price",
+                        "Highest Price",
+                        "New to Old",
+                        "Old to New"
+                      ]}
+                      defaultOption={
+                        filters.sortBy === 'featured' ? 'Featured' :
+                        filters.sortBy === 'bestSelling' ? 'Best Selling' :
+                        filters.sortBy === 'a-z' ? 'A-Z' :
+                        filters.sortBy === 'z-a' ? 'Z-A' :
+                        filters.sortBy === 'lowestPrice' ? 'Lowest Price' :
+                        filters.sortBy === 'highestPrice' ? 'Highest Price' :
+                        filters.sortBy === 'newest' ? 'New to Old' :
+                        filters.sortBy === 'oldest' ? 'Old to New' : 'Featured'
+                      }
+                      onSelect={(option) => {
+                        const sortMap = {
+                          'Featured': 'featured',
+                          'Best Selling': 'bestSelling',
+                          'A-Z': 'a-z',
+                          'Z-A': 'z-a',
+                          'Lowest Price': 'lowestPrice',
+                          'Highest Price': 'highestPrice',
+                          'New to Old': 'newest',
+                          'Old to New': 'oldest'
+                        };
+                        handleFilterChange('sortBy', sortMap[option]);
+                      }}
+                      className="min-w-[200px]"
+                    />
                   </div>
                   
                   <button
@@ -291,7 +308,7 @@ export default function CategoryPage() {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="sm:px-6 lg:px-8 py-8">
             {/* Mobile Filter Toggle */}
             <div className="lg:hidden mb-4">
               <button
@@ -447,26 +464,27 @@ export default function CategoryPage() {
                           <label className="block text-sm font-medium text-gray-700 mb-3">
                             Colors
                           </label>
-                          <select
-                            value={filters.color}
-                            onChange={(e) => handleFilterChange('color', e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          >
-                            <option value="">All Colors</option>
-                            <option value="black">Black</option>
-                            <option value="white">White</option>
-                            <option value="red">Red</option>
-                            <option value="blue">Blue</option>
-                            <option value="green">Green</option>
-                            <option value="yellow">Yellow</option>
-                            <option value="pink">Pink</option>
-                            <option value="purple">Purple</option>
-                            <option value="orange">Orange</option>
-                            <option value="brown">Brown</option>
-                            <option value="gray">Gray</option>
-                            <option value="navy">Navy</option>
-                            <option value="maroon">Maroon</option>
-                          </select>
+                          <Dropdown
+                            options={[
+                              "All Colors",
+                              "Black",
+                              "White",
+                              "Red",
+                              "Blue",
+                              "Green",
+                              "Yellow",
+                              "Pink",
+                              "Purple",
+                              "Orange",
+                              "Brown",
+                              "Gray",
+                              "Navy",
+                              "Maroon"
+                            ]}
+                            defaultOption={filters.color ? filters.color.charAt(0).toUpperCase() + filters.color.slice(1) : "All Colors"}
+                            onSelect={(option) => handleFilterChange('color', option === "All Colors" ? "" : option.toLowerCase())}
+                            className="w-full"
+                          />
                         </div>
 
                         {/* Sizes */}
@@ -474,27 +492,28 @@ export default function CategoryPage() {
                           <label className="block text-sm font-medium text-gray-700 mb-3">
                             Sizes
                           </label>
-                          <select
-                            value={filters.size}
-                            onChange={(e) => handleFilterChange('size', e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          >
-                            <option value="">All Sizes</option>
-                            <option value="XS">XS</option>
-                            <option value="S">S</option>
-                            <option value="M">M</option>
-                            <option value="L">L</option>
-                            <option value="XL">XL</option>
-                            <option value="XXL">XXL</option>
-                            <option value="XXXL">XXXL</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            <option value="11">11</option>
-                            <option value="12">12</option>
-                          </select>
+                          <Dropdown
+                            options={[
+                              "All Sizes",
+                              "XS",
+                              "S", 
+                              "M",
+                              "L",
+                              "XL",
+                              "XXL",
+                              "XXXL",
+                              "6",
+                              "7",
+                              "8",
+                              "9",
+                              "10",
+                              "11",
+                              "12"
+                            ]}
+                            defaultOption={filters.size || "All Sizes"}
+                            onSelect={(option) => handleFilterChange('size', option === "All Sizes" ? "" : option)}
+                            className="w-full"
+                          />
                         </div>
 
                         {/* Stock Availability */}
@@ -533,7 +552,7 @@ export default function CategoryPage() {
 
               {/* Desktop Filters Sidebar */}
               <div className="hidden lg:block lg:w-64 flex-shrink-0">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="h-[-webkit-fill-available] bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
                   
                   {/* Subcategories */}
@@ -656,31 +675,27 @@ export default function CategoryPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Colors
                     </label>
-                    <select
-                      value={filters.color}
-                      onChange={(e) => handleFilterChange('color', e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
-                    >
-                      <option value="">All Colors</option>
-                      <option value="black">Black</option>
-                      <option value="white">White</option>
-                      <option value="red">Red</option>
-                      <option value="blue">Blue</option>
-                      <option value="green">Green</option>
-                      <option value="yellow">Yellow</option>
-                      <option value="pink">Pink</option>
-                      <option value="purple">Purple</option>
-                      <option value="orange">Orange</option>
-                      <option value="brown">Brown</option>
-                      <option value="gray">Gray</option>
-                      <option value="navy">Navy</option>
-                      <option value="maroon">Maroon</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+                    <Dropdown
+                      options={[
+                        "All Colors",
+                        "Black",
+                        "White",
+                        "Red",
+                        "Blue",
+                        "Green",
+                        "Yellow",
+                        "Pink",
+                        "Purple",
+                        "Orange",
+                        "Brown",
+                        "Gray",
+                        "Navy",
+                        "Maroon"
+                      ]}
+                      defaultOption={filters.color ? filters.color.charAt(0).toUpperCase() + filters.color.slice(1) : "All Colors"}
+                      onSelect={(option) => handleFilterChange('color', option === "All Colors" ? "" : option.toLowerCase())}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Sizes */}
@@ -688,34 +703,28 @@ export default function CategoryPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Sizes
                     </label>
-                    <div className="relative">
-                      <select
-                        value={filters.size}
-                        onChange={(e) => handleFilterChange('size', e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
-                      >
-                        <option value="">All Sizes</option>
-                        <option value="XS">XS</option>
-                        <option value="S">S</option>
-                        <option value="M">M</option>
-                        <option value="L">L</option>
-                        <option value="XL">XL</option>
-                        <option value="XXL">XXL</option>
-                        <option value="XXXL">XXXL</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
+                    <Dropdown
+                      options={[
+                        "All Sizes",
+                        "XS",
+                        "S", 
+                        "M",
+                        "L",
+                        "XL",
+                        "XXL",
+                        "XXXL",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12"
+                      ]}
+                      defaultOption={filters.size || "All Sizes"}
+                      onSelect={(option) => handleFilterChange('size', option === "All Sizes" ? "" : option)}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Stock Availability */}

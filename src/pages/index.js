@@ -823,31 +823,25 @@ export default function Home() {
 
         {/* New Arrivals Slider */}
 
-        <section className="py-20 bg-gray-50">
+        <section className="py-12 bg-white">
 
           <div className="px-4 sm:px-6 lg:px-8">
 
-            <div className="flex justify-between items-center mb-12" data-aos="fade-up">
+            <div className="flex justify-between items-center mb-8" data-aos="fade-up">
 
-              <div>
-
-                <h2 className="text-4xl font-bold text-gray-900 mb-2">New Arrivals</h2>
-
-                <p className="text-gray-600">Discover our latest collection of premium footwear</p>
-
-              </div>
+              <h2 className="text-3xl font-bold text-gray-900">New Arrivals</h2>
 
               <Link
 
                 href="/categories/all?isNew=true"
 
-                className="group text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 transition-colors duration-300"
+                className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
 
               >
 
                 View All
 
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
 
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
 
@@ -873,11 +867,11 @@ export default function Home() {
 
               <div data-aos="fade-up" data-aos-delay="200">
 
-                <Slider {...getDynamicSliderSettings(getProductsByType('new').length)} className="product-slider">
+                <Slider {...getDynamicSliderSettings(getProductsByType('new').length)} className="bestseller-slider">
 
                   {getProductsByType('new').map((product, index) => (
 
-                    <div key={product._id || index} className="px-0" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
 
                       <ProductCard
 
@@ -1156,7 +1150,7 @@ export default function Home() {
 
                           <h2 className="text-3xl font-bold text-white mb-2">{product.name || 'Product Name'}</h2>
 
-                          <p className="text-xl text-white mb-4">Rs {product.price || 0}</p>
+                          <p className="text-2xl text-white mb-4 font-alumni-xl">Rs {product.price || 0}</p>
 
                           <p className="text-white mb-4">{product.description?.slice(0, 100) || 'Product Description'}</p>
 
@@ -1499,9 +1493,9 @@ export default function Home() {
 
                 <div className="mb-6">
 
-                  <span className="text-2xl font-bold">Rs 149.99</span>
+                  <span className="text-3xl font-bold font-alumni-xl">Rs 149.99</span>
 
-                  <span className="ml-2 text-gray-400 line-through">Rs 189.99</span>
+                  <span className="ml-2 text-xl text-gray-400 line-through font-alumni">Rs 189.99</span>
 
                   <span className="ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
 

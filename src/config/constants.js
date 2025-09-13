@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://admin.api.zagrofootwear.com/api';
-// export const BASE_URL = 'http://localhost:3005/api';
+// export const BASE_URL = 'https://admin.api.zagrofootwear.com/api';
+export const BASE_URL = 'http://localhost:3005/api';
 
 export const ENDPOINT = {
  
@@ -7,7 +7,8 @@ export const ENDPOINT = {
         getLandingPageProducts: `${BASE_URL}/product/all-types`,
         getProducts:`${BASE_URL}/product`,
         getProductsByFilters: `${BASE_URL}/product/filter`,
-        getProductById: `${BASE_URL}/product`
+        getProductById: `${BASE_URL}/product`,
+        getSimilarProducts: `${BASE_URL}/product/:id/similar`
     },
     categories: {
         getAllCategories: `${BASE_URL}/product/category/all`
