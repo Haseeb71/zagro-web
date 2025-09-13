@@ -1,5 +1,5 @@
-// export const BASE_URL = 'https://admin.api.zagrofootwear.com/api';
-export const BASE_URL = 'http://localhost:3005/api';
+export const BASE_URL = 'https://admin.api.zagrofootwear.com/api';
+// export const BASE_URL = 'http://localhost:3005/api';
 
 export const ENDPOINT = {
  
