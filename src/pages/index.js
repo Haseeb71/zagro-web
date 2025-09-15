@@ -90,16 +90,27 @@ export default function Home() {
 
 
 
-  // Show promotion modal automatically when page loads
+  // Show promotion modal automatically when page loads (with user preference check)
 
   useEffect(() => {
 
+    // Check if user has previously dismissed the promotion modal
+    const hasDismissedPromotion = localStorage.getItem('promotionDismissed');
+    const lastDismissedDate = localStorage.getItem('promotionDismissedDate');
+    
+    // If user dismissed within last 7 days, don't show again
+    if (hasDismissedPromotion && lastDismissedDate) {
+      const sevenDaysAgo = new Date().getTime() - (7 * 24 * 60 * 60 * 1000);
+      const dismissedDate = new Date(lastDismissedDate).getTime();
+      
+      if (dismissedDate > sevenDaysAgo) {
+        return; // Don't show promotion modal
+      }
+    }
+
     // Show promotion modal after a short delay to ensure page is loaded
-
     const timer = setTimeout(() => {
-
       setIsPromotionModalOpen(true);
-
     }, 1000); // 1 second delay
 
     return () => clearTimeout(timer);
@@ -226,6 +237,40 @@ export default function Home() {
     setIsPromotionModalOpen(false);
 
   };
+
+  // Function to handle "Maybe Later" - remember user choice for 7 days
+
+  const handleMaybeLater = () => {
+
+    // Save user preference to localStorage
+
+    localStorage.setItem('promotionDismissed', 'true');
+
+    localStorage.setItem('promotionDismissedDate', new Date().toISOString());
+
+    setIsPromotionModalOpen(false);
+
+  };
+
+  // Function to reset promotion preferences (for testing or admin use)
+
+  const resetPromotionPreferences = () => {
+
+    localStorage.removeItem('promotionDismissed');
+
+    localStorage.removeItem('promotionDismissedDate');
+
+    console.log('Promotion preferences reset. Banner will show again on next visit.');
+
+  };
+
+  // Expose reset function to window for testing (remove in production)
+
+  if (typeof window !== 'undefined') {
+
+    window.resetPromotionPreferences = resetPromotionPreferences;
+
+  }
 
 
 
@@ -687,11 +732,11 @@ export default function Home() {
 
                       {/* Badge */}
 
-                      <div className="slide-in-left mb-6">
+                      <div className="slide-in-left mb-4 sm:mb-6">
 
-                        <span className="inline-flex items-center px-4 py-2 bg-transparent border border-white/20 rounded-full text-white text-sm font-medium">
+                        <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-transparent border border-white/20 rounded-full text-white text-xs sm:text-sm font-medium">
 
-                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></span>
+                          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full mr-1.5 sm:mr-2 animate-pulse"></span>
 
                           New Collection Available
 
@@ -703,7 +748,7 @@ export default function Home() {
 
                       {/* Main Title */}
 
-                      <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight text-white drop-shadow-lg slide-in-left">
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 tracking-tight text-white drop-shadow-lg slide-in-left">
 
                         <span className="block">{banner.title.split(' ')[0]}</span>
 
@@ -715,9 +760,9 @@ export default function Home() {
 
                       {/* Subtitle */}
 
-                      <div className="relative z-10 mb-8 slide-in-left">
+                      <div className="relative z-10 mb-6 sm:mb-8 slide-in-left">
 
-                        <p className="text-xl md:text-2xl text-blue-100 font-light leading-relaxed max-w-2xl">
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-100 font-light leading-relaxed max-w-2xl">
 
                           {banner.subtitle}
 
@@ -729,15 +774,15 @@ export default function Home() {
 
                       {/* CTA Buttons */}
 
-                      <div className="flex flex-wrap gap-4 slide-in-left">
+                      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 slide-in-left">
 
-                        <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
+                        <button className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
 
-                          <span className="relative z-10 flex items-center gap-2">
+                          <span className="relative z-10 flex items-center justify-center gap-2">
 
                             {banner.ctaText}
 
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
 
@@ -749,13 +794,13 @@ export default function Home() {
 
                         </button>
 
-                        <button className="group px-8 py-4 bg-transparent border-2 border-white/30 hover:border-white/70 hover:bg-transparent text-white text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <button className="group px-6 sm:px-8 py-3 sm:py-4 bg-transparent border-2 border-white/30 hover:border-white/70 hover:bg-transparent text-white text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
 
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center justify-center gap-2">
 
                             {banner.ctaSecondary}
 
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
 
@@ -771,17 +816,17 @@ export default function Home() {
 
                       {/* Features */}
 
-                      <div className="mt-12 slide-in-left">
+                      <div className="mt-8 sm:mt-12 slide-in-left">
 
-                        <div className="flex flex-wrap gap-6 text-white/80">
+                        <div className="flex flex-wrap gap-4 sm:gap-6 text-white/80">
 
                           {['Free Shipping', '30-Day Returns', 'Premium Quality'].map((feature, idx) => (
 
                             <div key={idx} className="flex items-center gap-2">
 
-                              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"></div>
 
-                              <span className="text-sm font-medium">{feature}</span>
+                              <span className="text-xs sm:text-sm font-medium">{feature}</span>
 
                             </div>
 
@@ -801,11 +846,11 @@ export default function Home() {
 
                 {/* Scroll indicator */}
 
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
+                <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
 
-                  <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+                  <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/50 rounded-full flex justify-center">
 
-                    <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+                    <div className="w-0.5 h-2 sm:w-1 sm:h-3 bg-white/70 rounded-full mt-1.5 sm:mt-2 animate-pulse"></div>
 
                   </div>
 
@@ -823,25 +868,25 @@ export default function Home() {
 
         {/* New Arrivals Slider */}
 
-        <section className="py-12 bg-white">
+        <section className="py-8 sm:py-12 bg-white">
 
           <div className="px-4 sm:px-6 lg:px-8">
 
-            <div className="flex justify-between items-center mb-8" data-aos="fade-up">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4" data-aos="fade-up">
 
-              <h2 className="text-3xl font-bold text-gray-900">New Arrivals</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">New Arrivals</h2>
 
               <Link
 
                 href="/categories/all?isNew=true"
 
-                className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 self-start sm:self-auto"
 
               >
 
                 View All
 
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
 
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
 
@@ -908,25 +953,25 @@ export default function Home() {
 
         {/* Bestsellers Grid */}
 
-        <section className="py-12 bg-white">
+        <section className="py-8 sm:py-12 bg-white">
 
           <div className="px-4 sm:px-6 lg:px-8">
 
-            <div className="flex justify-between items-center mb-8" data-aos="fade-up">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4" data-aos="fade-up">
 
-              <h2 className="text-3xl font-bold text-gray-900">Bestsellers</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Bestsellers</h2>
 
               <Link
 
                 href="/categories/all?isBestSeller=true"
 
-                className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 self-start sm:self-auto"
 
               >
 
                 View All
 
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
 
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
 
@@ -993,17 +1038,17 @@ export default function Home() {
 
         {/* Trending Products Section */}
 
-        <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
+        <section className="py-12 sm:py-16 bg-gradient-to-r from-purple-50 to-pink-50">
 
           <div className="px-4 sm:px-6 lg:px-8">
 
-            <div className="flex justify-between items-center mb-12" data-aos="fade-up">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 sm:mb-12 gap-4" data-aos="fade-up">
 
               <div>
 
-                <h2 className="text-4xl font-bold text-gray-900 mb-2">Trending Now</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Trending Now</h2>
 
-                <p className="text-gray-600">Products that are currently trending among our customers</p>
+                <p className="text-sm sm:text-base text-gray-600">Products that are currently trending among our customers</p>
 
               </div>
 
@@ -1011,13 +1056,13 @@ export default function Home() {
 
                 href="/categories/all?isTrending=true"
 
-                className="group text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 transition-colors duration-300"
+                className="group text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 transition-colors duration-300 self-start sm:self-auto"
 
               >
 
                 View All
 
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
 
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
 
@@ -1189,17 +1234,17 @@ export default function Home() {
 
         {/* Special Offers Section */}
 
-        <section className="py-16 bg-gradient-to-r from-orange-50 to-red-50">
+        <section className="py-12 sm:py-16 bg-gradient-to-r from-orange-50 to-red-50">
 
           <div className="px-4 sm:px-6 lg:px-8">
 
-            <div className="flex justify-between items-center mb-12" data-aos="fade-up">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 sm:mb-12 gap-4" data-aos="fade-up">
 
               <div>
 
-                <h2 className="text-4xl font-bold text-gray-900 mb-2">Special Offers</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Special Offers</h2>
 
-                <p className="text-gray-600">Limited time deals and exclusive offers just for you</p>
+                <p className="text-sm sm:text-base text-gray-600">Limited time deals and exclusive offers just for you</p>
 
               </div>
 
@@ -1207,13 +1252,13 @@ export default function Home() {
 
                 href="/categories/all?isSpecial=true"
 
-                className="group text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2 transition-colors duration-300"
+                className="group text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2 transition-colors duration-300 self-start sm:self-auto"
 
               >
 
                 View All
 
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
 
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
 
@@ -1349,7 +1394,7 @@ export default function Home() {
 
         {/* New Featured Product Section like the image */}
 
-        <section className="py-16 bg-gradient-to-r from-gray-900 to-black relative overflow-hidden">
+        <section className="py-12 sm:py-16 bg-gradient-to-r from-gray-900 to-black relative overflow-hidden">
 
           {/* Diagonal geometric elements */}
 
@@ -1365,7 +1410,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center">
 
               {/* Product Image */}
 
@@ -1429,13 +1474,13 @@ export default function Home() {
 
                 <div className="mb-2">
 
-                  <span className="text-sm text-yellow-400 font-medium tracking-wider">REVOLUTIONARY TECHNOLOGY</span>
+                  <span className="text-xs sm:text-sm text-yellow-400 font-medium tracking-wider">REVOLUTIONARY TECHNOLOGY</span>
 
                 </div>
 
 
 
-                <h2 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 tracking-tight">
 
                   EVAPOR8 2.0 – STAY COOL, <br />
 
@@ -1445,11 +1490,11 @@ export default function Home() {
 
 
 
-                <div className="w-20 h-1 bg-yellow-400 mb-6 mt-4"></div>
+                <div className="w-16 sm:w-20 h-1 bg-yellow-400 mb-4 sm:mb-6 mt-2 sm:mt-4"></div>
 
 
 
-                <p className="text-gray-300 mb-8 text-lg">
+                <p className="text-gray-300 mb-6 sm:mb-8 text-sm sm:text-base lg:text-lg">
 
                   Engineered for peak breathability and all-day comfort, Evapor8 2.0
 
@@ -1461,29 +1506,29 @@ export default function Home() {
 
 
 
-                <div className="flex flex-wrap gap-4 mb-8">
+                <div className="flex flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
 
                   <div className="flex items-center gap-2">
 
-                    <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400"></div>
 
-                    <span>Ultra-lightweight</span>
+                    <span className="text-sm sm:text-base">Ultra-lightweight</span>
 
                   </div>
 
                   <div className="flex items-center gap-2">
 
-                    <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400"></div>
 
-                    <span>Breathable mesh</span>
+                    <span className="text-sm sm:text-base">Breathable mesh</span>
 
                   </div>
 
                   <div className="flex items-center gap-2">
 
-                    <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400"></div>
 
-                    <span>Dynamic support</span>
+                    <span className="text-sm sm:text-base">Dynamic support</span>
 
                   </div>
 
@@ -1491,19 +1536,19 @@ export default function Home() {
 
 
 
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
 
-                  <span className="text-3xl font-bold font-alumni-xl">Rs 149.99</span>
+                  <span className="text-2xl sm:text-3xl font-bold font-alumni-xl">Rs 149.99</span>
 
-                  <span className="ml-2 text-xl text-gray-400 line-through font-alumni">Rs 189.99</span>
+                  <span className="ml-2 text-lg sm:text-xl text-gray-400 line-through font-alumni">Rs 189.99</span>
 
-                  <span className="ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
+                  <span className="ml-2 sm:ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
 
                 </div>
 
 
 
-                <button className="px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-black text-lg font-semibold rounded-full shadow-lg hover:shadow-yellow-400/30 transition transform hover:scale-105">
+                <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-yellow-400 hover:bg-yellow-300 text-black text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-yellow-400/30 transition transform hover:scale-105">
 
                   SHOP NOW
 
@@ -1511,7 +1556,7 @@ export default function Home() {
 
 
 
-                <div className="mt-4 text-sm text-gray-400">
+                <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-400">
 
                   *Now available in 3 colors
 
@@ -1529,7 +1574,7 @@ export default function Home() {
 
         {/* Newsletter - Enhanced */}
 
-        <section className="py-16 bg-gradient-to-r from-blue-50 to-purple-50 relative overflow-hidden">
+        <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-50 to-purple-50 relative overflow-hidden">
 
           <div className="absolute inset-0 z-0">
 
@@ -1547,9 +1592,9 @@ export default function Home() {
 
           >
 
-            <h2 className="text-4xl font-bold mb-4 text-gray-800">Join Our Community</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4 text-gray-800">Join Our Community</h2>
 
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8">
 
               Subscribe to get special offers, free giveaways, and new release notifications
 
@@ -1563,11 +1608,11 @@ export default function Home() {
 
                 placeholder="Enter your email address"
 
-                className="flex-1 text-black outline-none px-6 py-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-lg"
+                className="flex-1 text-black outline-none px-4 sm:px-6 py-3 sm:py-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-sm sm:text-base lg:text-lg"
 
               />
 
-              <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <button className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-sm sm:text-base">
 
                 Subscribe
 
@@ -1594,6 +1639,8 @@ export default function Home() {
         isOpen={isPromotionModalOpen}
 
         onClose={handleClosePromotionModal}
+
+        onMaybeLater={handleMaybeLater}
 
       />
 

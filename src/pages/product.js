@@ -220,40 +220,46 @@ export default function Product() {
     ]
   };
 
-  // Similar products slider settings
-  const similarProductsSettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: false,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          arrows: false,
-          dots: false,
+  // Similar products slider settings - dynamic based on available products
+  const getSimilarProductsSettings = (productCount) => {
+    const maxSlides = Math.min(productCount, 4);
+    return {
+      dots: false,
+      infinite: productCount > 1, // Only enable infinite scroll if more than 1 product
+      speed: 500,
+      slidesToShow: maxSlides,
+      slidesToScroll: 1,
+      arrows: false,
+      responsive: [
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: Math.min(productCount, 3),
+            arrows: false,
+            dots: false,
+            infinite: productCount > 1,
+          }
+        },
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: Math.min(productCount, 2),
+            arrows: false,
+            dots: false,
+            infinite: productCount > 1,
+          }
+        },
+        {
+          breakpoint: 640,
+          settings: {
+            slidesToShow: 1,
+            arrows: false,
+            dots: false,
+            infinite: productCount > 1,
+          }
         }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-          arrows: false,
-          dots: false,
-        }
-      }
-    ]
+      ]
+    };
   };
 
   // Handle image zoom effect
@@ -267,6 +273,41 @@ export default function Product() {
     setZoomPosition({ x, y });
   };
 
+  // Helper function to parse sizes (handle both array and string formats)
+  const parseSizes = (sizes) => {
+    if (!sizes) return [];
+    
+    // If it's already an array, check if it contains JSON strings
+    if (Array.isArray(sizes)) {
+      // If array has one element that's a JSON string, parse it
+      if (sizes.length === 1 && typeof sizes[0] === 'string' && sizes[0].startsWith('[')) {
+        try {
+          const parsed = JSON.parse(sizes[0]);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          // If JSON parsing fails, treat as comma-separated
+          return sizes[0].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(s => s.length > 0);
+        }
+      }
+      // If it's a regular array of sizes, return it
+      return sizes;
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof sizes === 'string') {
+      try {
+        // Try to parse as JSON first (for ["6","7","8","9"] format)
+        const parsed = JSON.parse(sizes);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        // If JSON parsing fails, try comma-separated values
+        return sizes.split(',').map(s => s.trim().replace(/['"]/g, '')).filter(s => s.length > 0);
+      }
+    }
+    
+    return [];
+  };
+
   // Check if all required selections are made
   const canAddToCart = () => {
     if (!productData) return false;
@@ -278,7 +319,8 @@ export default function Product() {
     if (quantity < 1) return false;
 
     // Check if size is selected (if sizes are available)
-    if (productData.sizes && Array.isArray(productData.sizes) && productData.sizes.length > 0) {
+    const parsedSizes = parseSizes(productData.sizes);
+    if (parsedSizes.length > 0) {
       if (!selectedSize) return false;
     }
 
@@ -315,7 +357,8 @@ export default function Product() {
     }
 
     // Check size selection
-    if (productData.sizes && Array.isArray(productData.sizes) && productData.sizes.length > 0 && !selectedSize) {
+    const parsedSizes = parseSizes(productData.sizes);
+    if (parsedSizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
@@ -381,8 +424,15 @@ export default function Product() {
         type: '' // You can customize this based on product type
       });
       
-      if (response && response.data && response.data.products) {
-        setSimilarProducts(response.data.products);
+      console.log('Similar products API response:', response);
+      if (response && response.data) {
+        // Handle different possible response structures
+        const products = response.data.products || response.data || [];
+        console.log('Setting similar products:', products);
+        setSimilarProducts(Array.isArray(products) ? products : []);
+      } else {
+        console.log('No data found in response');
+        setSimilarProducts([]);
       }
     } catch (err) {
       console.error('Error fetching similar products:', err);
@@ -492,9 +542,9 @@ export default function Product() {
         </div>
 
         {/* Product Main Section */}
-        <section className="py-12">
+        <section className="py-6 sm:py-8 md:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
               {/* Product Gallery */}
               <div data-aos="fade-right">
                 <div
@@ -609,9 +659,9 @@ export default function Product() {
                 </div> */}
 
                 {/* Product title */}
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{productData.name}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">{productData.name}</h1>
 
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <span className="text-sm text-gray-600">{productData.category}</span>
                   <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
                   <div className="flex items-center">
@@ -632,16 +682,16 @@ export default function Product() {
 
                 {/* Price */}
                 <div className="mb-6">
-                  <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                    <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
-                      <>
-                        <span className="text-xl text-gray-500 line-through font-alumni">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-2">
+                        <span className="text-lg sm:text-xl text-gray-500 line-through font-alumni">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
                         <span className="text-sm text-green-600 font-medium font-alumni">Save Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
-                      </>
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over Rs 75</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over Rs 75</p>
                 </div>
 
                 {/* Color Selection */}
@@ -653,7 +703,7 @@ export default function Product() {
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-medium text-gray-900">Available Colors <span className="text-red-500">*</span></h3>
                         </div>
-                        <div className="flex gap-3 flex-wrap">
+                        <div className="flex gap-2 sm:gap-3 flex-wrap">
                           {colors.map((colorData, index) => {
                             const isOutOfStock = colorData.quantity <= 0;
                             const isSelected = selectedColor === index;
@@ -664,7 +714,7 @@ export default function Product() {
                                 key={index}
                                 onClick={() => !isOutOfStock && setSelectedColor(index)}
                                 disabled={isOutOfStock}
-                                className={`relative w-12 h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                                   isSelected
                                     ? 'border-gray-800 scale-110 shadow-lg'
                                     : isOutOfStock
@@ -706,36 +756,45 @@ export default function Product() {
                 })()}
 
                 {/* Size Selection */}
-                {productData.sizes && Array.isArray(productData.sizes) && productData.sizes.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium text-gray-900">Size <span className="text-red-500">*</span></h3>
-                      <button
-                        className="text-sm text-blue-600 hover:text-blue-800 transition"
-                        onClick={() => setShowSizeGuide(!showSizeGuide)}
-                      >
-                        Size Guide
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-5 gap-2">
-                      {productData.sizes.map((size) => (
+                {(() => {
+                  const parsedSizes = parseSizes(productData.sizes);
+                  console.log('Size parsing debug:', {
+                    original: productData.sizes,
+                    parsed: parsedSizes,
+                    type: typeof productData.sizes,
+                    isArray: Array.isArray(productData.sizes)
+                  });
+                  return parsedSizes.length > 0 && (
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-medium text-gray-900">Size <span className="text-red-500">*</span></h3>
                         <button
-                          key={size}
-                          className={`py-2 border rounded-md text-sm font-medium transition
-                          ${selectedSize === size
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 text-gray-900 hover:border-gray-300'}`}
-                          onClick={() => setSelectedSize(size)}
+                          className="text-sm text-blue-600 hover:text-blue-800 transition"
+                          onClick={() => setShowSizeGuide(!showSizeGuide)}
                         >
-                          {size}
+                          Size Guide
                         </button>
-                      ))}
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                        {parsedSizes.map((size) => (
+                          <button
+                            key={size}
+                            className={`py-2 px-1 border rounded-md text-sm font-medium transition transform hover:scale-105
+                            ${selectedSize === size
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 scale-105 shadow-md'
+                                : 'border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
+                            onClick={() => setSelectedSize(size)}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                      {!selectedSize && (
+                        <p className="text-sm text-red-500 mt-1">Please select a size</p>
+                      )}
                     </div>
-                    {!selectedSize && (
-                      <p className="text-sm text-red-500 mt-1">Please select a size</p>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Size Guide Modal */}
                 {showSizeGuide && (
@@ -791,12 +850,12 @@ export default function Product() {
                 {/* Quantity */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Quantity <span className="text-red-500">*</span></h3>
-                  <div className="flex items-center w-32">
+                  <div className="flex items-center w-28 sm:w-32">
                     <button
-                      className="w-10 h-10 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
+                      className="w-8 h-8 sm:w-10 sm:h-10 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                       </svg>
                     </button>
@@ -805,19 +864,19 @@ export default function Product() {
                       min="1"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="h-10 w-12 border-t border-b border-gray-300 text-center text-gray-900"
+                      className="h-8 sm:h-10 w-10 sm:w-12 border-t border-b border-gray-300 text-center text-gray-900 text-sm sm:text-base"
                     />
                     <button
-                      className="w-10 h-10 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
+                      className="w-8 h-8 sm:w-10 sm:h-10 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
                       onClick={() => setQuantity(quantity + 1)}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
                     </button>
                   </div>
                   {quantity < 1 && (
-                    <p className="text-sm text-red-500 mt-1">Please select a quantity greater than 0</p>
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">Please select a quantity greater than 0</p>
                   )}
                 </div>
 
@@ -826,7 +885,7 @@ export default function Product() {
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddToCart()}
-                    className={`group relative flex-1 py-3 px-8 text-white text-base font-semibold rounded-full shadow-md transition overflow-hidden ${canAddToCart()
+                    className={`group relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md transition overflow-hidden ${canAddToCart()
                         ? 'cursor-pointer bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
                         : 'bg-gray-400 cursor-not-allowed'
                       }`}
@@ -849,29 +908,29 @@ export default function Product() {
                 </div>
 
                 {/* Shipping & Returns */}
-                <div className="border-t border-gray-200 pt-6">
-                  <div className="mb-4">
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                  <div className="mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">Free shipping on orders over Rs 75</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Free shipping on orders over Rs 75</p>
                     </div>
                   </div>
-                  <div className="mb-4">
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">Free returns within 30 days</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Free returns within 30 days</p>
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">1-year manufacturer warranty</p>
+                      <p className="text-xs sm:text-sm text-gray-600">1-year manufacturer warranty</p>
                     </div>
                   </div>
                 </div>
@@ -1134,6 +1193,14 @@ export default function Product() {
               </div>
             </div>
 
+            {(() => {
+              console.log('Similar products render state:', {
+                loadingSimilar,
+                similarProductsLength: similarProducts.length,
+                similarProducts: similarProducts
+              });
+              return null;
+            })()}
             {loadingSimilar ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -1141,16 +1208,29 @@ export default function Product() {
               </div>
             ) : similarProducts.length > 0 ? (
               <div data-aos="fade-up" data-aos-delay="200">
-                <Slider {...similarProductsSettings} className="similar-products-slider">
-                  {similarProducts.map((product, index) => (
-                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                {similarProducts.length === 1 ? (
+                  // Single product - display in centered grid
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-sm">
                       <ProductCard
-                        product={product}
-                        className="max-w-sm mx-auto"
+                        product={similarProducts[0]}
+                        className="mx-auto"
                       />
                     </div>
-                  ))}
-                </Slider>
+                  </div>
+                ) : (
+                  // Multiple products - use slider
+                  <Slider {...getSimilarProductsSettings(similarProducts.length)} className="similar-products-slider">
+                    {similarProducts.map((product, index) => (
+                      <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                        <ProductCard
+                          product={product}
+                          className="max-w-sm mx-auto"
+                        />
+                      </div>
+                    ))}
+                  </Slider>
+                )}
               </div>
             ) : (
               <div className="text-center py-12">

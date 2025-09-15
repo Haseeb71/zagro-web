@@ -245,20 +245,20 @@ export default function CategoryPage() {
         <div className="min-h-screen bg-gray-50">
           {/* Header Section */}
           <div className="bg-white border-b border-gray-200 pt-16">
-            <div className="px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 capitalize">
+            <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+              <div className="flex flex-col items-start gap-4 sm:gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 capitalize">
                     {categoryInfo?.name || category}
                   </h1>
-                  <p className="mt-2 text-gray-600">
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
                     Showing: {totalProducts} Results
                   </p>
                 </div>
                 
                 {/* Sort Dropdown */}
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                  <div className="relative w-full sm:w-auto">
                     <Dropdown
                       options={[
                         "Featured",
@@ -293,13 +293,13 @@ export default function CategoryPage() {
                         };
                         handleFilterChange('sortBy', sortMap[option]);
                       }}
-                      className="min-w-[200px]"
+                      className="w-full sm:min-w-[200px]"
                     />
                   </div>
                   
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-gray-600 hover:text-gray-900 underline"
+                    className="text-sm text-gray-600 hover:text-gray-900 underline self-start sm:self-auto"
                   >
                     Clear all
                   </button>
@@ -313,12 +313,12 @@ export default function CategoryPage() {
             <div className="lg:hidden mb-4">
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
                 </svg>
-                Filters
+                <span>Filters</span>
                 <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
                   {Object.values(filters).filter(value => value !== '' && value !== 'createdAt' && value !== 'desc').length}
                 </span>
@@ -329,19 +329,19 @@ export default function CategoryPage() {
               {/* Mobile Filters Overlay */}
               {showMobileFilters && (
                 <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setShowMobileFilters(false)}>
-                  <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+                  <div className="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between p-4 border-b">
                       <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
                       <button
                         onClick={() => setShowMobileFilters(false)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-600 p-1"
                       >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
-                    <div className="p-4 overflow-y-auto h-full pb-20">
+                    <div className="p-4 overflow-y-auto h-full pb-24">
                       {/* Mobile Filters Content - Same as desktop */}
                       <div className="space-y-6">
                         {/* Subcategories */}
@@ -745,14 +745,14 @@ export default function CategoryPage() {
               {/* Products Grid */}
               <div className="flex-1">
                 {loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
                     {[...Array(8)].map((_, index) => (
                       <ProductSkeleton key={index} />
                     ))}
                   </div>
                 ) : products.length > 0 ? (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
                       {products.map((product, index) => (
                         <ProductCard key={product.id || product._id || index} product={product} />
                       ))}
