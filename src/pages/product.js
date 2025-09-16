@@ -230,54 +230,7 @@ export default function Product() {
   const [loadingSimilar, setLoadingSimilar] = useState(true);
   const [displayedImages, setDisplayedImages] = useState([]);
 
-  // Image gallery settings
-  const gallerySettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-    fade: true,
-  };
 
-  // Related products slider settings
-  const relatedProductsSettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: false,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-          arrows: false,
-          dots: false,
-        }
-      }
-    ]
-  };
-
-  // Similar products slider settings - dynamic based on available products
   const getSimilarProductsSettings = (productCount) => {
     const maxSlides = Math.min(productCount, 4);
     return {
@@ -319,7 +272,6 @@ export default function Product() {
     };
   };
 
-  // Handle image zoom effect
   const handleMouseMove = (e) => {
     if (!isZoomed) return;
 
@@ -330,7 +282,6 @@ export default function Product() {
     setZoomPosition({ x, y });
   };
 
-  // Helper function to parse sizes (handle both array and string formats)
   const parseSizes = (sizes) => {
     if (!sizes) return [];
     
@@ -365,7 +316,6 @@ export default function Product() {
     return [];
   };
 
-  // Check if all required selections are made
   const canAddToCart = () => {
     if (!productData) return false;
 
@@ -470,23 +420,39 @@ export default function Product() {
   };
 
   // Fetch similar products
-  const fetchSimilarProducts = async (productId) => {
-    if (!productId) return;
+  const fetchSimilarProducts = async (catID, currentProductId) => {
+    if (!catID) return;
 
     try {
       setLoadingSimilar(true);
-      const response = await eproductsAPI.getSimilarProducts(productId, {
+      const response = await eproductsAPI.getSimilarProducts({
+        catID: catID,
         page: 1,
         perPage: 8,
-        type: '' // You can customize this based on product type
+        type: '' 
       });
       
       console.log('Similar products API response:', response);
       if (response && response.data) {
-        // Handle different possible response structures
+       
         const products = response.data.products || response.data || [];
-        console.log('Setting similar products:', products);
-        setSimilarProducts(Array.isArray(products) ? products : []);
+        console.log('All similar products before filtering:', products);
+        console.log('Current product ID to filter:', currentProductId);
+        
+        // Filter out the current product from similar products
+        const filteredProducts = products.filter(product => {
+          const productId = product._id || product.id;
+          const isCurrentProduct = String(productId) === String(currentProductId);
+          console.log(`Product ${productId} (${typeof productId}) vs Current ${currentProductId} (${typeof currentProductId}) - Match: ${isCurrentProduct}`);
+          const shouldKeep = !isCurrentProduct;
+          console.log(`Should keep product ${productId}: ${shouldKeep}`);
+          return shouldKeep;
+        });
+        
+        console.log('Filtered similar products:', filteredProducts);
+        console.log('Filtered products length:', filteredProducts.length);
+        console.log('Is array?', Array.isArray(filteredProducts));
+        setSimilarProducts(Array.isArray(filteredProducts) ? filteredProducts : []);
       } else {
         console.log('No data found in response');
         setSimilarProducts([]);
@@ -511,9 +477,9 @@ export default function Product() {
 
         if (response && response.data && response.data.product) {
           console.log('Product Data:', response.data.product);
-          setProductData(response.data.product);
-          // Fetch similar products after getting product data
-          fetchSimilarProducts(response.data.product._id);
+            setProductData(response.data.product);
+            // Fetch similar products after getting product data
+            fetchSimilarProducts(response.data.product.category._id, response.data.product._id);
         } else {
           console.log('No product data found in response');
           setError('Product not found');
@@ -739,7 +705,13 @@ export default function Product() {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">{productData.name}</h1>
 
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
-                  <span className="text-sm text-gray-600">{productData.category}</span>
+                  <span className="text-sm text-gray-600">
+                    {typeof productData.category === 'object' && productData.category !== null
+                      ? productData.category.name
+                      : typeof productData.category === 'string'
+                        ? productData.category
+                        : ''}
+                  </span>
                   <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
                   <div className="flex items-center">
                     <div className="flex text-yellow-400">
@@ -1022,7 +994,7 @@ export default function Product() {
             {/* Tabs */}
             <div className="mb-8 border-b border-gray-200" data-aos="fade-up">
               <div className="flex flex-wrap -mb-px">
-                {['description', 'specifications', 'reviews'].map((tab) => (
+                {['description'].map((tab) => (
                   <button
                     key={tab}
                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === tab
@@ -1045,18 +1017,6 @@ export default function Product() {
                   <div className="prose max-w-none">
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">Product Description</h3>
                     <p className="text-gray-700 mb-6">{productData.description || 'No description available.'}</p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Details</h4>
-                        <ul className="space-y-2 text-gray-700">
-                          <li><strong>Category:</strong> {productData.category || 'N/A'}</li>
-                          <li><strong>Price:</strong> <span className="font-alumni">Rs {productData.price}</span></li>
-                          <li><strong>Quantity Available:</strong> {productData.quantity || 0}</li>
-                          <li><strong>Created:</strong> {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}</li>
-                        </ul>
-                      </div>
-                    </div>
                   </div>
 
                 </div>
@@ -1222,14 +1182,6 @@ export default function Product() {
               </div>
             </div>
 
-            {(() => {
-              console.log('Similar products render state:', {
-                loadingSimilar,
-                similarProductsLength: similarProducts.length,
-                similarProducts: similarProducts
-              });
-              return null;
-            })()}
             {loadingSimilar ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>

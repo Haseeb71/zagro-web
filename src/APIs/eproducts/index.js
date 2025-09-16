@@ -94,8 +94,8 @@ const getProductById = async (id) => {
   return response;
 }
 
-const getSimilarProducts = async (id, params = {}) => {
-  const { page = 1, perPage = 10, type = "", search = "" } = params;
+const getSimilarProducts = async (params = {}) => {
+  const { page = 1, perPage = 10, type = "", search = "", catID = "" } = params;
 
   const payload = {
     page,
@@ -106,7 +106,7 @@ const getSimilarProducts = async (id, params = {}) => {
   if (type !== "") payload.type = type;
   if (search !== "") payload.search = search;
 
-  const response = await API.postMethod(`${ENDPOINT.products.getSimilarProducts.replace(':id', id)}`, false, payload);
+  const response = await API.postMethod(`${ENDPOINT.products.getSimilarProducts}/${catID}`, false, payload);
   return response;
 }
 
