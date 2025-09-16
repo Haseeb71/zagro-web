@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import Link from "next/link";
 
+import { useRouter } from "next/router";
+
 import Slider from "react-slick";
 
 import Layout from "../components/Layout";
@@ -22,9 +24,9 @@ import categoriesAPI from "../APIs/categories";
 
 
 export default function Home() {
+  const router = useRouter();
 
   const [isMounted, setIsMounted] = useState(false);
-
 
   const [productsByType, setProductsByType] = useState({});
 
@@ -35,6 +37,11 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
 
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Banner click handler
+  const handleBannerClick = (redirectLink) => {
+    router.push(redirectLink);
+  };
 
   // Function to get dynamic background image and color based on category name
   const getCategoryStyle = (categoryName) => {
@@ -309,61 +316,21 @@ export default function Home() {
   // Enhanced banner images with more content - using proper static paths
 
   const bannerImages = [
-
     {
-
       id: 1,
-
       image: "/banner1.jpg",
-
-      title: "Step into the Future",
-
-      subtitle: "Experience ultimate comfort with our revolutionary shoe technology",
-
-      ctaText: "Shop Now",
-
-      ctaSecondary: "View Collection",
-
-      backgroundGradient: "from-blue-900/80 via-blue-800/60 to-transparent"
-
+      redirectLink: "/categories/shoes"
     },
-
     {
-
       id: 2,
-
-      image: "/banner2.webp",
-
-      title: "Summer Collection",
-
-      subtitle: "Lightweight shoes for your active lifestyle",
-
-      ctaText: "Explore Collection",
-
-      ctaSecondary: "Learn More",
-
-      backgroundGradient: "from-purple-900/80 via-purple-800/60 to-transparent"
-
+      image: "/banner2.jpg",
+      redirectLink: "/categories/sneakers"
     },
-
     {
-
       id: 3,
-
-      image: "/banner3.avif",
-
-      title: "Limited Edition Series",
-
-      subtitle: "Exclusive designs available for a limited time only",
-
-      ctaText: "View Limited Edition",
-
-      ctaSecondary: "Join Waitlist",
-
-      backgroundGradient: "from-gray-900/80 via-gray-800/60 to-transparent"
-
+      image: "/banner3.jpg",
+      redirectLink: "/categories/boots"
     }
-
   ];
 
 
@@ -668,7 +635,7 @@ export default function Home() {
 
 
 
-        {/* Hero Banner Slider - Full Page */}
+        {/* Hero Banner Slider - Image Only */}
 
         <section className="relative h-screen overflow-hidden">
 
@@ -676,13 +643,13 @@ export default function Home() {
 
             {bannerImages.map((banner, index) => (
 
-              <div key={banner.id} className="relative h-screen">
+              <div key={banner.id} className="relative h-screen cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
 
-                {/* Background image with parallax effect */}
+                {/* Background image */}
 
                 <div
 
-                  className="absolute inset-0"
+                  className="absolute inset-0 w-full h-full"
 
                   style={{
 
@@ -694,167 +661,9 @@ export default function Home() {
 
                     backgroundRepeat: 'no-repeat',
 
-                    width: '100%',
-
-                    height: '100%',
-
                   }}
 
                 />
-
-
-
-                {/* Gradient overlay - separate from background image */}
-
-                <div
-
-                  className="absolute inset-0 bg-transparent"
-
-                />
-
-
-
-                {/* Animated overlay patterns */}
-
-                <div className="absolute inset-0 bg-transparent" />
-
-                <div className="absolute inset-0 bg-transparent" />
-
-
-
-                {/* Content overlay */}
-
-                <div className="absolute inset-0 z-10 flex items-center">
-
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-
-                    <div className="max-w-3xl banner-content">
-
-                      {/* Badge */}
-
-                      <div className="slide-in-left mb-4 sm:mb-6">
-
-                        <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-transparent border border-white/20 rounded-full text-white text-xs sm:text-sm font-medium">
-
-                          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full mr-1.5 sm:mr-2 animate-pulse"></span>
-
-                          New Collection Available
-
-                        </span>
-
-                      </div>
-
-
-
-                      {/* Main Title */}
-
-                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 tracking-tight text-white drop-shadow-lg slide-in-left">
-
-                        <span className="block">{banner.title.split(' ')[0]}</span>
-
-                        <span className="block text-blue-300">{banner.title.split(' ').slice(1).join(' ')}</span>
-
-                      </h1>
-
-
-
-                      {/* Subtitle */}
-
-                      <div className="relative z-10 mb-6 sm:mb-8 slide-in-left">
-
-                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-100 font-light leading-relaxed max-w-2xl">
-
-                          {banner.subtitle}
-
-                        </p>
-
-                      </div>
-
-
-
-                      {/* CTA Buttons */}
-
-                      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 slide-in-left">
-
-                        <button className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
-
-                          <span className="relative z-10 flex items-center justify-center gap-2">
-
-                            {banner.ctaText}
-
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-
-                            </svg>
-
-                          </span>
-
-                          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-
-                        </button>
-
-                        <button className="group px-6 sm:px-8 py-3 sm:py-4 bg-transparent border-2 border-white/30 hover:border-white/70 hover:bg-transparent text-white text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-
-                          <span className="flex items-center justify-center gap-2">
-
-                            {banner.ctaSecondary}
-
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-
-                            </svg>
-
-                          </span>
-
-                        </button>
-
-                      </div>
-
-
-
-                      {/* Features */}
-
-                      <div className="mt-8 sm:mt-12 slide-in-left">
-
-                        <div className="flex flex-wrap gap-4 sm:gap-6 text-white/80">
-
-                          {['Free Shipping', '30-Day Returns', 'Premium Quality'].map((feature, idx) => (
-
-                            <div key={idx} className="flex items-center gap-2">
-
-                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"></div>
-
-                              <span className="text-xs sm:text-sm font-medium">{feature}</span>
-
-                            </div>
-
-                          ))}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-
-                {/* Scroll indicator */}
-
-                <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
-
-                  <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/50 rounded-full flex justify-center">
-
-                    <div className="w-0.5 h-2 sm:w-1 sm:h-3 bg-white/70 rounded-full mt-1.5 sm:mt-2 animate-pulse"></div>
-
-                  </div>
-
-                </div>
 
               </div>
 
@@ -1429,15 +1238,10 @@ export default function Home() {
 
 
                 <Image
-
-                  src="data:image/jpeg;base64,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"
-
+                  src="https://png.pngtree.com/png-clipart/20220611/ourmid/pngtree-white-shoes-png-image_4998482.png"
                   alt="EVAPOR8 2.0"
-
                   width={600}
-
                   height={400}
-
                   className="relative z-10"
 
                 />
@@ -1450,7 +1254,7 @@ export default function Home() {
 
                     <Image
 
-                      src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAJQAlAMBIgACEQEDEQH/xAAbAAEAAQUBAAAAAAAAAAAAAAAAAwIEBQYHAf/EAEAQAAIBAwEEBQkDCgcAAAAAAAABAgMEEQUGEiExIkFRYXETFDJCgZGx0eGCocEHFRYzU3KSk9LwIyREVGOywv/EABYBAQEBAAAAAAAAAAAAAAAAAAABAv/EABcRAQEBAQAAAAAAAAAAAAAAAAARASH/2gAMAwEAAhEDEQA/AO4gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFMZwnnclGWHh4ecAVAAACG7uqNpQlWuasadOPOUnwK6NWnWpRqUpxnCSypReUwKwAAAAAAAAAAAAAAAAABaavCpU0q9hReKsqE1B9+68HIdNr1dNdOvZVZ05JLiur5ruZ2atJRpTk+Si39xxSlUlvZkt3PZ1dxB1PZraCjrNviSVO7pr/Fpf+l3GaycaScJwqUakqc4+i4trd8GiSte6jJJVNRvJZ5LzmY7g2L8pdxCF5pdNV8yUardBSy89DEt1ce1Z72a5YahqFnKpKzuJ2/lUt9Rw845MtYUYxlOSXSn6UnxcvF82SpcCarZLLbPULXFO8jC6i+KnPoSS9i4+43PQ9YttYso3FtLiuE4PnB/3yOVb29HdajLsbXFe0kta1xYylVsrmVKckuMPSz15XZlDNR2IGjaft1NOnDUrVJZ3alWk/Rfbu/I2WltDpFSSitQt4t4wqk9zOerj19xoZQHiaaymmu1HoAAAAAAAAAAAYzaW68z0G+rJ7slScYvvfBfE4zCo609/Lxl4Ov7Y2Ub/AGcvaTc95U3KmovjKaXBe1nIacHTk4OMoyjwcZLDRBdwnPqm0uwkWXxk8sjppouFRqOKlGnUcXye6+IFBUUrmVxIrzBTgrZSSD1yc8eU6cV6r6ylwhNKnLO4+D3uk39x6OvJRkNL12+0lJUa0ZQfOm8uH3/Q2vT9trOriN7RnRk/Wh0o/P4mhyjldXEo3MdQqOv2mqWF5jza7o1G/VU1ve7mXaeTi0Xu8Vw7y/tNc1Cyadvd1Ul6rlmPufAtHWwYjZnVpavpqr1YxjWi92aj195lygAAAAAxWuV+hC3j6UmpS8F9fgY+WnWl3hXVtTrN8nKPH39RJr+n37r+e6ZUjKeEqlCrHMZ96a4p/cYmltHdWnQ1HQ7yk1wcqS34v+/EgvvzBo9hGV1O1c/J+p0p48F1k1vqF9cSqwoWkYunJJRk8NJ5xnj3fQtI7aaRBrziVxQf/JSwW9htRo1K7uqtS8jGFeWYPGeCbzw9qCspqGzunX9V1alOVKo/TdFqO8+9Ywy1ex2nNcK10vtR/pJ/0v0F/wCviuzMWex2t0GXBajT9sZfICynsXatdC7rL96KZZ1diqm9mlfx+1S+pnFtRoT4LU6GefHK/Aq/SHR3xWoUH4Nga3LY7UF6FW2l9pr8CJ7I6t1Roy8Kn0Nne0ujQ56hS9ik/wACl7X6FB4/OFNvuTEGtLZPVW8OnSS7XURLHY2+l+suLaPg5P8AAy1xt5s/STbvFJrqWPmYm6/KVpceFra3dznl5OlKX/VMQXFHYyKebi9b7VThj4mQobPaXZre8gptLLlVlvfHgatV261++e7pWzd6k+U6lvJY7+PyM1oUdUvHGrq2jVqs+f8AmanRXhH0V7hEbFotSNSrUlbrNBRwpxXQb7u32GYIqLk4Lfp7jx6OSUoAAAAAAAA8KXSg+cI+4rAEfkaf7OH8KHkaf7OH8KJABE7ei+dGm/sIpdnavnb0f5aJwBb+Y2n+1ofy4/IkhQo0/wBXShD92KRIAPMHoAA8wegAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//Z"
+                      src="https://png.pngtree.com/png-clipart/20220611/ourmid/pngtree-white-shoes-png-image_4998482.png"
 
                       alt="EVAPOR8 2.0"
 

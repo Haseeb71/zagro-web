@@ -216,15 +216,9 @@ const ProductCard = ({
 
   // Helper function to format price (e.g., 1000 -> 1k, 1500 -> 1.5k)
   const formatPrice = (price) => {
-    if (!price || price < 1000) return price;
+    if (!price) return price;
     
-    if (price >= 1000000) {
-      return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    } else if (price >= 1000) {
-      return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-    }
-    
-    return price;
+    return price.toLocaleString();
   };
 
   // Image carousel logic - on hover or tap
