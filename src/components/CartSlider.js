@@ -364,15 +364,11 @@ const CartSlider = ({ onClose }) => {
                 <span className="text-gray-600 font-medium">Shipping</span>
                 <span className="font-semibold text-green-600">Free</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 font-medium">Tax</span>
-                <span className="font-semibold text-gray-900">Rs {formatPrice(totalPrice * 0.08)}</span>
-              </div>
               <div className="border-t border-gray-300 pt-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xl font-bold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-gray-900">
-                    Rs {formatPrice(totalPrice * 1.08)}
+                    Rs {formatPrice(totalPrice)}
                   </span>
                 </div>
               </div>

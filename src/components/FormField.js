@@ -16,7 +16,7 @@ const FormField = ({
   const [isTouched, setIsTouched] = useState(false);
 
   const getFieldClasses = (field, meta) => {
-    const baseClasses = `w-full text-gray-900 px-3 py-2.5 border-2 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 ${fieldClassName}`;
+    const baseClasses = `w-full text-slate-900 px-3 py-2.5 pr-10 border border-slate-300 rounded-lg focus:ring-2 transition-all duration-200 hover:border-slate-400 ${fieldClassName}`;
     
     if (meta.touched && meta.error) {
       return `${baseClasses} field-error border-red-500 focus:border-red-500 focus:ring-red-200`;
@@ -24,7 +24,7 @@ const FormField = ({
       return `${baseClasses} field-success border-green-500 focus:border-green-500 focus:ring-green-200`;
     }
     
-    return `${baseClasses} border-gray-200 focus:ring-blue-500 focus:border-blue-500`;
+    return `${baseClasses} border-slate-300 focus:ring-slate-500 focus:border-slate-500`;
   };
 
   const getErrorMessageClasses = (meta) => {
@@ -34,7 +34,7 @@ const FormField = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-slate-700 mb-2">
         {label}
         <span className="text-red-500 ml-1">*</span>
       </label>
@@ -42,17 +42,27 @@ const FormField = ({
       <Field name={name}>
         {({ field, meta }) => (
           <>
-            <input
-              {...field}
-              type={type}
-              placeholder={placeholder}
-              className={getFieldClasses(field, meta)}
-              onBlur={(e) => {
-                field.onBlur(e);
-                setIsTouched(true);
-              }}
-              {...props}
-            />
+            <div className="relative">
+              <input
+                {...field}
+                type={type}
+                placeholder={placeholder}
+                className={getFieldClasses(field, meta)}
+                onBlur={(e) => {
+                  field.onBlur(e);
+                  setIsTouched(true);
+                }}
+                {...props}
+              />
+              
+              {meta.touched && !meta.error && showSuccess && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
             
             <ErrorMessage name={name}>
               {(msg) => (
@@ -64,14 +74,6 @@ const FormField = ({
                 </div>
               )}
             </ErrorMessage>
-            
-            {meta.touched && !meta.error && showSuccess && (
-              <div className="text-green-500 text-sm mt-1 flex items-center error-message">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
           </>
         )}
       </Field>
