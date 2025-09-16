@@ -3,15 +3,10 @@ import { useRouter } from 'next/router';
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
 import { updateQuantity, removeFromCart, closeCart, clearAutoCloseTimer } from '../redux/slices/cartSlice';
 
-// Helper function to format prices (e.g., 1000 to 1k)
 const formatPrice = (price) => {
-  if (!price || price < 1000) return price;
-  if (price >= 1000000) {
-    return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else if (price >= 1000) {
-    return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  }
-  return price;
+  if (!price) return price;
+  
+  return price.toLocaleString();
 };
 
 const CartSlider = ({ onClose }) => {

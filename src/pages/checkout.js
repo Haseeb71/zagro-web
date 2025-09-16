@@ -13,23 +13,10 @@ import ErrorSummary from '../components/ErrorSummary';
 import SubmitButton from '../components/SubmitButton';
 // import OrderConfirmationModal from '../components/OrderConfirmationModal';
 
-// Helper function to format prices (e.g., 1000 to 1k)
 const formatPrice = (price) => {
-  if (!price) return 0;
-
-  // Fix floating point issue
-  const fixedPrice = Number(price.toFixed(2));
-
-  if (fixedPrice < 1000) {
-    return fixedPrice; // return normally if < 1000
-  }
-  if (fixedPrice >= 1000000) {
-    return (fixedPrice / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else if (fixedPrice >= 1000) {
-    return (fixedPrice / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  }
-
-  return fixedPrice;
+  if (!price) return price;
+  
+  return price.toLocaleString();
 };
 
 

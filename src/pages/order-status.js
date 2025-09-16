@@ -4,15 +4,10 @@ import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import orderAPI from '../APIs/order/order';
 
-// Helper function to format prices
 const formatPrice = (price) => {
-  if (!price || price < 1000) return price;
-  if (price >= 1000000) {
-    return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else if (price >= 1000) {
-    return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  }
-  return price;
+  if (!price) return price;
+  
+  return price.toLocaleString();
 };
 
 // Helper function to get image URL
