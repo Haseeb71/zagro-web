@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import styles from './Dropdown.module.scss';
+import styles from './Dropdown.module.css';
 
 const Dropdown = ({ 
   options = [], 

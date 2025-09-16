@@ -17,6 +17,7 @@ const ProductCard = ({
   const dispatch = useAppDispatch();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isTapped, setIsTapped] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [nextImageIndex, setNextImageIndex] = useState(0);
   const [showNextImage, setShowNextImage] = useState(false);
@@ -24,12 +25,13 @@ const ProductCard = ({
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const intervalRef = useRef(null);
+  const tapTimeoutRef = useRef(null);
 
   // Helper function to get proper image URL
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/${imagePath.replace(/\\/g, '/')}`;
   };
 
   // Helper function to parse colorQuantities JSON string
@@ -42,6 +44,41 @@ const ProductCard = ({
       console.error('Error parsing colorQuantities:', error);
       return [];
     }
+  };
+
+  // Helper function to parse sizes (handle both array and string formats)
+  const parseSizes = (sizes) => {
+    if (!sizes) return [];
+    
+    // If it's already an array, check if it contains JSON strings
+    if (Array.isArray(sizes)) {
+      // If array has one element that's a JSON string, parse it
+      if (sizes.length === 1 && typeof sizes[0] === 'string' && sizes[0].startsWith('[')) {
+        try {
+          const parsed = JSON.parse(sizes[0]);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          // If JSON parsing fails, treat as comma-separated
+          return sizes[0].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(s => s.length > 0);
+        }
+      }
+      // If it's a regular array of sizes, return it
+      return sizes;
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof sizes === 'string') {
+      try {
+        // Try to parse as JSON first (for ["6","7","8","9"] format)
+        const parsed = JSON.parse(sizes);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        // If JSON parsing fails, try comma-separated values
+        return sizes.split(',').map(s => s.trim().replace(/['"]/g, '')).filter(s => s.length > 0);
+      }
+    }
+    
+    return [];
   };
 
   // Comprehensive color mapping system
@@ -179,21 +216,17 @@ const ProductCard = ({
 
   // Helper function to format price (e.g., 1000 -> 1k, 1500 -> 1.5k)
   const formatPrice = (price) => {
-    if (!price || price < 1000) return price;
+    if (!price) return price;
     
-    if (price >= 1000000) {
-      return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    } else if (price >= 1000) {
-      return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-    }
-    
-    return price;
+    return price.toLocaleString();
   };
 
-  // Image carousel logic - only on hover
+  // Image carousel logic - on hover or tap
   useEffect(() => {
-    if (isHovered && product.images && product.images.length > 1) {
-      // Start the image transition loop on hover
+    const shouldShowActions = isHovered || isTapped;
+    
+    if (shouldShowActions && product.images && product.images.length > 1) {
+      // Start the image transition loop on hover or tap
       intervalRef.current = setInterval(() => {
         setCurrentImageIndex((prevIndex) => {
           const nextIndex = (prevIndex + 1) % product.images.length;
@@ -218,26 +251,51 @@ const ProductCard = ({
         }
       };
     } else {
-      // Clear interval when not hovering and reset to first image
+      // Clear interval when not hovering/tapped and reset to first image
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      // Reset to first image when hover ends
-      if (!isHovered) {
+      // Reset to first image when hover/tap ends
+      if (!shouldShowActions) {
         setCurrentImageIndex(0);
         setNextImageIndex(0);
         setShowNextImage(false);
         setIsTransitioning(false);
       }
     }
-  }, [isHovered, product.images]);
+  }, [isHovered, isTapped, product.images]);
+
+  // Mobile tap handlers
+  const handleTouchStart = useCallback((e) => {
+    // Don't prevent default to allow click events to work
+    setIsTapped(true);
+    
+    // Clear any existing timeout
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+    
+    // Auto-hide after 3 seconds on mobile
+    tapTimeoutRef.current = setTimeout(() => {
+      setIsTapped(false);
+    }, 3000);
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    // Don't prevent default to allow click events to work
+    // Don't immediately hide on touch end, let the timeout handle it
+  }, []);
+
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+      }
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
       }
     };
   }, []);
@@ -271,15 +329,22 @@ const ProductCard = ({
 
   const currentVariant = variants[variant];
 
-  const handleQuickView = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    router.push(`/product?id=${product._id}`);
-  }, [router, product._id]);
 
   const handleProductClick = useCallback((e) => {
+    // Don't navigate if clicking on action buttons
+    if (e.target.closest('.action-buttons')) {
+      return;
+    }
+    
     e.preventDefault();
     e.stopPropagation();
+    
+    // Hide tap state when navigating
+    setIsTapped(false);
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+    
     router.push(`/product?id=${product._id}`);
   }, [router, product._id]);
 
@@ -293,10 +358,18 @@ const ProductCard = ({
   const handleCartIconClick = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    const parsedSizes = parseSizes(product.sizes);
+    console.log('Cart button clicked on mobile:', { 
+      productName: product.name, 
+      hasSizes: parsedSizes.length > 0,
+      hasColors: getColorQuantities(product.colorQuantities).length > 0
+    });
+    
     setShowCartModal(true);
     // Set default selections if available
-    if (product.sizes && product.sizes.length > 0) {
-      setSelectedSize(product.sizes[0]);
+    if (parsedSizes.length > 0) {
+      setSelectedSize(parsedSizes[0]);
     }
     const colorQuantities = getColorQuantities(product.colorQuantities);
     if (colorQuantities && colorQuantities.length > 0) {
@@ -307,8 +380,9 @@ const ProductCard = ({
   // Set default selections when modal opens
   useEffect(() => {
     if (showCartModal) {
-      if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-        setSelectedSize(product.sizes[0]);
+      const parsedSizes = parseSizes(product.sizes);
+      if (parsedSizes.length > 0 && !selectedSize) {
+        setSelectedSize(parsedSizes[0]);
       }
       const colorQuantities = getColorQuantities(product.colorQuantities);
       if (colorQuantities && colorQuantities.length > 0 && !selectedColor) {
@@ -322,7 +396,8 @@ const ProductCard = ({
     e.stopPropagation();
     
     // Check if size and color are required
-    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+    const parsedSizes = parseSizes(product.sizes);
+    if (parsedSizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
@@ -404,9 +479,12 @@ const ProductCard = ({
 
   return (
     <div 
-      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-transparent ${className}`}
+      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-transparent cursor-pointer ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleProductClick}
     >
       {/* Product Image Container */}
       <div className={`relative ${currentVariant.imageSize} overflow-hidden rounded-t-2xl`}>
@@ -447,27 +525,15 @@ const ProductCard = ({
           </div>
         )}
 
-        {/* Hover Overlay with Action Buttons */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="flex space-x-2">
-            {/* Quick View Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleQuickView(e);
-              }}
-              className="bg-white/90 text-gray-800 w-10 h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center"
-              aria-label={`Quick view ${product.name}`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-
+        {/* Hover/Tap Overlay with Cart Button */}
+        <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+          isHovered || isTapped ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="flex space-x-2 action-buttons">
             {/* Add to Cart Button */}
             <button
               onClick={handleCartIconClick}
+              onTouchEnd={handleCartIconClick}
               disabled={product.quantity === 0}
               className="bg-white/90 text-gray-800 w-10 h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               aria-label={`Add ${product.name} to cart`}
@@ -579,11 +645,13 @@ const ProductCard = ({
               </div>
 
               {/* Size Selection */}
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.1s' }}>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">SIZE:</label>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size, index) => (
+              {(() => {
+                const parsedSizes = parseSizes(product.sizes);
+                return parsedSizes.length > 0 && (
+                  <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">SIZE:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {parsedSizes.map((size, index) => (
                       <button
                         key={size}
                         onClick={(e) => {
@@ -600,10 +668,11 @@ const ProductCard = ({
                       >
                         {size}
                       </button>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Color Selection */}
               {(() => {

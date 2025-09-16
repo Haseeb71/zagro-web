@@ -4,22 +4,17 @@ import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import orderAPI from '../APIs/order/order';
 
-// Helper function to format prices
 const formatPrice = (price) => {
-  if (!price || price < 1000) return price;
-  if (price >= 1000000) {
-    return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else if (price >= 1000) {
-    return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  }
-  return price;
+  if (!price) return price;
+  
+  return price.toLocaleString();
 };
 
 // Helper function to get image URL
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
-  return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/${imagePath.replace(/\\/g, '/')}`;
 };
 
 const OrderStatusPage = () => {

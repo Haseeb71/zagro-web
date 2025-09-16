@@ -10,15 +10,72 @@ import "slick-carousel/slick/slick-theme.css";
 import eproductsAPI from '../APIs/eproducts';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
+import Newsletter from '../components/Newsletter';
 import { useAppDispatch } from '../redux/hooks';
 import { addToCart, openCart } from '../redux/slices/cartSlice';
 import { toast } from 'react-hot-toast';
 
-// Helper function to get proper image URL
+  // Helper function to get proper image URL
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
-  return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/${imagePath.replace(/\\/g, '/')}`;
+};
+
+// Helper function to get ALL images (general + all colors)
+const getAllImages = (productData) => {
+  if (!productData) return [];
+  
+  let allImages = [];
+  
+  // Always include general images first
+  if (productData.images && Array.isArray(productData.images)) {
+    allImages = [...productData.images];
+  }
+  
+  // Add all color-specific images
+  if (productData.colorImages && productData.colorQuantities) {
+    try {
+      const colors = JSON.parse(productData.colorQuantities);
+      if (Array.isArray(colors)) {
+        colors.forEach(colorData => {
+          if (productData.colorImages[colorData.color] && Array.isArray(productData.colorImages[colorData.color])) {
+            allImages = [...allImages, ...productData.colorImages[colorData.color]];
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing colorQuantities:', error);
+    }
+  }
+  
+  return allImages;
+};
+
+// Helper function to get the starting index of a specific color's images
+const getColorImagesStartIndex = (productData, selectedColorIndex) => {
+  if (!productData || !productData.images) return 0;
+  
+  let currentIndex = productData.images.length; // Start after general images
+  
+  if (selectedColorIndex !== null && selectedColorIndex !== undefined && productData.colorQuantities) {
+    try {
+      const colors = JSON.parse(productData.colorQuantities);
+      if (Array.isArray(colors)) {
+        // Find the selected color and calculate its starting index
+        for (let i = 0; i < selectedColorIndex && i < colors.length; i++) {
+          const colorData = colors[i];
+          if (productData.colorImages && productData.colorImages[colorData.color] && Array.isArray(productData.colorImages[colorData.color])) {
+            currentIndex += productData.colorImages[colorData.color].length;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing colorQuantities:', error);
+    }
+  }
+  
+  return currentIndex;
 };
 
 // Comprehensive color mapping system
@@ -172,91 +229,50 @@ export default function Product() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [similarProducts, setSimilarProducts] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(true);
+  const [displayedImages, setDisplayedImages] = useState([]);
 
-  // Image gallery settings
-  const gallerySettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-    fade: true,
+
+  const getSimilarProductsSettings = (productCount) => {
+    const maxSlides = Math.min(productCount, 4);
+    return {
+      dots: false,
+      infinite: productCount > 1, // Only enable infinite scroll if more than 1 product
+      speed: 500,
+      slidesToShow: maxSlides,
+      slidesToScroll: 1,
+      arrows: false,
+      responsive: [
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: Math.min(productCount, 3),
+            arrows: false,
+            dots: false,
+            infinite: productCount > 1,
+          }
+        },
+        {
+          breakpoint: 768,
+          settings: {
+            slidesToShow: Math.min(productCount, 2),
+            arrows: false,
+            dots: false,
+            infinite: productCount > 1,
+          }
+        },
+        {
+          breakpoint: 640,
+          settings: {
+            slidesToShow: 1,
+            arrows: false,
+            dots: false,
+            infinite: productCount > 1,
+          }
+        }
+      ]
+    };
   };
 
-  // Related products slider settings
-  const relatedProductsSettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: false,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-          arrows: false,
-          dots: false,
-        }
-      }
-    ]
-  };
-
-  // Similar products slider settings
-  const similarProductsSettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: false,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          arrows: false,
-          dots: false,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-          arrows: false,
-          dots: false,
-        }
-      }
-    ]
-  };
-
-  // Handle image zoom effect
   const handleMouseMove = (e) => {
     if (!isZoomed) return;
 
@@ -267,7 +283,40 @@ export default function Product() {
     setZoomPosition({ x, y });
   };
 
-  // Check if all required selections are made
+  const parseSizes = (sizes) => {
+    if (!sizes) return [];
+    
+    // If it's already an array, check if it contains JSON strings
+    if (Array.isArray(sizes)) {
+      // If array has one element that's a JSON string, parse it
+      if (sizes.length === 1 && typeof sizes[0] === 'string' && sizes[0].startsWith('[')) {
+        try {
+          const parsed = JSON.parse(sizes[0]);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          // If JSON parsing fails, treat as comma-separated
+          return sizes[0].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(s => s.length > 0);
+        }
+      }
+      // If it's a regular array of sizes, return it
+      return sizes;
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof sizes === 'string') {
+      try {
+        // Try to parse as JSON first (for ["6","7","8","9"] format)
+        const parsed = JSON.parse(sizes);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        // If JSON parsing fails, try comma-separated values
+        return sizes.split(',').map(s => s.trim().replace(/['"]/g, '')).filter(s => s.length > 0);
+      }
+    }
+    
+    return [];
+  };
+
   const canAddToCart = () => {
     if (!productData) return false;
 
@@ -278,7 +327,8 @@ export default function Product() {
     if (quantity < 1) return false;
 
     // Check if size is selected (if sizes are available)
-    if (productData.sizes && Array.isArray(productData.sizes) && productData.sizes.length > 0) {
+    const parsedSizes = parseSizes(productData.sizes);
+    if (parsedSizes.length > 0) {
       if (!selectedSize) return false;
     }
 
@@ -315,7 +365,8 @@ export default function Product() {
     }
 
     // Check size selection
-    if (productData.sizes && Array.isArray(productData.sizes) && productData.sizes.length > 0 && !selectedSize) {
+    const parsedSizes = parseSizes(productData.sizes);
+    if (parsedSizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
@@ -349,8 +400,8 @@ export default function Product() {
     }
 
     // Get selected image
-    const selectedImage = productData.images && productData.images.length > 0
-      ? getImageUrl(productData.images[currentImageIndex])
+    const selectedImage = displayedImages && displayedImages.length > 0
+      ? getImageUrl(displayedImages[currentImageIndex])
       : null;
 
     // Add to cart
@@ -370,23 +421,55 @@ export default function Product() {
   };
 
   // Fetch similar products
-  const fetchSimilarProducts = async (productId) => {
-    if (!productId) return;
+  const fetchSimilarProducts = async (catID, currentProductId) => {
+    if (!catID) {
+      console.log('No category ID provided for similar products');
+      setLoadingSimilar(false);
+      return;
+    }
 
     try {
+      console.log('Starting to fetch similar products for category:', catID);
       setLoadingSimilar(true);
-      const response = await eproductsAPI.getSimilarProducts(productId, {
+      setSimilarProducts([]); // Clear previous products
+      
+      const response = await eproductsAPI.getSimilarProducts({
+        catID: catID,
         page: 1,
         perPage: 8,
-        type: '' // You can customize this based on product type
+        type: '' 
       });
       
-      if (response && response.data && response.data.products) {
-        setSimilarProducts(response.data.products);
+      console.log('Similar products API response:', response);
+      if (response && response.data) {
+       
+        const products = response.data.products || response.data || [];
+        console.log('All similar products before filtering:', products);
+        console.log('Current product ID to filter:', currentProductId);
+        
+        // Filter out the current product from similar products
+        const filteredProducts = products.filter(product => {
+          const productId = product._id || product.id;
+          const isCurrentProduct = String(productId) === String(currentProductId);
+          console.log(`Product ${productId} (${typeof productId}) vs Current ${currentProductId} (${typeof currentProductId}) - Match: ${isCurrentProduct}`);
+          const shouldKeep = !isCurrentProduct;
+          console.log(`Should keep product ${productId}: ${shouldKeep}`);
+          return shouldKeep;
+        });
+        
+        console.log('Filtered similar products:', filteredProducts);
+        console.log('Filtered products length:', filteredProducts.length);
+        console.log('Is array?', Array.isArray(filteredProducts));
+        setSimilarProducts(Array.isArray(filteredProducts) ? filteredProducts : []);
+      } else {
+        console.log('No data found in response');
+        setSimilarProducts([]);
       }
     } catch (err) {
       console.error('Error fetching similar products:', err);
+      setSimilarProducts([]);
     } finally {
+      console.log('Setting loading to false');
       setLoadingSimilar(false);
     }
   };
@@ -399,21 +482,32 @@ export default function Product() {
       try {
         setLoading(true);
         setError(null);
+        setLoadingSimilar(true); // Ensure loading state is set for similar products
         const response = await eproductsAPI.getProductById(id);
         console.log('API Response:', response);
 
         if (response && response.data && response.data.product) {
           console.log('Product Data:', response.data.product);
           setProductData(response.data.product);
+          
           // Fetch similar products after getting product data
-          fetchSimilarProducts(response.data.product._id);
+          if (response.data.product.category && response.data.product.category._id) {
+            console.log('Fetching similar products for category:', response.data.product.category._id);
+            await fetchSimilarProducts(response.data.product.category._id, response.data.product._id);
+          } else {
+            console.log('No category found for similar products');
+            setLoadingSimilar(false);
+            setSimilarProducts([]);
+          }
         } else {
           console.log('No product data found in response');
           setError('Product not found');
+          setLoadingSimilar(false);
         }
       } catch (err) {
         console.error('Error fetching product:', err);
         setError('Failed to load product');
+        setLoadingSimilar(false);
       } finally {
         setLoading(false);
       }
@@ -421,6 +515,34 @@ export default function Product() {
 
     fetchProduct();
   }, [id]);
+
+  // Ensure similar products section is properly initialized
+  useEffect(() => {
+    console.log('Similar products state changed:', {
+      loadingSimilar,
+      similarProductsLength: similarProducts?.length || 0,
+      similarProducts: similarProducts
+    });
+  }, [loadingSimilar, similarProducts]);
+
+  // Update displayed images when product data changes
+  useEffect(() => {
+    if (productData) {
+      const images = getAllImages(productData);
+      setDisplayedImages(images);
+    }
+  }, [productData]);
+
+  // Handle color selection - slide to specific color images
+  useEffect(() => {
+    if (productData && selectedColor !== null && selectedColor !== undefined) {
+      const colorStartIndex = getColorImagesStartIndex(productData, selectedColor);
+      setCurrentImageIndex(colorStartIndex);
+    } else if (productData) {
+      // If no color selected, show first general image
+      setCurrentImageIndex(0);
+    }
+  }, [selectedColor, productData]);
 
   // Initialize AOS animations
   useEffect(() => {
@@ -492,9 +614,9 @@ export default function Product() {
         </div>
 
         {/* Product Main Section */}
-        <section className="py-12">
+        <section className="py-6 sm:py-8 md:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
               {/* Product Gallery */}
               <div data-aos="fade-right">
                 <div
@@ -503,18 +625,19 @@ export default function Product() {
                   onMouseMove={handleMouseMove}
                   onMouseLeave={() => setIsZoomed(false)}
                 >
-                  <div className="relative aspect-square">
-                    {productData.images && Array.isArray(productData.images) && productData.images.length > 0 ? (
+                  <div className="relative aspect-square overflow-hidden">
+                    {displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0 ? (
                       <div
-                        className={`absolute inset-0 bg-gray-200 flex items-center justify-center ${isZoomed ? 'scale-150' : 'scale-100'} transition-transform duration-300`}
+                        className={`absolute inset-0 bg-gray-200 flex items-center justify-center ${isZoomed ? 'scale-150' : 'scale-100'} transition-all duration-500 ease-in-out`}
                         style={isZoomed ? {
                           transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
                         } : {}}
                       >
                         <img
-                          src={getImageUrl(productData.images[currentImageIndex])}
+                          key={`${currentImageIndex}-${selectedColor}`} 
+                          src={getImageUrl(displayedImages[currentImageIndex])}
                           alt={productData.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-opacity duration-300"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
@@ -543,8 +666,8 @@ export default function Product() {
 
                 {/* Thumbnails */}
                 <div className="flex justify-center mt-4 gap-2">
-                  {productData.images && Array.isArray(productData.images) && productData.images.length > 0 ? (
-                    productData.images.map((image, index) => (
+                  {displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0 ? (
+                    displayedImages.map((image, index) => (
                       <div
                         key={index}
                         className={`w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 ${index === currentImageIndex ? 'border-blue-500' : 'border-transparent'} hover:border-blue-400 transition`}
@@ -609,10 +732,16 @@ export default function Product() {
                 </div> */}
 
                 {/* Product title */}
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{productData.name}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">{productData.name}</h1>
 
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-sm text-gray-600">{productData.category}</span>
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                  <span className="text-sm text-gray-600">
+                    {typeof productData.category === 'object' && productData.category !== null
+                      ? productData.category.name
+                      : typeof productData.category === 'string'
+                        ? productData.category
+                        : ''}
+                  </span>
                   <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
                   <div className="flex items-center">
                     <div className="flex text-yellow-400">
@@ -632,16 +761,16 @@ export default function Product() {
 
                 {/* Price */}
                 <div className="mb-6">
-                  <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                    <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
-                      <>
-                        <span className="text-xl text-gray-500 line-through font-alumni">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-2">
+                        <span className="text-lg sm:text-xl text-gray-500 line-through font-alumni">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
                         <span className="text-sm text-green-600 font-medium font-alumni">Save Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
-                      </>
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over Rs 75</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over Rs 75</p>
                 </div>
 
                 {/* Color Selection */}
@@ -653,7 +782,7 @@ export default function Product() {
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-medium text-gray-900">Available Colors <span className="text-red-500">*</span></h3>
                         </div>
-                        <div className="flex gap-3 flex-wrap">
+                        <div className="flex gap-2 sm:gap-3 flex-wrap">
                           {colors.map((colorData, index) => {
                             const isOutOfStock = colorData.quantity <= 0;
                             const isSelected = selectedColor === index;
@@ -664,7 +793,7 @@ export default function Product() {
                                 key={index}
                                 onClick={() => !isOutOfStock && setSelectedColor(index)}
                                 disabled={isOutOfStock}
-                                className={`relative w-12 h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                                   isSelected
                                     ? 'border-gray-800 scale-110 shadow-lg'
                                     : isOutOfStock
@@ -706,36 +835,45 @@ export default function Product() {
                 })()}
 
                 {/* Size Selection */}
-                {productData.sizes && Array.isArray(productData.sizes) && productData.sizes.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium text-gray-900">Size <span className="text-red-500">*</span></h3>
-                      <button
-                        className="text-sm text-blue-600 hover:text-blue-800 transition"
-                        onClick={() => setShowSizeGuide(!showSizeGuide)}
-                      >
-                        Size Guide
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-5 gap-2">
-                      {productData.sizes.map((size) => (
+                {(() => {
+                  const parsedSizes = parseSizes(productData.sizes);
+                  console.log('Size parsing debug:', {
+                    original: productData.sizes,
+                    parsed: parsedSizes,
+                    type: typeof productData.sizes,
+                    isArray: Array.isArray(productData.sizes)
+                  });
+                  return parsedSizes.length > 0 && (
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-medium text-gray-900">Size <span className="text-red-500">*</span></h3>
                         <button
-                          key={size}
-                          className={`py-2 border rounded-md text-sm font-medium transition
-                          ${selectedSize === size
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 text-gray-900 hover:border-gray-300'}`}
-                          onClick={() => setSelectedSize(size)}
+                          className="text-sm text-blue-600 hover:text-blue-800 transition"
+                          onClick={() => setShowSizeGuide(!showSizeGuide)}
                         >
-                          {size}
+                          Size Guide
                         </button>
-                      ))}
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                        {parsedSizes.map((size) => (
+                          <button
+                            key={size}
+                            className={`py-2 px-1 border rounded-md text-sm font-medium transition transform hover:scale-105
+                            ${selectedSize === size
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 scale-105 shadow-md'
+                                : 'border-gray-200 text-gray-900 hover:border-gray-300 hover:bg-gray-50'}`}
+                            onClick={() => setSelectedSize(size)}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                      {!selectedSize && (
+                        <p className="text-sm text-red-500 mt-1">Please select a size</p>
+                      )}
                     </div>
-                    {!selectedSize && (
-                      <p className="text-sm text-red-500 mt-1">Please select a size</p>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Size Guide Modal */}
                 {showSizeGuide && (
@@ -791,12 +929,12 @@ export default function Product() {
                 {/* Quantity */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Quantity <span className="text-red-500">*</span></h3>
-                  <div className="flex items-center w-32">
+                  <div className="flex items-center w-28 sm:w-32">
                     <button
-                      className="w-10 h-10 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
+                      className="w-8 h-8 sm:w-10 sm:h-10 border border-gray-300 rounded-l-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                       </svg>
                     </button>
@@ -805,19 +943,19 @@ export default function Product() {
                       min="1"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="h-10 w-12 border-t border-b border-gray-300 text-center text-gray-900"
+                      className="h-8 sm:h-10 w-10 sm:w-12 border-t border-b border-gray-300 text-center text-gray-900 text-sm sm:text-base"
                     />
                     <button
-                      className="w-10 h-10 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
+                      className="w-8 h-8 sm:w-10 sm:h-10 border border-gray-300 rounded-r-md flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
                       onClick={() => setQuantity(quantity + 1)}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
                     </button>
                   </div>
                   {quantity < 1 && (
-                    <p className="text-sm text-red-500 mt-1">Please select a quantity greater than 0</p>
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">Please select a quantity greater than 0</p>
                   )}
                 </div>
 
@@ -826,52 +964,76 @@ export default function Product() {
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddToCart()}
-                    className={`group relative flex-1 py-3 px-8 text-white text-base font-semibold rounded-full shadow-md transition overflow-hidden ${canAddToCart()
-                        ? 'cursor-pointer bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+                    className={`relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md overflow-hidden transition-colors duration-500
+                      ${canAddToCart()
+                        ? 'cursor-pointer'
                         : 'bg-gray-400 cursor-not-allowed'
                       }`}
+                    style={{
+                      background: canAddToCart()
+                        ? 'linear-gradient(to right, #000 0%, #fff 100%)'
+                        : undefined,
+                      color: canAddToCart() ? '#fff' : undefined,
+                      position: 'relative',
+                    }}
                   >
-                    <span className="relative z-10">
+                    {canAddToCart() && (
+                      <span
+                        className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
+                        style={{
+                          background: 'linear-gradient(to left, #000 0%, #fff 100%)',
+                          width: '0%',
+                          left: '100%',
+                          top: 0,
+                          bottom: 0,
+                          transition: 'all 0.7s cubic-bezier(0.4,0,0.2,1)',
+                          borderRadius: '9999px',
+                          pointerEvents: 'none',
+                        }}
+                        aria-hidden="true"
+                        id="liquid-gradient"
+                      />
+                    )}
+                    <span className="relative z-10 transition-colors duration-500">
                       {!canAddToCart() ? 'Select Size, Color & Quantity' : 'Add to Cart'}
                     </span>
-                    {canAddToCart() && (
-                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    )}
                   </button>
-                  {/* <button className="flex-1 py-3 px-8 bg-gray-900 hover:bg-black text-white text-base font-semibold rounded-full shadow-md hover:shadow-lg transition">
-                  Buy Now
-                </button> */}
-                  {/* <button className="p-3 rounded-full border border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-50 transition">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button> */}
+                  <style jsx>{`
+                    button[style] {
+                      position: relative;
+                      overflow: hidden;
+                    }
+                    button[style]:hover #liquid-gradient {
+                      width: 100%;
+                      left: 0;
+                    }
+                  `}</style>
                 </div>
 
                 {/* Shipping & Returns */}
-                <div className="border-t border-gray-200 pt-6">
-                  <div className="mb-4">
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                  <div className="mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">Free shipping on orders over Rs 75</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Free shipping on orders over Rs 75</p>
                     </div>
                   </div>
-                  <div className="mb-4">
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">Free returns within 30 days</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Free returns within 30 days</p>
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
                       </svg>
-                      <p className="text-sm text-gray-600">1-year manufacturer warranty</p>
+                      <p className="text-xs sm:text-sm text-gray-600">1-year manufacturer warranty</p>
                     </div>
                   </div>
                 </div>
@@ -886,7 +1048,7 @@ export default function Product() {
             {/* Tabs */}
             <div className="mb-8 border-b border-gray-200" data-aos="fade-up">
               <div className="flex flex-wrap -mb-px">
-                {['description', 'specifications', 'reviews'].map((tab) => (
+                {['description'].map((tab) => (
                   <button
                     key={tab}
                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === tab
@@ -909,68 +1071,8 @@ export default function Product() {
                   <div className="prose max-w-none">
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">Product Description</h3>
                     <p className="text-gray-700 mb-6">{productData.description || 'No description available.'}</p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Details</h4>
-                        <ul className="space-y-2 text-gray-700">
-                          <li><strong>Category:</strong> {productData.category || 'N/A'}</li>
-                          <li><strong>Price:</strong> <span className="font-alumni">Rs {productData.price}</span></li>
-                          <li><strong>Quantity Available:</strong> {productData.quantity || 0}</li>
-                          <li><strong>Created:</strong> {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Status</h4>
-                        <ul className="space-y-2 text-gray-700">
-                          <li><strong>Featured:</strong> {productData.isFeatured ? 'Yes' : 'No'}</li>
-                          <li><strong>Best Seller:</strong> {productData.isBestSeller ? 'Yes' : 'No'}</li>
-                          <li><strong>Trending:</strong> {productData.isTrending ? 'Yes' : 'No'}</li>
-                          <li><strong>Special:</strong> {productData.isSpecial ? 'Yes' : 'No'}</li>
-                          <li><strong>Discounted:</strong> {productData.isDiscounted ? 'Yes' : 'No'}</li>
-                        </ul>
-                      </div>
-                    </div>
                   </div>
 
-                  <div className="mt-8 bg-blue-50 rounded-lg p-6">
-                    <h4 className="text-lg font-semibold text-blue-900 mb-3">Technology Highlights</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <h5 className="font-medium text-gray-900 mb-1">Ultra-Responsive Cushioning</h5>
-                        <p className="text-sm text-gray-600">
-                          Our patented foam technology delivers explosive energy return with every stride.
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                          </svg>
-                        </div>
-                        <h5 className="font-medium text-gray-900 mb-1">Adaptive Fit System</h5>
-                        <p className="text-sm text-gray-600">
-                          Innovative upper design molds to your foot for custom comfort and support.
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                          </svg>
-                        </div>
-                        <h5 className="font-medium text-gray-900 mb-1">Performance Traction</h5>
-                        <p className="text-sm text-gray-600">
-                          Strategically placed rubber compounds provide optimal grip in all conditions.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -1134,127 +1236,59 @@ export default function Product() {
               </div>
             </div>
 
+            {(() => {
+              console.log('Similar products render check:', {
+                loadingSimilar,
+                similarProductsLength: similarProducts.length,
+                similarProducts: similarProducts
+              });
+              return null;
+            })()}
             {loadingSimilar ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading similar products...</p>
               </div>
-            ) : similarProducts.length > 0 ? (
+            ) : similarProducts && Array.isArray(similarProducts) && similarProducts.length > 0 ? (
               <div data-aos="fade-up" data-aos-delay="200">
-                <Slider {...similarProductsSettings} className="similar-products-slider">
-                  {similarProducts.map((product, index) => (
-                    <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                {similarProducts.length === 1 ? (
+                  // Single product - display in centered grid
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-sm">
                       <ProductCard
-                        product={product}
-                        className="max-w-sm mx-auto"
+                        product={similarProducts[0]}
+                        className="mx-auto"
                       />
                     </div>
-                  ))}
-                </Slider>
+                  </div>
+                ) : (
+                  // Multiple products - use slider
+                  <Slider {...getSimilarProductsSettings(similarProducts.length)} className="similar-products-slider">
+                    {similarProducts.map((product, index) => (
+                      <div key={product._id || index} className="px-1" data-aos="fade-up" data-aos-delay={100 + (index * 50)}>
+                        <ProductCard
+                          product={product}
+                          className="max-w-sm mx-auto"
+                        />
+                      </div>
+                    ))}
+                  </Slider>
+                )}
               </div>
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500">No similar products available at the moment.</p>
+                <div className="mt-4 text-xs text-gray-400">
+                  Debug: Loading: {loadingSimilar ? 'Yes' : 'No'}, Products: {similarProducts?.length || 0}
+                </div>
               </div>
             )}
           </div>
         </section>
 
         {/* Newsletter */}
-        <section className="bg-gray-50 py-12 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto" data-aos="fade-up">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Join Our Community</h2>
-              <p className="text-gray-600 mb-6">Subscribe to get special offers, free giveaways, and early access to new releases.</p>
+        <Newsletter />
 
-              <div className="flex flex-col sm:flex-row sm:items-center sm:max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="px-4 py-3 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 flex-grow sm:rounded-r-none"
-                />
-                <button className="mt-3 sm:mt-0 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md sm:rounded-l-none shadow-sm transition">
-                  Subscribe
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 mt-3">By subscribing, you agree to our Privacy Policy and consent to receive updates from our company.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="bg-gray-900 text-white pt-12 pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <img src="/images/logo.png" alt="Logo" className="h-10 w-auto mb-4" />
-                <p className="text-gray-400 mb-4">Creating innovative footwear for every athlete since 2007.</p>
-                <div className="flex space-x-4">
-                  <a href="#" className="text-gray-400 hover:text-white transition">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                    </svg>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-white transition">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
-                    </svg>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-white transition">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                    </svg>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-white transition">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Shop</h3>
-                <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Men's Shoes</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Women's Shoes</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Kids' Shoes</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">New Arrivals</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Sale</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Support</h3>
-                <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Help Center</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Order Status</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Shipping & Delivery</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Returns & Exchanges</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Size Guide</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Company</h3>
-                <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">About Us</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Sustainability</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Careers</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Press</a></li>
-                  <li><a href="#" className="text-gray-400 hover:text-white transition">Contact Us</a></li>
-                </ul>
-              </div>
-            </div>
-            <div className="border-t border-gray-800 mt-10 pt-8">
-              <div className="flex flex-col md:flex-row justify-between items-center">
-                <p className="text-gray-400 text-sm">© 2023 Zagro Footwear. All rights reserved.</p>
-                <div className="flex space-x-6 mt-4 md:mt-0">
-                  <a href="#" className="text-sm text-gray-400 hover:text-white transition">Privacy Policy</a>
-                  <a href="#" className="text-sm text-gray-400 hover:text-white transition">Terms of Service</a>
-                  <a href="#" className="text-sm text-gray-400 hover:text-white transition">Accessibility</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
       </div>
     </Layout>
   );
