@@ -14,11 +14,67 @@ import { useAppDispatch } from '../redux/hooks';
 import { addToCart, openCart } from '../redux/slices/cartSlice';
 import { toast } from 'react-hot-toast';
 
-// Helper function to get proper image URL
+  // Helper function to get proper image URL
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
   return `${process.env.NEXT_PUBLIC_API_URL}/${imagePath.replace(/\\/g, '/')}`;
+};
+
+// Helper function to get ALL images (general + all colors)
+const getAllImages = (productData) => {
+  if (!productData) return [];
+  
+  let allImages = [];
+  
+  // Always include general images first
+  if (productData.images && Array.isArray(productData.images)) {
+    allImages = [...productData.images];
+  }
+  
+  // Add all color-specific images
+  if (productData.colorImages && productData.colorQuantities) {
+    try {
+      const colors = JSON.parse(productData.colorQuantities);
+      if (Array.isArray(colors)) {
+        colors.forEach(colorData => {
+          if (productData.colorImages[colorData.color] && Array.isArray(productData.colorImages[colorData.color])) {
+            allImages = [...allImages, ...productData.colorImages[colorData.color]];
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing colorQuantities:', error);
+    }
+  }
+  
+  return allImages;
+};
+
+// Helper function to get the starting index of a specific color's images
+const getColorImagesStartIndex = (productData, selectedColorIndex) => {
+  if (!productData || !productData.images) return 0;
+  
+  let currentIndex = productData.images.length; // Start after general images
+  
+  if (selectedColorIndex !== null && selectedColorIndex !== undefined && productData.colorQuantities) {
+    try {
+      const colors = JSON.parse(productData.colorQuantities);
+      if (Array.isArray(colors)) {
+        // Find the selected color and calculate its starting index
+        for (let i = 0; i < selectedColorIndex && i < colors.length; i++) {
+          const colorData = colors[i];
+          if (productData.colorImages && productData.colorImages[colorData.color] && Array.isArray(productData.colorImages[colorData.color])) {
+            currentIndex += productData.colorImages[colorData.color].length;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing colorQuantities:', error);
+    }
+  }
+  
+  return currentIndex;
 };
 
 // Comprehensive color mapping system
@@ -172,6 +228,7 @@ export default function Product() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [similarProducts, setSimilarProducts] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(true);
+  const [displayedImages, setDisplayedImages] = useState([]);
 
   // Image gallery settings
   const gallerySettings = {
@@ -392,8 +449,8 @@ export default function Product() {
     }
 
     // Get selected image
-    const selectedImage = productData.images && productData.images.length > 0
-      ? getImageUrl(productData.images[currentImageIndex])
+    const selectedImage = displayedImages && displayedImages.length > 0
+      ? getImageUrl(displayedImages[currentImageIndex])
       : null;
 
     // Add to cart
@@ -471,6 +528,25 @@ export default function Product() {
 
     fetchProduct();
   }, [id]);
+
+  // Update displayed images when product data changes
+  useEffect(() => {
+    if (productData) {
+      const images = getAllImages(productData);
+      setDisplayedImages(images);
+    }
+  }, [productData]);
+
+  // Handle color selection - slide to specific color images
+  useEffect(() => {
+    if (productData && selectedColor !== null && selectedColor !== undefined) {
+      const colorStartIndex = getColorImagesStartIndex(productData, selectedColor);
+      setCurrentImageIndex(colorStartIndex);
+    } else if (productData) {
+      // If no color selected, show first general image
+      setCurrentImageIndex(0);
+    }
+  }, [selectedColor, productData]);
 
   // Initialize AOS animations
   useEffect(() => {
@@ -553,18 +629,19 @@ export default function Product() {
                   onMouseMove={handleMouseMove}
                   onMouseLeave={() => setIsZoomed(false)}
                 >
-                  <div className="relative aspect-square">
-                    {productData.images && Array.isArray(productData.images) && productData.images.length > 0 ? (
+                  <div className="relative aspect-square overflow-hidden">
+                    {displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0 ? (
                       <div
-                        className={`absolute inset-0 bg-gray-200 flex items-center justify-center ${isZoomed ? 'scale-150' : 'scale-100'} transition-transform duration-300`}
+                        className={`absolute inset-0 bg-gray-200 flex items-center justify-center ${isZoomed ? 'scale-150' : 'scale-100'} transition-all duration-500 ease-in-out`}
                         style={isZoomed ? {
                           transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
                         } : {}}
                       >
                         <img
-                          src={getImageUrl(productData.images[currentImageIndex])}
+                          key={`${currentImageIndex}-${selectedColor}`} 
+                          src={getImageUrl(displayedImages[currentImageIndex])}
                           alt={productData.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-opacity duration-300"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
@@ -593,8 +670,8 @@ export default function Product() {
 
                 {/* Thumbnails */}
                 <div className="flex justify-center mt-4 gap-2">
-                  {productData.images && Array.isArray(productData.images) && productData.images.length > 0 ? (
-                    productData.images.map((image, index) => (
+                  {displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0 ? (
+                    displayedImages.map((image, index) => (
                       <div
                         key={index}
                         className={`w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 ${index === currentImageIndex ? 'border-blue-500' : 'border-transparent'} hover:border-blue-400 transition`}
@@ -979,57 +1056,9 @@ export default function Product() {
                           <li><strong>Created:</strong> {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}</li>
                         </ul>
                       </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-3">Product Status</h4>
-                        <ul className="space-y-2 text-gray-700">
-                          <li><strong>Featured:</strong> {productData.isFeatured ? 'Yes' : 'No'}</li>
-                          <li><strong>Best Seller:</strong> {productData.isBestSeller ? 'Yes' : 'No'}</li>
-                          <li><strong>Trending:</strong> {productData.isTrending ? 'Yes' : 'No'}</li>
-                          <li><strong>Special:</strong> {productData.isSpecial ? 'Yes' : 'No'}</li>
-                          <li><strong>Discounted:</strong> {productData.isDiscounted ? 'Yes' : 'No'}</li>
-                        </ul>
-                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 bg-blue-50 rounded-lg p-6">
-                    <h4 className="text-lg font-semibold text-blue-900 mb-3">Technology Highlights</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <h5 className="font-medium text-gray-900 mb-1">Ultra-Responsive Cushioning</h5>
-                        <p className="text-sm text-gray-600">
-                          Our patented foam technology delivers explosive energy return with every stride.
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                          </svg>
-                        </div>
-                        <h5 className="font-medium text-gray-900 mb-1">Adaptive Fit System</h5>
-                        <p className="text-sm text-gray-600">
-                          Innovative upper design molds to your foot for custom comfort and support.
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                          </svg>
-                        </div>
-                        <h5 className="font-medium text-gray-900 mb-1">Performance Traction</h5>
-                        <p className="text-sm text-gray-600">
-                          Strategically placed rubber compounds provide optimal grip in all conditions.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
 

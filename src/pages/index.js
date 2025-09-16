@@ -1238,35 +1238,13 @@ export default function Home() {
 
 
                 <Image
-                  src="https://png.pngtree.com/png-clipart/20220611/ourmid/pngtree-white-shoes-png-image_4998482.png"
+                  src="/formal.png"
                   alt="EVAPOR8 2.0"
                   width={600}
                   height={400}
                   className="relative z-10"
 
                 />
-
-
-
-                <div className="absolute bottom-0 left-0 right-0 text-center">
-
-                  <div className="inline-block bg-transparent px-6 py-2 rounded-full">
-
-                    <Image
-
-                      src="https://png.pngtree.com/png-clipart/20220611/ourmid/pngtree-white-shoes-png-image_4998482.png"
-
-                      alt="EVAPOR8 2.0"
-
-                      width={200}
-
-                      height={50}
-
-                    />
-
-                  </div>
-
-                </div>
 
               </div>
 
