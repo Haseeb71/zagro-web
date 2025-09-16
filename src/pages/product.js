@@ -10,6 +10,7 @@ import "slick-carousel/slick/slick-theme.css";
 import eproductsAPI from '../APIs/eproducts';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
+import Newsletter from '../components/Newsletter';
 import { useAppDispatch } from '../redux/hooks';
 import { addToCart, openCart } from '../redux/slices/cartSlice';
 import { toast } from 'react-hot-toast';
@@ -1286,26 +1287,7 @@ export default function Product() {
         </section>
 
         {/* Newsletter */}
-        <section className="bg-gray-50 py-12 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto" data-aos="fade-up">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Join Our Community</h2>
-              <p className="text-gray-600 mb-6">Subscribe to get special offers, free giveaways, and early access to new releases.</p>
-
-              <div className="flex flex-col sm:flex-row sm:items-center sm:max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="px-4 py-3 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 flex-grow sm:rounded-r-none"
-                />
-                <button className="mt-3 sm:mt-0 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md sm:rounded-l-none shadow-sm transition">
-                  Subscribe
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 mt-3">By subscribing, you agree to our Privacy Policy and consent to receive updates from our company.</p>
-            </div>
-          </div>
-        </section>
+        <Newsletter />
 
       </div>
     </Layout>

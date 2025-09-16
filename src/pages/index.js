@@ -12,6 +12,8 @@ import Layout from "../components/Layout";
 
 import Modal from "../components/Modal";
 
+import Newsletter from "../components/Newsletter";
+
 
 import productsAPI from "../APIs/eproducts";
 
@@ -1132,75 +1134,6 @@ export default function Home() {
 
         </section>
 
-
-
-        {/* Category Banners
-
-        <section className="py-12 bg-gray-50">
-
-          <div className="px-4 sm:px-6 lg:px-8">
-
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center" data-aos="fade-up">Shop by Category</h2>
-
-            {categoriesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((index) => (
-                  <div
-                    key={index}
-                    className="relative h-80 rounded-xl overflow-hidden shadow-md bg-gray-200 animate-pulse"
-                    data-aos="fade-up"
-                    data-aos-delay={index * 100}
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 bg-gray-300 rounded-full"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {categories.map((category, index) => {
-                  const { color, imageUrl } = getCategoryStyle(category.name);
-                  return (
-                    <Link
-                      key={category._id || index}
-                      href={`/categories/${category.slug}`}
-                      className="relative h-80 rounded-xl overflow-hidden shadow-md group cursor-pointer"
-                      data-aos="fade-up"
-                      data-aos-delay={index * 100}
-                    >
-                      {/* Dynamic Background Image */}
-        {/* <div 
-                        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                        style={{
-                          backgroundImage: `url(${imageUrl})`
-                        }}
-                      ></div> */}
-
-        {/* Gradient Overlay
-                      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-60 group-hover:opacity-70 transition`}></div> */}
-
-        {/* Content */}
-        {/* <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                        <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">
-                          {category.name}
-                        </h3>
-                        <button className="mt-4 px-6 py-2 bg-white text-gray-900 font-medium rounded-full shadow transform group-hover:scale-105 transition">
-                          Explore
-                        </button>
-                      </div> */}
-        {/* </Link>
-                  );
-                })}
-              </div>
-            )}
-
-          </div>
-
-        </section> */}
-
-
-
         {/* New Featured Product Section like the image */}
 
         <section className="py-12 sm:py-16 bg-gradient-to-r from-gray-900 to-black relative overflow-hidden">
@@ -1356,55 +1289,7 @@ export default function Home() {
 
         {/* Newsletter - Enhanced */}
 
-        <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-50 to-purple-50 relative overflow-hidden">
-
-          <div className="absolute inset-0 z-0">
-
-            <div className="absolute -right-40 -bottom-40 w-80 h-80 bg-blue-200/50 rounded-full blur-3xl"></div>
-
-            <div className="absolute -left-20 -top-20 w-60 h-60 bg-purple-200/50 rounded-full blur-3xl"></div>
-
-          </div>
-
-          <div
-
-            className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10"
-
-            data-aos="fade-up"
-
-          >
-
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4 text-gray-800">Join Our Community</h2>
-
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8">
-
-              Subscribe to get special offers, free giveaways, and new release notifications
-
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-
-              <input
-
-                type="email"
-
-                placeholder="Enter your email address"
-
-                className="flex-1 text-black outline-none px-4 sm:px-6 py-3 sm:py-4 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-full shadow-sm text-sm sm:text-base lg:text-lg"
-
-              />
-
-              <button className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-sm sm:text-base">
-
-                Subscribe
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </section>
+        <Newsletter />
 
       </div>
 
