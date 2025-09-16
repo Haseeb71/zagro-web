@@ -216,11 +216,27 @@ const CheckoutPage = () => {
       console.log('Customer data:', customerResponseData);
 
       // Check if response exists and has customer data
-      if (!customerResponseData || !customerResponseData.customer || !customerResponseData.customer._id) {
-        throw new Error('Failed to create customer - invalid response structure');
+      if (!customerResponseData) {
+        console.error('No response data received from customer API');
+        throw new Error('Failed to create customer - no response data');
       }
 
-      const customerId = customerResponseData.customer._id;
+      // Handle different possible response structures
+      let customerId;
+      if (customerResponseData.customer && customerResponseData.customer._id) {
+        // Expected structure: { customer: { _id: "..." } }
+        customerId = customerResponseData.customer._id;
+      } else if (customerResponseData._id) {
+        // Alternative structure: { _id: "...", ... }
+        customerId = customerResponseData._id;
+      } else if (customerResponseData.id) {
+        // Another alternative: { id: "...", ... }
+        customerId = customerResponseData.id;
+      } else {
+        console.error('Invalid response structure:', customerResponseData);
+        throw new Error('Failed to create customer - invalid response structure. Expected customer with _id, id, or direct _id field');
+      }
+
       setCustomerId(customerId);
       console.log('Customer ID extracted:', customerId);
 
@@ -401,20 +417,20 @@ const CheckoutPage = () => {
                           <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
                             <option value="PK">Pakistan</option>
                           </select>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <FormField
-                            name="firstName"
-                            type="text"
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                          name="firstName"
+                          type="text"
                             label="First name"
-                            placeholder="Enter your first name"
-                          />
-                          <FormField
-                            name="lastName"
-                            type="text"
+                          placeholder="Enter your first name"
+                        />
+                        <FormField
+                          name="lastName"
+                          type="text"
                             label="Last name"
-                            placeholder="Enter your last name"
-                          />
+                          placeholder="Enter your last name"
+                        />
                         </div>
                         <FormField
                           name="company"
@@ -462,10 +478,10 @@ const CheckoutPage = () => {
                           />
                           <label htmlFor="saveInfo" className="ml-2 text-sm text-slate-700">
                             Save this information for next time
-                          </label>
+                              </label>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
                     {/* Shipping method */}
                     <div>
@@ -478,8 +494,8 @@ const CheckoutPage = () => {
                         onClick={() => setPaymentMethod('free_shipping')}
                         >
                           <div className="flex items-center">
-                            <input
-                              type="radio"
+                          <input
+                            type="radio"
                               name="shippingMethod"
                               value="free_shipping"
                               checked={paymentMethod === 'free_shipping'}
@@ -487,9 +503,9 @@ const CheckoutPage = () => {
                               className="w-4 h-4 text-slate-600 border-slate-300 focus:ring-slate-500"
                             />
                             <span className="ml-3 text-sm font-medium text-slate-900">Free Shipping (Pre Paid) Debit and Credit Cards</span>
-                          </div>
+                            </div>
                           <span className="text-sm font-medium text-slate-600">FREE</span>
-                        </div>
+                          </div>
                         <div className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === 'cash_on_delivery'
                           ? 'border-slate-300 bg-slate-50'
                           : 'border-slate-200 hover:border-slate-300'
@@ -497,8 +513,8 @@ const CheckoutPage = () => {
                         onClick={() => setPaymentMethod('cash_on_delivery')}
                         >
                           <div className="flex items-center">
-                            <input
-                              type="radio"
+                          <input
+                            type="radio"
                               name="shippingMethod"
                               value="cash_on_delivery"
                               checked={paymentMethod === 'cash_on_delivery'}
@@ -506,9 +522,9 @@ const CheckoutPage = () => {
                               className="w-4 h-4 text-slate-600 border-slate-300 focus:ring-slate-500"
                             />
                             <span className="ml-3 text-sm font-medium text-slate-900">Cash On Delivery</span>
-                          </div>
+                            </div>
                           <span className="text-sm font-medium text-slate-600">Rs 250.00</span>
-                        </div>
+                          </div>
                       </div>
                     </div>
 
@@ -564,30 +580,30 @@ const CheckoutPage = () => {
 
                     return Object.values(groupedItems).map((productItems, groupIndex) => (
                       <div key={groupIndex} className="flex items-center space-x-3 py-3">
-                        {productItems[0].product.image ? (
-                          <div
-                            className="relative group cursor-pointer"
-                            onClick={() => {
-                              setPreviewImage(productItems[0].product.image);
-                              setShowImageModal(true);
-                            }}
-                          >
-                            <img
-                              src={productItems[0].product.image}
-                              alt={productItems[0].product.name}
+                          {productItems[0].product.image ? (
+                            <div
+                              className="relative group cursor-pointer"
+                              onClick={() => {
+                                setPreviewImage(productItems[0].product.image);
+                                setShowImageModal(true);
+                              }}
+                            >
+                              <img
+                                src={productItems[0].product.image}
+                                alt={productItems[0].product.name}
                               className="w-16 h-16 object-cover rounded-lg"
                             />
                             {/* Quantity badge */}
                             <div className="absolute -top-1 -right-1 w-5 h-5 bg-slate-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
                               {productItems.reduce((sum, item) => sum + item.quantity, 0)}
+                              </div>
                             </div>
-                          </div>
-                        ) : (
+                          ) : (
                           <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center">
                             <span className="text-xs text-slate-500 font-medium">No Image</span>
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-slate-900 text-sm mb-1 line-clamp-2">{productItems[0].product.name}</h3>
                           <div className="flex items-center space-x-2 mb-1">
                             <span className="text-xs text-slate-500">{productItems[0].selectedSize || 'Size'}</span>
@@ -596,7 +612,7 @@ const CheckoutPage = () => {
                               <div className="flex items-center space-x-1">
                                 <div
                                   className="w-3 h-3 rounded-full border border-slate-300 shadow-sm"
-                                  style={{
+                                            style={{
                                     backgroundColor: typeof productItems[0].selectedColor === 'string'
                                       ? productItems[0].selectedColor
                                       : productItems[0].selectedColor?.hex || productItems[0].selectedColor?.code || productItems[0].selectedColor?.name || '#ccc'
@@ -605,14 +621,14 @@ const CheckoutPage = () => {
                                 />
                                 <span className="text-xs text-slate-500">
                                   {typeof productItems[0].selectedColor === 'string' ? productItems[0].selectedColor : productItems[0].selectedColor?.name || 'Color'}
-                                </span>
-                              </div>
+                                      </span>
+                                    </div>
                             ) : (
                               <span className="text-xs text-slate-500">Color</span>
-                            )}
-                          </div>
+                                  )}
+                                </div>
                         </div>
-                        <div className="text-right">
+                                <div className="text-right">
                           <p className="text-sm font-medium text-slate-900">Rs {formatPrice(productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0))}</p>
                         </div>
                       </div>
