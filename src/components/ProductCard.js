@@ -31,7 +31,7 @@ const ProductCard = ({
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
+    return `${process.env.NEXT_PUBLIC_API_URL}/${imagePath.replace(/\\/g, '/')}`;
   };
 
   // Helper function to parse colorQuantities JSON string
@@ -293,15 +293,6 @@ const ProductCard = ({
     // Don't immediately hide on touch end, let the timeout handle it
   }, []);
 
-  const handleCardClick = useCallback((e) => {
-    // Only hide tap state if clicking on the card itself, not on action buttons
-    if (e.target === e.currentTarget || e.target.closest('.action-buttons') === null) {
-      setIsTapped(false);
-      if (tapTimeoutRef.current) {
-        clearTimeout(tapTimeoutRef.current);
-      }
-    }
-  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -344,15 +335,22 @@ const ProductCard = ({
 
   const currentVariant = variants[variant];
 
-  const handleQuickView = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    router.push(`/product?id=${product._id}`);
-  }, [router, product._id]);
 
   const handleProductClick = useCallback((e) => {
+    // Don't navigate if clicking on action buttons
+    if (e.target.closest('.action-buttons')) {
+      return;
+    }
+    
     e.preventDefault();
     e.stopPropagation();
+    
+    // Hide tap state when navigating
+    setIsTapped(false);
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+    
     router.push(`/product?id=${product._id}`);
   }, [router, product._id]);
 
@@ -487,12 +485,12 @@ const ProductCard = ({
 
   return (
     <div 
-      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-transparent ${className}`}
+      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-transparent cursor-pointer ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onClick={handleCardClick}
+      onClick={handleProductClick}
     >
       {/* Product Image Container */}
       <div className={`relative ${currentVariant.imageSize} overflow-hidden rounded-t-2xl`}>
@@ -533,30 +531,11 @@ const ProductCard = ({
           </div>
         )}
 
-        {/* Hover/Tap Overlay with Action Buttons */}
+        {/* Hover/Tap Overlay with Cart Button */}
         <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
           isHovered || isTapped ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="flex space-x-2 action-buttons">
-            {/* Quick View Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleQuickView(e);
-              }}
-              onTouchEnd={(e) => {
-                e.stopPropagation();
-                handleQuickView(e);
-              }}
-              className="bg-white/90 text-gray-800 w-10 h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center"
-              aria-label={`Quick view ${product.name}`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-
             {/* Add to Cart Button */}
             <button
               onClick={handleCartIconClick}

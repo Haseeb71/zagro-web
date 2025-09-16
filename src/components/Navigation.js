@@ -335,7 +335,7 @@ export default function Navigation() {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    return `${process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:5000'}/${imagePath.replace(/\\/g, '/')}`;
+    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/${imagePath.replace(/\\/g, '/')}`;
   };
 
   // Helper function to get product image with fallbacks
