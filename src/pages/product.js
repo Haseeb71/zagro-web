@@ -421,10 +421,17 @@ export default function Product() {
 
   // Fetch similar products
   const fetchSimilarProducts = async (catID, currentProductId) => {
-    if (!catID) return;
+    if (!catID) {
+      console.log('No category ID provided for similar products');
+      setLoadingSimilar(false);
+      return;
+    }
 
     try {
+      console.log('Starting to fetch similar products for category:', catID);
       setLoadingSimilar(true);
+      setSimilarProducts([]); // Clear previous products
+      
       const response = await eproductsAPI.getSimilarProducts({
         catID: catID,
         page: 1,
@@ -459,7 +466,9 @@ export default function Product() {
       }
     } catch (err) {
       console.error('Error fetching similar products:', err);
+      setSimilarProducts([]);
     } finally {
+      console.log('Setting loading to false');
       setLoadingSimilar(false);
     }
   };
@@ -472,21 +481,32 @@ export default function Product() {
       try {
         setLoading(true);
         setError(null);
+        setLoadingSimilar(true); // Ensure loading state is set for similar products
         const response = await eproductsAPI.getProductById(id);
         console.log('API Response:', response);
 
         if (response && response.data && response.data.product) {
           console.log('Product Data:', response.data.product);
-            setProductData(response.data.product);
-            // Fetch similar products after getting product data
-            fetchSimilarProducts(response.data.product.category._id, response.data.product._id);
+          setProductData(response.data.product);
+          
+          // Fetch similar products after getting product data
+          if (response.data.product.category && response.data.product.category._id) {
+            console.log('Fetching similar products for category:', response.data.product.category._id);
+            await fetchSimilarProducts(response.data.product.category._id, response.data.product._id);
+          } else {
+            console.log('No category found for similar products');
+            setLoadingSimilar(false);
+            setSimilarProducts([]);
+          }
         } else {
           console.log('No product data found in response');
           setError('Product not found');
+          setLoadingSimilar(false);
         }
       } catch (err) {
         console.error('Error fetching product:', err);
         setError('Failed to load product');
+        setLoadingSimilar(false);
       } finally {
         setLoading(false);
       }
@@ -494,6 +514,15 @@ export default function Product() {
 
     fetchProduct();
   }, [id]);
+
+  // Ensure similar products section is properly initialized
+  useEffect(() => {
+    console.log('Similar products state changed:', {
+      loadingSimilar,
+      similarProductsLength: similarProducts?.length || 0,
+      similarProducts: similarProducts
+    });
+  }, [loadingSimilar, similarProducts]);
 
   // Update displayed images when product data changes
   useEffect(() => {
@@ -934,18 +963,50 @@ export default function Product() {
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddToCart()}
-                    className={`group relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md transition overflow-hidden ${canAddToCart()
-                        ? 'cursor-pointer bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+                    className={`relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md overflow-hidden transition-colors duration-500
+                      ${canAddToCart()
+                        ? 'cursor-pointer'
                         : 'bg-gray-400 cursor-not-allowed'
                       }`}
+                    style={{
+                      background: canAddToCart()
+                        ? 'linear-gradient(to right, #000 0%, #fff 100%)'
+                        : undefined,
+                      color: canAddToCart() ? '#fff' : undefined,
+                      position: 'relative',
+                    }}
                   >
-                    <span className="relative z-10">
+                    {canAddToCart() && (
+                      <span
+                        className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
+                        style={{
+                          background: 'linear-gradient(to left, #000 0%, #fff 100%)',
+                          width: '0%',
+                          left: '100%',
+                          top: 0,
+                          bottom: 0,
+                          transition: 'all 0.7s cubic-bezier(0.4,0,0.2,1)',
+                          borderRadius: '9999px',
+                          pointerEvents: 'none',
+                        }}
+                        aria-hidden="true"
+                        id="liquid-gradient"
+                      />
+                    )}
+                    <span className="relative z-10 transition-colors duration-500">
                       {!canAddToCart() ? 'Select Size, Color & Quantity' : 'Add to Cart'}
                     </span>
-                    {canAddToCart() && (
-                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    )}
                   </button>
+                  <style jsx>{`
+                    button[style] {
+                      position: relative;
+                      overflow: hidden;
+                    }
+                    button[style]:hover #liquid-gradient {
+                      width: 100%;
+                      left: 0;
+                    }
+                  `}</style>
                   {/* <button className="flex-1 py-3 px-8 bg-gray-900 hover:bg-black text-white text-base font-semibold rounded-full shadow-md hover:shadow-lg transition">
                   Buy Now
                 </button> */}
@@ -1182,12 +1243,20 @@ export default function Product() {
               </div>
             </div>
 
+            {(() => {
+              console.log('Similar products render check:', {
+                loadingSimilar,
+                similarProductsLength: similarProducts.length,
+                similarProducts: similarProducts
+              });
+              return null;
+            })()}
             {loadingSimilar ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading similar products...</p>
               </div>
-            ) : similarProducts.length > 0 ? (
+            ) : similarProducts && Array.isArray(similarProducts) && similarProducts.length > 0 ? (
               <div data-aos="fade-up" data-aos-delay="200">
                 {similarProducts.length === 1 ? (
                   // Single product - display in centered grid
@@ -1216,6 +1285,9 @@ export default function Product() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500">No similar products available at the moment.</p>
+                <div className="mt-4 text-xs text-gray-400">
+                  Debug: Loading: {loadingSimilar ? 'Yes' : 'No'}, Products: {similarProducts?.length || 0}
+                </div>
               </div>
             )}
           </div>
