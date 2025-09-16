@@ -1,32 +1,39 @@
-export const BASE_URL = 'https://admin.api.zagrofootwear.com/api';
-// export const BASE_URL = 'http://localhost:3005/api';
+// export const BASE_URL = 'https://admin.api.zagrofootwear.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export const BASE_URL = API_URL;
+
+// Debug logging
+console.log('BASE_URL:', BASE_URL);
+console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
 
 export const ENDPOINT = {
- 
     products: {
-        getLandingPageProducts: `${BASE_URL}/product/all-types`,
-        getProducts:`${BASE_URL}/product`,
-        getProductsByFilters: `${BASE_URL}/product/filter`,
-        getProductById: `${BASE_URL}/product`,
-        getSimilarProducts: `${BASE_URL}/product/:id/similar`
+        getLandingPageProducts: `${BASE_URL}/products/all-types`,
+        getNewArrivals: `${BASE_URL}/products/new-arrivals`,
+        getTrendingProducts: `${BASE_URL}/products/trending`,
+        getBestSellersProducts: `${BASE_URL}/products/best-sellers`,
+        getSearchedProducts: `${BASE_URL}/products/search`,
+        getFilteredProducts: `${BASE_URL}/products/filter`,
+        getProductById: `${BASE_URL}/products`,
     },
     categories: {
-        getAllCategories: `${BASE_URL}/product/category/all`
-    },
-    subCategories: {
-        getAllSubCategoriesByCategory: `${BASE_URL}/product/sub-category/by-category`,
-        getAllSubCategories: `${BASE_URL}/product/sub-category/all`
+        getAllCategories: `${BASE_URL}/categories`,
     },
     promotions: {
-        getAllPromotions: `${BASE_URL}/promotion`
+        getPromotions: `${BASE_URL}/promotions`,
     },
-    checkoutCustomer: {
-        checkoutCustomer: `${BASE_URL}/checkout/customer`,
-        applyCoupon: `${BASE_URL}/coupon/validate`
-    },
-    orderCheckout: {
-        orderCheckout: `${BASE_URL}/checkout`,
-        orderStatus: `${BASE_URL}/checkout/order`
+    order: {
+        placeOrder: `${BASE_URL}/checkout`,
+        applyCoupon: `${BASE_URL}/coupons`,
     }
+};
+
+// Export API_ENDPOINTS for backward compatibility
+export const API_ENDPOINTS = ENDPOINT;
+
+// Add API_HEADERS for authentication requests
+export const API_HEADERS = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
 };
 

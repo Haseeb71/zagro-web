@@ -17,7 +17,11 @@ export default function Footer() {
     try {
       setIsLoadingCategories(true);
       const response = await categoriesAPI.getAllCategories();
-      setCategories(response.data.categories);
+      if (response && response.data && response.data.categories) {
+        setCategories(response.data.categories);
+      } else {
+        console.error('Categories response structure:', response);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
@@ -67,14 +71,10 @@ export default function Footer() {
           <div className="md:col-span-1">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Shop</h3>
             <ul className="space-y-2">
-              {categories.slice(0, MAX_VISIBLE_CATEGORIES).map((category) => (
-                <li key={category.id}>
-                  <Link href={`/category/${category.slug}`} className="text-gray-600 hover:text-blue-600 transition-colors duration-300">
-                    {category.name}
-                  </Link>
-                </li>
-              ))}
-              <li><Link href="/collections" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">All Collections</Link></li>
+              <li><Link href="/categories/men" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Men's Shoes</Link></li>
+              <li><Link href="/categories/women" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Women's Shoes</Link></li>
+              <li><Link href="/categories/kids" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">Kids' Shoes</Link></li>
+              <li><Link href="/categories/new-arrivals" className="text-gray-600 hover:text-blue-600 transition-colors duration-300">New Arrivals</Link></li>
             </ul>
           </div>
 

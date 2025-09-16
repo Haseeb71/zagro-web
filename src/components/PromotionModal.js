@@ -1,36 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import promotionsAPI from '../APIs/promotions/index';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import promotionsAPI from '../APIs/promotions/indes';
 
-// Custom X Mark Icon Component
-const XMarkIcon = ({ className }) => (
-  <svg 
-    className={className} 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    strokeWidth={1.5} 
-    stroke="currentColor"
-  >
-    <path 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      d="M6 18L18 6M6 6l12 12" 
-    />
-  </svg>
-);
-
-const PromotionModal = ({ isOpen, onClose, onMaybeLater }) => {
+const PromotionModal = ({ isOpen, onClose }) => {
   const [promotions, setPromotions] = useState([]);
   const [currentPromotionIndex, setCurrentPromotionIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-
-  // Helper function to get proper image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
-  };
 
   // Fetch promotions on component mount
   useEffect(() => {
@@ -133,10 +110,10 @@ const PromotionModal = ({ isOpen, onClose, onMaybeLater }) => {
       }`}>
         {/* Left Panel - Text and Buttons */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col justify-center min-h-[300px] sm:min-h-[400px] lg:min-h-auto">
-          {/* Close Button - Only visible on mobile */}
+          {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center z-10 transition-colors duration-200 sm:hidden"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center z-10 transition-colors duration-200"
           >
             <XMarkIcon className="w-4 h-4 text-gray-600" />
           </button>
@@ -156,19 +133,15 @@ const PromotionModal = ({ isOpen, onClose, onMaybeLater }) => {
             <button
               onClick={() => {
                 onClose();
-                // Navigate to promotion link if available
-                if (currentPromotion.link) {
-                  window.open(currentPromotion.link, '_blank');
-                } else {
-                  console.log('User clicked SHOP NOW');
-                }
+                // Navigate to store or perform action
+                console.log('User clicked SHOP NOW');
               }}
               className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg border-2 font-medium text-sm sm:text-base transition-colors duration-200 bg-black text-white border-black hover:bg-gray-800"
             >
               SHOP NOW
             </button>
             <button
-              onClick={onMaybeLater || onClose}
+              onClick={onClose}
               className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg border-2 font-medium text-sm sm:text-base transition-colors duration-200 bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
             >
               MAYBE LATER
@@ -178,11 +151,6 @@ const PromotionModal = ({ isOpen, onClose, onMaybeLater }) => {
           {/* Disclaimer */}
           <p className="text-xs sm:text-sm text-gray-500 mt-4 sm:mt-6">
             Limited time offer • Terms and conditions apply
-          </p>
-          
-          {/* User preference info */}
-          <p className="text-xs text-gray-400 mt-2">
-            Click "MAYBE LATER" to not see this for 7 days
           </p>
 
           {/* Promotion Counter */}
@@ -202,21 +170,15 @@ const PromotionModal = ({ isOpen, onClose, onMaybeLater }) => {
 
         {/* Right Panel - Image */}
         <div className="flex-1 relative min-h-[200px] sm:min-h-[300px] lg:min-h-auto">
-          {currentPromotion.image ? (
-            <img
-              src={getImageUrl(currentPromotion.image)}
-              alt={currentPromotion.mainText || "Promotion"}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-500">No Image</span>
-            </div>
-          )}
-          {/* Close button on image side - Only visible on desktop */}
+          <img
+            src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=800&fit=crop"
+            alt="Promotion background"
+            className="w-full h-full object-cover"
+          />
+          {/* Close button on image side */}
           <button
             onClick={onClose}
-            className="hidden sm:flex absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 bg-white bg-opacity-80 hover:bg-opacity-100 rounded items-center justify-center transition-colors duration-200"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-6 h-6 bg-white bg-opacity-80 hover:bg-opacity-100 rounded flex items-center justify-center transition-colors duration-200"
           >
             <XMarkIcon className="w-4 h-4 text-gray-600" />
           </button>

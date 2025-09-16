@@ -1,92 +1,120 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// Helper function to get proper image URL
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
-  if (imagePath.startsWith('http')) return imagePath;
-  return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
+// Helper function to get cart from localStorage
+const getCartFromStorage = () => {
+  if (typeof window !== 'undefined') {
+    const cart = localStorage.getItem('cart');
+    return cart ? JSON.parse(cart) : [];
+  }
+  return [];
 };
 
-// Helper function to format price
-const formatPrice = (price) => {
-  if (!price || price < 1000) return price;
-  
-  if (price >= 1000000) {
-    return (price / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else if (price >= 1000) {
-    return (price / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+// Helper function to save cart to localStorage
+const saveCartToStorage = (cart) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('cart', JSON.stringify(cart));
   }
-  
-  return price;
 };
 
 const initialState = {
-  items: [],
+  items: getCartFromStorage(),
   totalItems: 0,
   totalPrice: 0,
   isOpen: false,
-  autoCloseTimer: null,
+  autoCloseTimer: null
 };
 
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
+    // Add item to cart
     addToCart: (state, action) => {
-      const { product, quantity = 1, selectedSize, selectedColor, selectedImage } = action.payload;
+      const { 
+        name, 
+        price, 
+        image, 
+        quantity = 1, 
+        selectedSize = null, 
+        selectedColor = null,
+        productId 
+      } = action.payload;
       
-      // Create a unique ID for this cart item
-      const itemId = `${product._id}-${selectedSize || 'no-size'}-${selectedColor || 'no-color'}`;
+      // Create essential product data
+      const essentialProduct = {
+        _id: productId,
+        name,
+        price,
+        image
+      };
       
-      // Check if item already exists with same size and color
-      const existingItem = state.items.find(item => item.id === itemId);
-      
-      if (existingItem) {
-        // Update quantity if item exists
-        existingItem.quantity += quantity;
+      // Check if item already exists in cart (same product, size, and color)
+      const existingItemIndex = state.items.findIndex(
+        item => 
+          item.product._id === productId && 
+          item.selectedSize === selectedSize && 
+          item.selectedColor === selectedColor
+      );
+
+      if (existingItemIndex >= 0) {
+        // If exact same item exists (same product, size, and color), increase quantity
+        state.items[existingItemIndex].quantity += quantity;
       } else {
-        // Add new item to cart
-        const newItem = {
-          id: itemId,
-          product: {
-            _id: product._id,
-            name: product.name,
-            price: product.price,
-            originalPrice: product.originalPrice || product.price,
-            image: selectedImage || (product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : null),
-            brand: product.brand,
-            category: product.category,
-            description: product.description,
-            rating: product.rating,
-            reviewCount: product.reviewCount,
-            quantity: product.quantity,
-            discountPercentage: product.discountPercentage || 0,
-            isFeatured: product.isFeatured,
-            isNew: product.isNew,
-            isBestSeller: product.isBestSeller,
-            isTrending: product.isTrending,
-            isSpecial: product.isSpecial,
-            isDiscounted: product.isDiscounted,
-          },
-          quantity,
-          selectedSize: selectedSize || null,
-          selectedColor: selectedColor || null,
-          selectedImage: selectedImage || (product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : null),
-          addedAt: new Date().toISOString(),
-          replaced: false,
-        };
-        
-        state.items.push(newItem);
+        // Check if there's a previous version of this product without size/color
+        const previousItemIndex = state.items.findIndex(
+          item => 
+            item.product._id === productId && 
+            (!item.selectedSize || !item.selectedColor)
+        );
+
+        if (previousItemIndex >= 0) {
+          // Replace the previous item with the new one (with size/color)
+          state.items[previousItemIndex] = {
+            id: `${productId}_${selectedSize || 'default'}_${selectedColor || 'default'}`,
+            product: essentialProduct,
+            quantity,
+            selectedSize,
+            selectedColor,
+            addedAt: new Date().toISOString(),
+            replaced: true // Flag to indicate this item replaced a previous version
+          };
+        } else {
+          // If no previous version exists, add new item (allows multiple sizes/colors of same product)
+          state.items.push({
+            id: `${productId}_${selectedSize || 'default'}_${selectedColor || 'default'}`,
+            product: essentialProduct,
+            quantity,
+            selectedSize,
+            selectedColor,
+            addedAt: new Date().toISOString()
+          });
+        }
       }
+
+      // Update totals
+      cartSlice.caseReducers.updateTotals(state);
+      
+      // Save to localStorage
+      saveCartToStorage(state.items);
+      
+      // Open cart and set auto-close timer
+      state.isOpen = true;
+      state.autoCloseTimer = Date.now() + 5000; // 5 seconds from now
+    },
+
+    // Remove item from cart
+    removeFromCart: (state, action) => {
+      const itemId = action.payload;
+      state.items = state.items.filter(item => item.id !== itemId);
       
       // Update totals
-      state.totalItems = state.items.reduce((total, item) => total + item.quantity, 0);
-      state.totalPrice = state.items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+      cartSlice.caseReducers.updateTotals(state);
       
-      // Set auto-close timer (5 seconds)
-      state.autoCloseTimer = Date.now() + 5000;
+      // Save to localStorage
+      saveCartToStorage(state.items);
     },
-    
+
+    // Update item quantity
     updateQuantity: (state, action) => {
       const { itemId, quantity } = action.payload;
       const item = state.items.find(item => item.id === itemId);
@@ -100,74 +128,78 @@ const cartSlice = createSlice({
         }
         
         // Update totals
-        state.totalItems = state.items.reduce((total, item) => total + item.quantity, 0);
-        state.totalPrice = state.items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+        cartSlice.caseReducers.updateTotals(state);
+        
+        // Save to localStorage
+        saveCartToStorage(state.items);
       }
     },
-    
-    removeFromCart: (state, action) => {
-      const itemId = action.payload;
-      state.items = state.items.filter(item => item.id !== itemId);
-      
-      // Update totals
-      state.totalItems = state.items.reduce((total, item) => total + item.quantity, 0);
-      state.totalPrice = state.items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
-    },
-    
+
+    // Clear entire cart
     clearCart: (state) => {
       state.items = [];
       state.totalItems = 0;
       state.totalPrice = 0;
+      
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('cart');
+      }
+    },
+
+    // Toggle cart visibility
+    toggleCart: (state) => {
+      state.isOpen = !state.isOpen;
+      // Clear auto-close timer when manually toggling
       state.autoCloseTimer = null;
     },
-    
+
+    // Open cart
     openCart: (state) => {
       state.isOpen = true;
-    },
-    
-    closeCart: (state) => {
-      state.isOpen = false;
+      // Clear auto-close timer when manually opening
       state.autoCloseTimer = null;
     },
-    
+
+    // Close cart
+    closeCart: (state) => {
+      state.isOpen = false;
+      // Clear auto-close timer when manually closing
+      state.autoCloseTimer = null;
+    },
+
+    // Clear auto-close timer
     clearAutoCloseTimer: (state) => {
       state.autoCloseTimer = null;
     },
-    
-    updateItemDetails: (state, action) => {
-      const { itemId, selectedSize, selectedColor, selectedImage } = action.payload;
-      const item = state.items.find(item => item.id === itemId);
-      
-      if (item) {
-        item.selectedSize = selectedSize;
-        item.selectedColor = selectedColor;
-        item.selectedImage = selectedImage;
-        item.replaced = true;
-      }
+
+    // Update totals (helper reducer)
+    updateTotals: (state) => {
+      state.totalItems = state.items.reduce((total, item) => total + item.quantity, 0);
+      state.totalPrice = state.items.reduce((total, item) => {
+        return total + (item.product.price * item.quantity);
+      }, 0);
     },
-    
-    // Load cart from localStorage
-    loadCartFromStorage: (state, action) => {
-      const savedCart = action.payload;
-      if (savedCart && savedCart.items) {
-        state.items = savedCart.items;
-        state.totalItems = savedCart.totalItems || 0;
-        state.totalPrice = savedCart.totalPrice || 0;
-      }
-    },
-  },
+
+    // Load cart from localStorage (for hydration)
+    loadCart: (state) => {
+      const cart = getCartFromStorage();
+      state.items = cart;
+      cartSlice.caseReducers.updateTotals(state);
+    }
+  }
 });
 
 export const {
   addToCart,
-  updateQuantity,
   removeFromCart,
+  updateQuantity,
   clearCart,
+  toggleCart,
   openCart,
   closeCart,
   clearAutoCloseTimer,
-  updateItemDetails,
-  loadCartFromStorage,
+  loadCart
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

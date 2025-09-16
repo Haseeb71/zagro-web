@@ -2,25 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: '**',
-      },
-    ],
-    domains: ['localhost', '127.0.0.1'],
+    domains: ['localhost', '127.0.0.1', 'images.unsplash.com'],
   },
-  eslint: {
-    // Disable ESLint during builds
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    // Disable TypeScript errors during builds
-    ignoreBuildErrors: true,
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 };
 

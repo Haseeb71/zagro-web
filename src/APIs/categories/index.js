@@ -1,23 +1,17 @@
-import API from '../base'
+import API from '../base';
 import { ENDPOINT } from '../../config/constants'
 
-const getAllCategories = async () => {
-    const response = await API.getMethod(`${ENDPOINT.categories.getAllCategories}`, false);
-    return response;
-}
+const categoriesAPI = {
+  // Get all categories
+  getAllCategories: async () => {
+    try {
+      const response = await API.getMethod(`${ENDPOINT.categories.getAllCategories}`, false);
+      return response;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return { data: null, error: error, success: false };
+    }
+  }
+};
 
-const getAllSubCategoriesByCategory = async (categoryId) => {
-    const response = await API.getMethod(`${ENDPOINT.subCategories.getAllSubCategoriesByCategory}/${categoryId}`, false);
-    return response;
-}
-
-const getAllSubCategories = async () => {
-  const response = await API.getMethod(`${ENDPOINT.subCategories.getAllSubCategories}`, false);
-  return response;
-}
-
-export default {
-  getAllCategories,
-  getAllSubCategoriesByCategory,
-  getAllSubCategories
-}
+export default categoriesAPI;

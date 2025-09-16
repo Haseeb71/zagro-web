@@ -484,13 +484,63 @@ export default function Product() {
     }
   }, []);
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading product...</p>
+  return (
+    <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-white`}>
+      {/* Navigation - Light Theme */}
+      <nav className="sticky top-0 z-50 bg-white shadow-sm backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-xl font-bold text-blue-600">
+                Zagro Footwear
+              </Link>
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-700 hover:text-blue-600 transition">Home</Link>
+              <a href="#" className="text-gray-700 hover:text-blue-600 transition">Men</a>
+              <a href="#" className="text-gray-700 hover:text-blue-600 transition">Women</a>
+              <a href="#" className="text-gray-700 hover:text-blue-600 transition">Kids</a>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button className="p-2 text-gray-700 hover:text-blue-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              <button className="p-2 text-gray-700 hover:text-blue-600 transition relative">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-blue-600 rounded-full">2</span>
+              </button>
+              <button className="p-2 text-gray-700 hover:text-blue-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Breadcrumbs */}
+      <div className="bg-gray-50 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Link href="/" className="hover:text-blue-600 transition">Home</Link>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <Link href="/" className="hover:text-blue-600 transition">Footwear</Link>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <Link href="/" className="hover:text-blue-600 transition">Running</Link>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="font-medium text-gray-900">{productData.name}</span>
+          </div>
         </div>
       </div>
     );
@@ -1178,7 +1228,28 @@ export default function Product() {
                     </div>
                   </div>
                 </div>
-              )}
+              ))}
+            </Slider>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-gray-50 py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto" data-aos="fade-up">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Join Our Community</h2>
+            <p className="text-gray-600 mb-6">Subscribe to get special offers, free giveaways, and early access to new releases.</p>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center sm:max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="px-4 py-3 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 flex-grow sm:rounded-r-none"
+              />
+              <button className="cursor-pointer mt-3 sm:mt-0 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md sm:rounded-l-none shadow-sm transition">
+                Subscribe
+              </button>
             </div>
           </div>
         </section>
