@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "PORT=4500 next start",
     "lint": "next lint"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "react-hot-toast": "^2.6.0",
     "react-redux": "^9.2.0",
     "react-slick": "^0.30.3",
+    "sass": "^1.92.1",
     "slick-carousel": "^1.8.1",
     "three": "^0.175.0",
     "toast": "^0.5.4",
