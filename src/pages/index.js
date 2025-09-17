@@ -639,13 +639,13 @@ export default function Home() {
 
         {/* Hero Banner Slider - Image Only */}
 
-        <section className="relative h-screen overflow-hidden">
+        <section className="relative h-130 overflow-hidden">
 
           <Slider {...bannerSliderSettings} className="h-full">
 
             {bannerImages.map((banner, index) => (
 
-              <div key={banner.id} className="relative h-screen cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
+              <div key={banner.id} className="relative h-130 cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
 
                 {/* Background image */}
 
