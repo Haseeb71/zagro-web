@@ -3,6 +3,144 @@ import { useRouter } from 'next/router';
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
 import { updateQuantity, removeFromCart, closeCart, clearAutoCloseTimer } from '../redux/slices/cartSlice';
 
+// Comprehensive color mapping system (same as ProductCard)
+const getColorHex = (colorName) => {
+  if (!colorName) return '#6B7280'; // Default gray
+  
+  const color = colorName.toLowerCase().trim();
+  
+  // If it's already a hex code, return it as is
+  if (color.startsWith('#')) {
+    return color;
+  }
+  
+  // Comprehensive color mapping
+  const colorMap = {
+    // Basic Colors
+    'red': '#EF4444',
+    'blue': '#3B82F6',
+    'green': '#10B981',
+    'yellow': '#F59E0B',
+    'orange': '#F97316',
+    'purple': '#8B5CF6',
+    'pink': '#EC4899',
+    'brown': '#A16207',
+    'black': '#1F2937',
+    'white': '#F9FAFB',
+    'gray': '#6B7280',
+    'grey': '#6B7280',
+    
+    // Extended Colors
+    'navy': '#1E3A8A',
+    'maroon': '#991B1B',
+    'olive': '#365314',
+    'lime': '#65A30D',
+    'cyan': '#06B6D4',
+    'magenta': '#D946EF',
+    'violet': '#7C3AED',
+    'indigo': '#4F46E5',
+    'teal': '#0D9488',
+    'emerald': '#059669',
+    'amber': '#D97706',
+    'rose': '#F43F5E',
+    'sky': '#0EA5E9',
+    'slate': '#475569',
+    'zinc': '#71717A',
+    'neutral': '#737373',
+    'stone': '#78716C',
+    
+    // Common Shoe Colors
+    'beige': '#F5F5DC',
+    'tan': '#D2B48C',
+    'khaki': '#F0E68C',
+    'cream': '#FFFDD0',
+    'ivory': '#FFFFF0',
+    'off-white': '#FAFAFA',
+    'charcoal': '#36454F',
+    'midnight': '#191970',
+    'royal': '#4169E1',
+    'forest': '#228B22',
+    'crimson': '#DC143C',
+    'burgundy': '#800020',
+    'wine': '#722F37',
+    'gold': '#FFD700',
+    'silver': '#C0C0C0',
+    'bronze': '#CD7F32',
+    'copper': '#B87333',
+    
+    // Multi-word colors
+    'dark blue': '#1E40AF',
+    'light blue': '#93C5FD',
+    'dark green': '#166534',
+    'light green': '#86EFAC',
+    'dark red': '#991B1B',
+    'light red': '#FCA5A5',
+    'dark gray': '#374151',
+    'light gray': '#D1D5DB',
+    'dark grey': '#374151',
+    'light grey': '#D1D5DB',
+    'royal blue': '#1D4ED8',
+    'navy blue': '#1E3A8A',
+    'sky blue': '#0EA5E9',
+    'forest green': '#166534',
+    'lime green': '#65A30D',
+    'bright red': '#DC2626',
+    'deep red': '#991B1B',
+    'bright blue': '#2563EB',
+    'deep blue': '#1E40AF',
+    'bright green': '#16A34A',
+    'deep green': '#166534',
+    
+    // Special cases and codes
+    'multi': '#8B5CF6', // Multi-color
+    'multicolor': '#8B5CF6',
+    'multicoloured': '#8B5CF6',
+    'multicolored': '#8B5CF6',
+    'rainbow': '#8B5CF6',
+    'clear': '#F9FAFB',
+    'transparent': '#F9FAFB',
+    'metallic': '#C0C0C0',
+    'shiny': '#C0C0C0',
+    'matte': '#6B7280',
+    'glossy': '#1F2937',
+    
+    // Common variations
+    'reddish': '#EF4444',
+    'bluish': '#3B82F6',
+    'greenish': '#10B981',
+    'yellowish': '#F59E0B',
+    'purplish': '#8B5CF6',
+    'pinkish': '#EC4899',
+    'brownish': '#A16207',
+    'blackish': '#1F2937',
+    'whitish': '#F9FAFB',
+    'grayish': '#6B7280',
+    'greyish': '#6B7280'
+  };
+
+  // Direct match
+  if (colorMap[color]) {
+    return colorMap[color];
+  }
+
+  // Partial match for compound colors
+  for (const [key, value] of Object.entries(colorMap)) {
+    if (color.includes(key) || key.includes(color)) {
+      return value;
+    }
+  }
+
+  // Generate a consistent color from the string if no match
+  let hash = 0;
+  for (let i = 0; i < color.length; i++) {
+    hash = color.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Convert hash to a color
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 50%)`;
+};
+
 const formatPrice = (price) => {
   if (!price) return price;
   
@@ -288,11 +426,9 @@ const CartSlider = ({ onClose }) => {
                               <div 
                                 className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
                                 style={{ 
-                                  backgroundColor: typeof item.selectedColor === 'string' 
-                                    ? item.selectedColor 
-                                    : item.selectedColor?.hex || item.selectedColor?.code || item.selectedColor?.name || '#ccc'
+                                  backgroundColor: getColorHex(item.selectedColor)
                                 }}
-                                title={typeof item.selectedColor === 'string' ? item.selectedColor : item.selectedColor?.name}
+                                title={item.selectedColor}
                               />
                             ) : (
                               <span className="text-gray-400">Pending</span>
