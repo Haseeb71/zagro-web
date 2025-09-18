@@ -23,6 +23,10 @@ import PromotionModal from "../components/PromotionModal";
 
 import categoriesAPI from "../APIs/categories";
 
+import LogoLoop from "../components/LogoLoop";
+
+import { SiNike, SiAdidas, SiPuma, SiAmazon, SiApple, SiGoogle, SiMinds, SiSpotify } from 'react-icons/si';
+
 
 
 export default function Home() {
@@ -335,6 +339,18 @@ export default function Home() {
     }
   ];
 
+  // Logo data for LogoLoop component - Shoe brands and partners
+  const shoeBrandLogos = [
+    { node: <SiNike />, title: "Nike", href: "https://nike.com" },
+    { node: <SiAdidas />, title: "Adidas", href: "https://adidas.com" },
+    { node: <SiPuma />, title: "Puma", href: "https://puma.com" },
+    { node: <SiAmazon />, title: "Amazon", href: "https://amazon.com" },
+    { node: <SiApple />, title: "Apple", href: "https://apple.com" },
+    { node: <SiGoogle />, title: "Google", href: "https://google.com" },
+    { node: <SiMinds />, title: "Microsoft", href: "https://microsoft.com" },
+    { node: <SiSpotify />, title: "Spotify", href: "https://spotify.com" },
+  ];
+
 
 
 
@@ -363,84 +379,23 @@ export default function Home() {
   };
 
 
-
-  const productSliderSettings = {
-
-    dots: false,
-
-    infinite: true,
-
-    speed: 500,
-
-    slidesToShow: 4,
-
-    slidesToScroll: 1,
-
-    autoplay: false,
-
-    responsive: [
-
-      {
-
-        breakpoint: 1024,
-
-        settings: {
-
-          slidesToShow: 3,
-
-        }
-
-      },
-
-      {
-
-        breakpoint: 768,
-
-        settings: {
-
-          slidesToShow: 2,
-
-        }
-
-      },
-
-      {
-
-        breakpoint: 640,
-
-        settings: {
-
-          slidesToShow: 1,
-
-        }
-
-      }
-
-    ]
-
-  };
-
-
-
-  // Dynamic slider settings based on product count
-
   const getDynamicSliderSettings = (productCount) => {
 
     const baseSettings = {
 
-      dots: false, // No dots on any screen size
+      dots: false, 
 
-      infinite: false, // No infinite scroll on desktop
+      infinite: false, 
 
       speed: 500,
 
-      slidesToShow: 4, // Always show 4 products on desktop
+      slidesToShow: 4,
 
       slidesToScroll: 1,
 
       autoplay: false,
 
-      arrows: false, // No arrows on any screen size
+      arrows: false,
 
       centerMode: false,
 
@@ -454,13 +409,13 @@ export default function Home() {
 
           settings: {
 
-            slidesToShow: 4, // Always show 4 products on large screens
+            slidesToShow: 4,
 
-            dots: false, // Never show dots on large screens
+            dots: false,
 
-            arrows: false, // Never show arrows on large screens
+            arrows: false,
 
-            infinite: false, // Never infinite scroll on large screens
+            infinite: false,
 
             centerMode: false,
 
@@ -476,11 +431,11 @@ export default function Home() {
 
           settings: {
 
-            slidesToShow: 3, // Show 3 products on tablet
+            slidesToShow: 3,
 
-            dots: false, // No dots on any screen size
+            dots: false,
 
-            arrows: false, // No arrows on any screen size
+            arrows: false,
 
             infinite: productCount > 3,
 
@@ -498,11 +453,11 @@ export default function Home() {
 
           settings: {
 
-            slidesToShow: 2, // Show 2 products on mobile
+            slidesToShow: 2,
 
-            dots: false, // No dots on any screen size
+            dots: false,
 
-            arrows: false, // No arrows on any screen size
+            arrows: false,
 
             infinite: productCount > 2,
 
@@ -520,11 +475,11 @@ export default function Home() {
 
           settings: {
 
-            slidesToShow: 1, // Show 1 product on small mobile
+            slidesToShow: 1,
 
-            dots: false, // No dots on any screen size
+            dots: false,
 
-            arrows: false, // No arrows on any screen size
+            arrows: false,
 
             infinite: productCount > 1,
 
@@ -542,7 +497,6 @@ export default function Home() {
 
 
 
-    // If only 1 product, disable slider functionality
 
     if (productCount <= 1) {
 
@@ -563,12 +517,8 @@ export default function Home() {
 
 
   useEffect(() => {
-
     setIsMounted(true);
-
   }, []);
-
-
 
   return (
 
@@ -635,17 +585,14 @@ export default function Home() {
 
         `}</style>
 
-
-
         {/* Hero Banner Slider - Image Only */}
-
-        <section className="relative h-screen overflow-hidden">
+        <section className="relative h-190 overflow-hidden">
 
           <Slider {...bannerSliderSettings} className="h-full">
 
             {bannerImages.map((banner, index) => (
 
-              <div key={banner.id} className="relative h-screen cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
+              <div key={banner.id} className="relative h-190 cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
 
                 {/* Background image */}
 
@@ -675,7 +622,25 @@ export default function Home() {
 
         </section>
 
-
+        {/* Logo Loop Section */}
+        <section className="py-8 bg-gray-50">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div style={{ height: '120px', position: 'relative', overflow: 'hidden' }}>
+              <LogoLoop
+                logos={shoeBrandLogos}
+                speed={120}
+                direction="left"
+                logoHeight={48}
+                gap={90}
+                pauseOnHover
+                scaleOnHover
+                fadeOut
+                fadeOutColor="#f9fafb"
+                ariaLabel="Shoe brand partners"
+              />
+            </div>
+          </div>
+        </section>
 
         {/* New Arrivals Slider */}
 

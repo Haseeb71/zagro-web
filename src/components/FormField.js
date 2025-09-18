@@ -34,11 +34,6 @@ const FormField = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-slate-700 mb-2">
-        {label}
-        <span className="text-red-500 ml-1">*</span>
-      </label>
-      
       <Field name={name}>
         {({ field, meta }) => (
           <>
@@ -46,7 +41,7 @@ const FormField = ({
               <input
                 {...field}
                 type={type}
-                placeholder={placeholder}
+                placeholder={placeholder || label}
                 className={getFieldClasses(field, meta)}
                 onBlur={(e) => {
                   field.onBlur(e);

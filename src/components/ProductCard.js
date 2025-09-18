@@ -87,6 +87,11 @@ const ProductCard = ({
     
     const color = colorName.toLowerCase().trim();
     
+    // If it's already a hex code, return it as is
+    if (color.startsWith('#')) {
+      return color;
+    }
+    
     // Comprehensive color mapping
     const colorMap = {
       // Basic Colors

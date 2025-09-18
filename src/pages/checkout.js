@@ -10,13 +10,150 @@ import orderAPI from '../APIs/order/order';
 import Layout from '../components/Layout';
 import FormField from '../components/FormField';
 import ErrorSummary from '../components/ErrorSummary';
-import SubmitButton from '../components/SubmitButton';
 // import OrderConfirmationModal from '../components/OrderConfirmationModal';
 
 const formatPrice = (price) => {
   if (!price) return price;
   
   return price.toLocaleString();
+};
+
+// Comprehensive color mapping system (same as ProductCard)
+const getColorHex = (colorName) => {
+  if (!colorName) return '#6B7280'; // Default gray
+  
+  const color = colorName.toLowerCase().trim();
+  
+  // If it's already a hex code, return it as is
+  if (color.startsWith('#')) {
+    return color;
+  }
+  
+  // Comprehensive color mapping
+  const colorMap = {
+    // Basic Colors
+    'red': '#EF4444',
+    'blue': '#3B82F6',
+    'green': '#10B981',
+    'yellow': '#F59E0B',
+    'orange': '#F97316',
+    'purple': '#8B5CF6',
+    'pink': '#EC4899',
+    'brown': '#A16207',
+    'black': '#1F2937',
+    'white': '#F9FAFB',
+    'gray': '#6B7280',
+    'grey': '#6B7280',
+    
+    // Extended Colors
+    'navy': '#1E3A8A',
+    'maroon': '#991B1B',
+    'olive': '#365314',
+    'lime': '#65A30D',
+    'cyan': '#06B6D4',
+    'magenta': '#D946EF',
+    'violet': '#7C3AED',
+    'indigo': '#4F46E5',
+    'teal': '#0D9488',
+    'emerald': '#059669',
+    'amber': '#D97706',
+    'rose': '#F43F5E',
+    'sky': '#0EA5E9',
+    'slate': '#475569',
+    'zinc': '#71717A',
+    'neutral': '#737373',
+    'stone': '#78716C',
+    
+    // Common Shoe Colors
+    'beige': '#F5F5DC',
+    'tan': '#D2B48C',
+    'khaki': '#F0E68C',
+    'cream': '#FFFDD0',
+    'ivory': '#FFFFF0',
+    'off-white': '#FAFAFA',
+    'charcoal': '#36454F',
+    'midnight': '#191970',
+    'royal': '#4169E1',
+    'forest': '#228B22',
+    'crimson': '#DC143C',
+    'burgundy': '#800020',
+    'wine': '#722F37',
+    'gold': '#FFD700',
+    'silver': '#C0C0C0',
+    'bronze': '#CD7F32',
+    'copper': '#B87333',
+    
+    // Multi-word colors
+    'dark blue': '#1E40AF',
+    'light blue': '#93C5FD',
+    'dark green': '#166534',
+    'light green': '#86EFAC',
+    'dark red': '#991B1B',
+    'light red': '#FCA5A5',
+    'dark gray': '#374151',
+    'light gray': '#D1D5DB',
+    'dark grey': '#374151',
+    'light grey': '#D1D5DB',
+    'royal blue': '#1D4ED8',
+    'navy blue': '#1E3A8A',
+    'sky blue': '#0EA5E9',
+    'forest green': '#166534',
+    'lime green': '#65A30D',
+    'bright red': '#DC2626',
+    'deep red': '#991B1B',
+    'bright blue': '#2563EB',
+    'deep blue': '#1E40AF',
+    'bright green': '#16A34A',
+    'deep green': '#166534',
+    
+    // Special cases and codes
+    'multi': '#8B5CF6', // Multi-color
+    'multicolor': '#8B5CF6',
+    'multicoloured': '#8B5CF6',
+    'multicolored': '#8B5CF6',
+    'rainbow': '#8B5CF6',
+    'clear': '#F9FAFB',
+    'transparent': '#F9FAFB',
+    'metallic': '#C0C0C0',
+    'shiny': '#C0C0C0',
+    'matte': '#6B7280',
+    'glossy': '#1F2937',
+    
+    // Common variations
+    'reddish': '#EF4444',
+    'bluish': '#3B82F6',
+    'greenish': '#10B981',
+    'yellowish': '#F59E0B',
+    'purplish': '#8B5CF6',
+    'pinkish': '#EC4899',
+    'brownish': '#A16207',
+    'blackish': '#1F2937',
+    'whitish': '#F9FAFB',
+    'grayish': '#6B7280',
+    'greyish': '#6B7280'
+  };
+
+  // Direct match
+  if (colorMap[color]) {
+    return colorMap[color];
+  }
+
+  // Partial match for compound colors
+  for (const [key, value] of Object.entries(colorMap)) {
+    if (color.includes(key) || key.includes(color)) {
+      return value;
+    }
+  }
+
+  // Generate a consistent color from the string if no match
+  let hash = 0;
+  for (let i = 0; i < color.length; i++) {
+    hash = color.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Convert hash to a color
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 50%)`;
 };
 
 
@@ -393,7 +530,7 @@ const CheckoutPage = () => {
                           name="email"
                           type="email"
                           label="Email"
-                          placeholder="Enter your email address"
+                          placeholder="Email"
                         />
                         <div className="flex items-center">
                           <input
@@ -412,63 +549,57 @@ const CheckoutPage = () => {
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900 mb-4">Delivery</h2>
                       <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Country/Region</label>
-                          <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-sm">
-                            <option value="PK">Pakistan</option>
-                          </select>
-                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                           name="firstName"
                           type="text"
                             label="First name"
-                          placeholder="Enter your first name"
+                          placeholder="First name"
                         />
                         <FormField
                           name="lastName"
                           type="text"
                             label="Last name"
-                          placeholder="Enter your last name"
+                          placeholder="Last name"
                         />
                         </div>
                         <FormField
                           name="company"
                           type="text"
                           label="Company (optional)"
-                          placeholder="Enter company name"
+                          placeholder="Company (optional)"
                         />
                         <FormField
                           name="address"
                           type="text"
                           label="Address"
-                          placeholder="House/Flat No, Street Name, Area, Landmark"
+                          placeholder="Address"
                         />
                         <FormField
                           name="apartment"
                           type="text"
                           label="Apartment, suite, etc. (optional)"
-                          placeholder="Apartment, suite, etc."
+                          placeholder="Apartment, suite, etc. (optional)"
                         />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
                             name="city"
                             type="text"
                             label="City"
-                            placeholder="e.g., Karachi, Lahore"
+                            placeholder="City"
                           />
                           <FormField
                             name="zipCode"
                             type="text"
                             label="Postal code (optional)"
-                            placeholder="5400"
+                            placeholder="Postal code (optional)"
                           />
                         </div>
                         <FormField
                           name="phone"
                           type="tel"
                           label="Phone"
-                          placeholder="+92 300 1234567"
+                          placeholder="Phone"
                         />
                         <div className="flex items-center">
                           <input
@@ -487,25 +618,6 @@ const CheckoutPage = () => {
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900 mb-4">Shipping method</h2>
                       <div className="space-y-3">
-                        <div className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === 'free_shipping'
-                          ? 'border-slate-300 bg-slate-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                        onClick={() => setPaymentMethod('free_shipping')}
-                        >
-                          <div className="flex items-center">
-                          <input
-                            type="radio"
-                              name="shippingMethod"
-                              value="free_shipping"
-                              checked={paymentMethod === 'free_shipping'}
-                              onChange={(e) => setPaymentMethod(e.target.value)}
-                              className="w-4 h-4 text-slate-600 border-slate-300 focus:ring-slate-500"
-                            />
-                            <span className="ml-3 text-sm font-medium text-slate-900">Free Shipping (Pre Paid) Debit and Credit Cards</span>
-                            </div>
-                          <span className="text-sm font-medium text-slate-600">FREE</span>
-                          </div>
                         <div className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === 'cash_on_delivery'
                           ? 'border-slate-300 bg-slate-50'
                           : 'border-slate-200 hover:border-slate-300'
@@ -546,15 +658,58 @@ const CheckoutPage = () => {
                     )}
 
                     {/* Place Order Button */}
-                    <SubmitButton
-                      isSubmitting={isSubmitting}
-                      isProcessing={isProcessing}
-                      isValid={isValid}
-                      dirty={dirty}
-                      errors={errors}
-                      touched={touched}
-                      cartItems={cartItems}
-                    />
+                    <div className="flex flex-col sm:flex-row gap-3 mb-8">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || isProcessing || !isValid || !dirty || cartItems.some(item => !item.selectedSize || !item.selectedColor)}
+                        className={`relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md overflow-hidden transition-colors duration-500
+                          ${!isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor)
+                            ? 'cursor-pointer'
+                            : 'bg-gray-400 cursor-not-allowed'
+                          }`}
+                        style={{
+                          background: !isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor)
+                            ? 'linear-gradient(to right, #000 0%, #fff 100%)'
+                            : undefined,
+                          color: !isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor) ? '#fff' : undefined,
+                          position: 'relative',
+                        }}
+                      >
+                        {!isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor) && (
+                          <span
+                            className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
+                            style={{
+                              background: 'linear-gradient(to left, #000 0%, #fff 100%)',
+                              width: '0%',
+                              left: '100%',
+                              top: 0,
+                              bottom: 0,
+                              transition: 'all 0.7s cubic-bezier(0.4,0,0.2,1)',
+                              borderRadius: '9999px',
+                              pointerEvents: 'none',
+                            }}
+                            aria-hidden="true"
+                            id="liquid-gradient-place-order"
+                          />
+                        )}
+                        <span className="relative z-10 transition-colors duration-500">
+                          {isSubmitting || isProcessing ? 'Processing...' : 
+                           !isValid || !dirty ? 'Fill in all required fields' :
+                           cartItems.some(item => !item.selectedSize || !item.selectedColor) ? 'Complete product selection' :
+                           'Place Order'}
+                        </span>
+                      </button>
+                      <style jsx>{`
+                        button[style] {
+                          position: relative;
+                          overflow: hidden;
+                        }
+                        button[style]:hover #liquid-gradient-place-order {
+                          width: 100%;
+                          left: 0;
+                        }
+                      `}</style>
+                    </div>
                   </Form>
                 )}
               </Formik>
@@ -612,20 +767,18 @@ const CheckoutPage = () => {
                               <div className="flex items-center space-x-1">
                                 <div
                                   className="w-3 h-3 rounded-full border border-slate-300 shadow-sm"
-                                            style={{
-                                    backgroundColor: typeof productItems[0].selectedColor === 'string'
-                                      ? productItems[0].selectedColor
-                                      : productItems[0].selectedColor?.hex || productItems[0].selectedColor?.code || productItems[0].selectedColor?.name || '#ccc'
+                                  style={{
+                                    backgroundColor: getColorHex(productItems[0].selectedColor)
                                   }}
-                                  title={typeof productItems[0].selectedColor === 'string' ? productItems[0].selectedColor : productItems[0].selectedColor?.name}
+                                  title={productItems[0].selectedColor}
                                 />
                                 <span className="text-xs text-slate-500">
-                                  {typeof productItems[0].selectedColor === 'string' ? productItems[0].selectedColor : productItems[0].selectedColor?.name || 'Color'}
-                                      </span>
-                                    </div>
+                                  {productItems[0].selectedColor}
+                                </span>
+                              </div>
                             ) : (
                               <span className="text-xs text-slate-500">Color</span>
-                                  )}
+                            )}
                                 </div>
                         </div>
                                 <div className="text-right">
