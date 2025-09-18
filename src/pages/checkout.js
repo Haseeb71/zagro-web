@@ -7,7 +7,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import orderAPI from '../APIs/order/order';
-import Layout from '../components/Layout';
+import CheckoutHeader from '../components/CheckoutHeader';
 import FormField from '../components/FormField';
 import ErrorSummary from '../components/ErrorSummary';
 // import OrderConfirmationModal from '../components/OrderConfirmationModal';
@@ -183,8 +183,6 @@ const validationSchema = Yup.object({
     .min(10, 'Phone number must be at least 10 digits')
     .max(15, 'Phone number must be less than 15 digits')
     .matches(/^[\+]?[0-9\s\-\(\)]+$/, 'Phone number can only contain digits, spaces, hyphens, parentheses, and + sign'),
-  company: Yup.string()
-    .max(100, 'Company name must be less than 100 characters'),
   address: Yup.string()
     .min(10, 'Address must be at least 10 characters')
     .max(200, 'Address must be less than 200 characters')
@@ -222,7 +220,6 @@ const CheckoutPage = () => {
     lastName: '',
     email: '',
     phone: '',
-    company: '',
     address: '',
     apartment: '',
     city: '',
@@ -479,8 +476,9 @@ const CheckoutPage = () => {
 
   if (cartItems.length === 0) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center pt-24">
+      <>
+        <CheckoutHeader />
+        <div className="min-h-screen flex items-center justify-center pt-32">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
             <button
@@ -491,18 +489,19 @@ const CheckoutPage = () => {
             </button>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
+      <CheckoutHeader />
       <Head>
         <title>Checkout - Zagro Footwear</title>
         <meta name="description" content="Complete your order at Zagro Footwear" />
       </Head>
 
-      <div className="min-h-screen bg-white py-12 pt-28">
+      <div className="min-h-screen bg-white py-12 pt-32">
         <div className="max-w-6xl mx-auto px-8 lg:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
             {/* Checkout Form */}
@@ -563,12 +562,6 @@ const CheckoutPage = () => {
                           placeholder="Last name"
                         />
                         </div>
-                        <FormField
-                          name="company"
-                          type="text"
-                          label="Company (optional)"
-                          placeholder="Company (optional)"
-                        />
                         <FormField
                           name="address"
                           type="text"
@@ -1041,7 +1034,7 @@ const CheckoutPage = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 
