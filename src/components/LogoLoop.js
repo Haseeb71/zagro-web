@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
-import './LogoLoop.css';
 
 const ANIMATION_CONFIG = {
   SMOOTH_TAU: 0.25,
@@ -174,18 +173,17 @@ export const LogoLoop = memo(
     const cssVariables = useMemo(
       () => ({
         '--logoloop-gap': `${gap}px`,
-        '--logoloop-logoHeight': `${logoHeight}px`,
-        ...(fadeOutColor && { '--logoloop-fadeColor': fadeOutColor })
+        '--logoloop-logoHeight': `${logoHeight}px`
       }),
-      [gap, logoHeight, fadeOutColor]
+      [gap, logoHeight]
     );
 
     const rootClassName = useMemo(
       () =>
-        ['logoloop', fadeOut && 'logoloop--fade', scaleOnHover && 'logoloop--scale-hover', className]
+        ['relative overflow-x-hidden', scaleOnHover && 'py-1', className]
           .filter(Boolean)
           .join(' '),
-      [fadeOut, scaleOnHover, className]
+      [scaleOnHover, className]
     );
 
     const handleMouseEnter = useCallback(() => {
@@ -200,7 +198,7 @@ export const LogoLoop = memo(
       const isNodeItem = 'node' in item;
 
       const content = isNodeItem ? (
-        <span className="logoloop__node" aria-hidden={!!item.href && !item.ariaLabel}>
+        <span className="inline-flex items-center text-gray-800" aria-hidden={!!item.href && !item.ariaLabel}>
           {item.node}
         </span>
       ) : (
@@ -215,6 +213,7 @@ export const LogoLoop = memo(
           loading="lazy"
           decoding="async"
           draggable={false}
+          className="h-12 w-auto block object-contain select-none pointer-events-none transition-transform duration-300 ease-out"
         />
       );
 
@@ -222,7 +221,7 @@ export const LogoLoop = memo(
 
       const itemContent = item.href ? (
         <a
-          className="logoloop__link"
+          className="inline-flex items-center no-underline rounded transition-opacity duration-200 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
           href={item.href}
           aria-label={itemAriaLabel || 'logo link'}
           target="_blank"
@@ -235,7 +234,23 @@ export const LogoLoop = memo(
       );
 
       return (
-        <li className="logoloop__item" key={key} role="listitem">
+        <li 
+          className={`flex-none mr-8 text-5xl leading-none last:mr-8 ${scaleOnHover ? 'overflow-visible' : ''}`} 
+          key={key} 
+          role="listitem"
+          onMouseEnter={scaleOnHover ? (e) => {
+            const img = e.currentTarget.querySelector('img');
+            const node = e.currentTarget.querySelector('span');
+            if (img) img.style.transform = 'scale(1.2)';
+            if (node) node.style.transform = 'scale(1.2)';
+          } : undefined}
+          onMouseLeave={scaleOnHover ? (e) => {
+            const img = e.currentTarget.querySelector('img');
+            const node = e.currentTarget.querySelector('span');
+            if (img) img.style.transform = 'scale(1)';
+            if (node) node.style.transform = 'scale(1)';
+          } : undefined}
+        >
           {itemContent}
         </li>
       );
@@ -245,7 +260,7 @@ export const LogoLoop = memo(
       () =>
         Array.from({ length: copyCount }, (_, copyIndex) => (
           <ul
-            className="logoloop__list"
+            className="flex items-center"
             key={`copy-${copyIndex}`}
             role="list"
             aria-hidden={copyIndex > 0}
@@ -270,15 +285,60 @@ export const LogoLoop = memo(
       <div
         ref={containerRef}
         className={rootClassName}
-        style={containerStyle}
+        style={{
+          ...containerStyle,
+          position: 'relative',
+          ...(fadeOut && {
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: 'clamp(24px, 8%, 120px)',
+              background: `linear-gradient(to right, ${fadeOutColor || '#ffffff'} 0%, rgba(0, 0, 0, 0) 100%)`,
+              pointerEvents: 'none',
+              zIndex: 1
+            },
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              right: 0,
+              width: 'clamp(24px, 8%, 120px)',
+              background: `linear-gradient(to left, ${fadeOutColor || '#ffffff'} 0%, rgba(0, 0, 0, 0) 100%)`,
+              pointerEvents: 'none',
+              zIndex: 1
+            }
+          })
+        }}
         role="region"
         aria-label={ariaLabel}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="logoloop__track" ref={trackRef}>
+        <div className="flex w-max will-change-transform select-none" ref={trackRef}>
           {logoLists}
         </div>
+        {fadeOut && (
+          <>
+            <div 
+              className="absolute top-0 bottom-0 left-0 pointer-events-none z-10"
+              style={{
+                width: 'clamp(24px, 8%, 120px)',
+                background: `linear-gradient(to right, ${fadeOutColor || '#ffffff'} 0%, rgba(0, 0, 0, 0) 100%)`
+              }}
+            />
+            <div 
+              className="absolute top-0 bottom-0 right-0 pointer-events-none z-10"
+              style={{
+                width: 'clamp(24px, 8%, 120px)',
+                background: `linear-gradient(to left, ${fadeOutColor || '#ffffff'} 0%, rgba(0, 0, 0, 0) 100%)`
+              }}
+            />
+          </>
+        )}
       </div>
     );
   }

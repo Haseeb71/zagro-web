@@ -340,15 +340,29 @@ export default function Home() {
   ];
 
   // Logo data for LogoLoop component - Shoe brands and partners
+  // Easy to manage: Add new logos by adding objects to this array
   const shoeBrandLogos = [
-    { node: <SiNike />, title: "Nike", href: "https://nike.com" },
-    { node: <SiAdidas />, title: "Adidas", href: "https://adidas.com" },
-    { node: <SiPuma />, title: "Puma", href: "https://puma.com" },
-    { node: <SiAmazon />, title: "Amazon", href: "https://amazon.com" },
-    { node: <SiApple />, title: "Apple", href: "https://apple.com" },
-    { node: <SiGoogle />, title: "Google", href: "https://google.com" },
-    { node: <SiMinds />, title: "Microsoft", href: "https://microsoft.com" },
-    { node: <SiSpotify />, title: "Spotify", href: "https://spotify.com" },
+    // { node: <SiNike />, title: "Nike", href: "https://nike.com" },
+    // { node: <SiAdidas />, title: "Adidas", href: "https://adidas.com" },
+    // { node: <SiPuma />, title: "Puma", href: "https://puma.com" },
+    // { node: <SiAmazon />, title: "Amazon", href: "https://amazon.com" },
+    
+    // Image-based logos (using your own images)
+    { 
+      src: "/formal.png", 
+      alt: "Formal Footwear", 
+      title: "Formal Footwear",
+      href: "#"
+    },
+    { 
+      src: "/formal3.jpg", 
+      alt: "Formal Footwear", 
+      title: "Formal Footwear",
+      href: "#"
+    },
+
+    // { node: <SiMinds />, title: "Microsoft", href: "https://microsoft.com" },
+    // { node: <SiSpotify />, title: "Spotify", href: "https://spotify.com" },
   ];
 
 
@@ -623,7 +637,7 @@ export default function Home() {
         </section>
 
         {/* Logo Loop Section */}
-        <section className="py-8 bg-gray-50">
+        <section className="pt-8 pb-0 bg-gray-50">
           <div className="px-4 sm:px-6 lg:px-8">
             <div style={{ height: '120px', position: 'relative', overflow: 'hidden' }}>
               <LogoLoop
