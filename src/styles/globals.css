@@ -510,3 +510,40 @@ body {
   }
 }
 
+/* Fix for very light text colors - make them black for better visibility */
+.text-gray-50,
+.text-gray-100,
+.text-slate-50,
+.text-slate-100,
+.text-white.opacity-10,
+.text-white.opacity-20,
+.text-white.opacity-30,
+.text-white.opacity-40,
+.text-white.opacity-50,
+.text-white.opacity-60,
+.text-white.opacity-70,
+.text-white.opacity-80,
+.text-white.opacity-90 {
+  color: #000000 !important;
+}
+
+/* Specific fix for table cells with very light text */
+td.text-gray-50,
+td.text-gray-100,
+td.text-slate-50,
+td.text-slate-100,
+th.text-gray-50,
+th.text-gray-100,
+th.text-slate-50,
+th.text-slate-100 {
+  color: #000000 !important;
+}
+
+/* Fix for any text that appears almost invisible */
+[class*="text-gray-50"],
+[class*="text-gray-100"],
+[class*="text-slate-50"],
+[class*="text-slate-100"] {
+  color: #000000 !important;
+}
+
