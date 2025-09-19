@@ -770,8 +770,8 @@ export default function Product() {
                     <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
                       <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-2">
-                        <span className="text-lg sm:text-xl text-gray-500 line-through font-alumni">Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100))}</span>
-                        <span className="text-sm text-green-600 font-medium font-alumni">Save Rs {Math.round(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
+                        <span className="text-lg sm:text-xl text-gray-500 line-through font-alumni">Rs {Math.floor(productData.price / (1 - productData.discountPercentage / 100))}</span>
+                        <span className="text-sm text-green-600 font-medium font-alumni">Save Rs {Math.floor(productData.price / (1 - productData.discountPercentage / 100)) - productData.price}</span>
                       </div>
                     )}
                   </div>

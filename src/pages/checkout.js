@@ -13,9 +13,10 @@ import ErrorSummary from '../components/ErrorSummary';
 // import OrderConfirmationModal from '../components/OrderConfirmationModal';
 
 const formatPrice = (price) => {
+  console.log("Price ---", price)
   if (!price) return price;
-  
-  return price.toLocaleString();
+  // Use parseFloat and toFixed to handle decimal precision properly
+  return parseFloat(price).toFixed(0).toLocaleString();
 };
 
 // Comprehensive color mapping system (same as ProductCard)
@@ -267,10 +268,10 @@ const CheckoutPage = () => {
     };
   }, [showImageModal]);
 
-  const subtotal = totalPrice; // Use Redux total price
-  const shipping = 9.99;
-  const tax = 0; // No tax
-  const discount = couponDiscount || 0; // Default to 0 if no coupon
+  const subtotal = totalPrice;
+  const shipping = 0;
+  const tax = 0;
+  const discount = couponDiscount || 0;
   const total = subtotal + shipping + tax - discount;
 
   // Coupon validation and application
@@ -628,7 +629,7 @@ const CheckoutPage = () => {
                             />
                             <span className="ml-3 text-sm font-medium text-slate-900">Cash On Delivery</span>
                             </div>
-                          <span className="text-sm font-medium text-slate-600">Rs 250.00</span>
+                          {/* <span className="text-sm font-medium text-slate-600">Rs 250.00</span> */}
                           </div>
                       </div>
                     </div>
@@ -878,7 +879,7 @@ const CheckoutPage = () => {
                   )}
                   <div className="flex justify-between text-base font-semibold text-slate-900 border-t border-slate-200 pt-3">
                     <span>Total</span>
-                    <span>PKR Rs {formatPrice(total)}</span>
+                    <span>Rs {formatPrice(total)}</span>
                   </div>
                 </div>
 

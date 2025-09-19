@@ -526,7 +526,7 @@ const ProductCard = ({
         {/* Discount Badge */}
         {product.discountPercentage > 0 && (
           <div className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-product font-bold shadow-lg">
-            -{product.discountPercentage}%
+            {product.discountPercentage}% OFF
           </div>
         )}
 
@@ -601,7 +601,7 @@ const ProductCard = ({
           </span>
           {product.discountPercentage > 0 && (
             <span className="text-sm text-red-500 line-through font-medium font-alumni">
-              Rs {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
+              Rs {formatPrice(Math.floor(product.price / (1 - product.discountPercentage / 100)))}
             </span>
           )}
         </div>
@@ -635,7 +635,7 @@ const ProductCard = ({
                   {product.discountPercentage > 0 ? (
                     <>
                       <span className="text-sm text-gray-500 line-through font-alumni">
-                        Rs {formatPrice(Math.round(product.price / (1 - product.discountPercentage / 100)))}
+                        Rs {formatPrice(Math.floor(product.price / (1 - product.discountPercentage / 100)))}
                       </span>
                       <span className="text-lg font-product font-bold text-red-600">
                         <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>

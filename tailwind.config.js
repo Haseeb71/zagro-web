@@ -7,7 +7,7 @@ module.exports = {
     theme: {
       extend: {
         fontFamily: {
-          'sans': ['var(--font-barlow)', 'Barlow', 'sans-serif'],
+          'sans': ['HelveticaNeueCyr', 'Helvetica', 'Arial', 'sans-serif'],
           'product': ['Google Sans Code', 'monospace'],
         },
         animation: {

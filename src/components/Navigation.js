@@ -1009,7 +1009,6 @@ export default function Navigation() {
                         {subCategory.name}
                       </Link>
                     ))}
-
                     {/* Special highlight items */}
                     {/* <Link 
                       href="/categories/sale" 
