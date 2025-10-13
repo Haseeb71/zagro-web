@@ -489,13 +489,13 @@ export default function Home() {
 
           settings: {
 
-            slidesToShow: 1,
+            slidesToShow: 2,
 
             dots: false,
 
             arrows: false,
 
-            infinite: productCount > 1,
+            infinite: productCount > 2,
 
             centerMode: false,
 
@@ -600,13 +600,13 @@ export default function Home() {
         `}</style>
 
         {/* Hero Banner Slider - Image Only */}
-        <section className="relative h-190 overflow-hidden">
+        <section className="relative h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] overflow-hidden">
 
           <Slider {...bannerSliderSettings} className="h-full">
 
             {bannerImages.map((banner, index) => (
 
-              <div key={banner.id} className="relative h-190 cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
+              <div key={banner.id} className="relative h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] cursor-pointer" onClick={() => handleBannerClick(banner.redirectLink)}>
 
                 {/* Background image */}
 
@@ -637,15 +637,15 @@ export default function Home() {
         </section>
 
         {/* Logo Loop Section */}
-        <section className="pt-8 pb-0 bg-gray-50">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div style={{ height: '120px', position: 'relative', overflow: 'hidden' }}>
+        <section className="pt-4 sm:pt-6 md:pt-8 pb-0 bg-gray-50">
+          <div className="px-2 sm:px-4 md:px-6 lg:px-8">
+            <div style={{ height: '80px', position: 'relative', overflow: 'hidden' }} className="sm:h-[100px] md:h-[120px]">
               <LogoLoop
                 logos={shoeBrandLogos}
                 speed={120}
                 direction="left"
-                logoHeight={48}
-                gap={90}
+                logoHeight={40}
+                gap={60}
                 pauseOnHover
                 scaleOnHover
                 fadeOut
@@ -1115,7 +1115,7 @@ export default function Home() {
 
         {/* New Featured Product Section like the image */}
 
-        <section className="py-12 sm:py-16 bg-gradient-to-r from-gray-900 to-black relative overflow-hidden">
+        <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-r from-gray-900 to-black relative overflow-hidden">
 
           {/* Diagonal geometric elements */}
 
@@ -1131,13 +1131,13 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center">
 
               {/* Product Image */}
 
               <div
 
-                className="relative"
+                className="relative px-4 sm:px-0"
 
                 data-aos="fade-right"
 
@@ -1145,7 +1145,7 @@ export default function Home() {
 
               >
 
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-[20px] bg-gradient-to-r from-yellow-400 to-yellow-200 filter blur-xl opacity-70 rounded-full"></div>
+                <div className="absolute -bottom-4 sm:-bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-[15px] sm:h-[20px] bg-gradient-to-r from-yellow-400 to-yellow-200 filter blur-xl opacity-70 rounded-full"></div>
 
 
 
@@ -1154,7 +1154,7 @@ export default function Home() {
                   alt="EVAPOR8 2.0"
                   width={600}
                   height={400}
-                  className="relative z-10"
+                  className="relative z-10 w-full h-auto"
 
                 />
 

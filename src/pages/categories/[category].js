@@ -745,14 +745,14 @@ export default function CategoryPage() {
               {/* Products Grid */}
               <div className="flex-1">
                 {loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
                     {[...Array(8)].map((_, index) => (
                       <ProductSkeleton key={index} />
                     ))}
                   </div>
                 ) : products.length > 0 ? (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
                       {products.map((product, index) => (
                         <ProductCard key={product.id || product._id || index} product={product} />
                       ))}

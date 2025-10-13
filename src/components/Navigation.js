@@ -28,6 +28,7 @@ export default function Navigation() {
   const [searchPage, setSearchPage] = useState(1);
   const [hasMoreSearchResults, setHasMoreSearchResults] = useState(true);
   const [isLoadingMoreSearch, setIsLoadingMoreSearch] = useState(false);
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
   // Maximum categories to show initially
   const MAX_VISIBLE_CATEGORIES = 3;
@@ -687,7 +688,12 @@ export default function Navigation() {
               {/* Mobile Menu Button */}
               <button
                 className="md:hidden p-2 text-white hover:text-gray-200 transition-colors duration-300"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onClick={() => {
+                  setIsMenuOpen(!isMenuOpen);
+                  if (isMenuOpen) {
+                    setExpandedMobileCategory(null);
+                  }
+                }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -719,25 +725,13 @@ export default function Navigation() {
                   <>
                     {categories.slice(0, MAX_VISIBLE_CATEGORIES).map((category, index) => {
                       const categoryId = category.id || category._id;
-                      const isHovered = hoveredCategory && (hoveredCategory.id || hoveredCategory._id) === categoryId;
+                      const isExpanded = expandedMobileCategory && (expandedMobileCategory.id || expandedMobileCategory._id) === categoryId;
                       const categorySubCategories = subCategories[categoryId] || [];
                       const isLoadingSubs = isLoadingSubCategories[categoryId];
 
                       return (
                         <div key={categoryId || index}>
-                          <div
-                            className="flex items-center justify-between px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-300 cursor-pointer"
-                            onClick={() => {
-                              if (isHovered) {
-                                closeDropdown();
-                              } else {
-                                handleCategoryHover(category);
-                                if (categorySubCategories.length === 0) {
-                                  fetchSubCategories(categoryId);
-                                }
-                              }
-                            }}
-                          >
+                          <div className="flex items-center justify-between px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors duration-300">
                             <Link
                               href={`/categories/${category.slug || category.name?.toLowerCase() || 'category'}`}
                               className="flex-1"
@@ -745,7 +739,60 @@ export default function Navigation() {
                             >
                               {category.name}
                             </Link>
+                            <button
+                              onClick={() => {
+                                if (isExpanded) {
+                                  setExpandedMobileCategory(null);
+                                } else {
+                                  setExpandedMobileCategory(category);
+                                  if (categorySubCategories.length === 0) {
+                                    fetchSubCategories(categoryId);
+                                  }
+                                }
+                              }}
+                              className="ml-2 p-1 hover:bg-gray-200 rounded transition-all duration-300"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`h-5 w-5 text-gray-600 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
                           </div>
+                          
+                          {/* Subcategories - Mobile */}
+                          {isExpanded && (
+                            <div className="pl-6 pr-3 py-2 bg-gray-50 rounded-md ml-3 mr-3 mb-2">
+                              {isLoadingSubs ? (
+                                <div className="flex items-center py-2">
+                                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="ml-2 text-gray-500 text-sm">Loading...</span>
+                                </div>
+                              ) : categorySubCategories.length > 0 ? (
+                                categorySubCategories.map((subCategory, subIndex) => (
+                                  <Link
+                                    key={subCategory.id || subCategory._id || subIndex}
+                                    href={`/categories/${category.slug || category.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
+                                    className="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-md transition-colors duration-200 text-sm"
+                                    onClick={() => {
+                                      setIsMenuOpen(false);
+                                      setExpandedMobileCategory(null);
+                                    }}
+                                  >
+                                    {subCategory.name}
+                                  </Link>
+                                ))
+                              ) : (
+                                <div className="px-3 py-2 text-gray-500 text-sm">
+                                  No subcategories available
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}

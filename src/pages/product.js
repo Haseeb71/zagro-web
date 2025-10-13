@@ -268,7 +268,7 @@ export default function Product() {
         {
           breakpoint: 640,
           settings: {
-            slidesToShow: 1,
+            slidesToShow: Math.min(productCount, 2),
             arrows: false,
             dots: false,
             infinite: productCount > 1,

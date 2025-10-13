@@ -27,7 +27,7 @@ export default function Footer() {
   return (
     <footer className="py-12 border-t border-gray-100" style={{backgroundColor: 'rgb(141,159,133)'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="md:col-span-1">
             <img src="/images/logo.png" alt="Logo" className="h-10 w-auto mb-4" />

@@ -307,10 +307,10 @@ const ProductCard = ({
   
   const variants = {
     default: {
-      imageSize: 'w-full h-100 sm:h-72 md:h-80 lg:h-100',
+      imageSize: 'w-full h-48 xs:h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96',
       cardPadding: 'p-0',
-      titleSize: 'text-sm sm:text-base md:text-lg',
-      priceSize: 'text-base sm:text-lg md:text-xl',
+      titleSize: 'text-xs sm:text-sm md:text-base lg:text-lg',
+      priceSize: 'text-sm sm:text-base md:text-lg lg:text-xl',
       showRating: true,
       showActions: true
     },
@@ -525,7 +525,7 @@ const ProductCard = ({
 
         {/* Discount Badge */}
         {product.discountPercentage > 0 && (
-          <div className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-md font-product font-bold shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md font-product font-bold shadow-lg">
             {product.discountPercentage}% OFF
           </div>
         )}
@@ -540,10 +540,10 @@ const ProductCard = ({
               onClick={handleCartIconClick}
               onTouchEnd={handleCartIconClick}
               disabled={product.quantity === 0}
-              className="bg-white/90 text-gray-800 w-10 h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="bg-white/90 text-gray-800 w-8 h-8 sm:w-10 sm:h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               aria-label={`Add ${product.name} to cart`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
               </svg>
             </button>
@@ -552,17 +552,17 @@ const ProductCard = ({
       </div>
 
       {/* Product Info - Below Image */}
-      <div className="p-4 space-y-2">
+      <div className="p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2">
         {/* Brand */}
         {product.brand && (
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-500">
             {product.brand}
           </p>
         )}
 
         {/* Product Name */}
         <h3 
-          className={`${currentVariant.titleSize} font-product font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200`}
+          className={`${currentVariant.titleSize} font-product font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200 line-clamp-2`}
           onClick={handleProductClick}
           onKeyDown={handleKeyDown}
           role="button"
