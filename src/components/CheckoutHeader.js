@@ -37,7 +37,7 @@ export default function CheckoutHeader() {
                 className="logo-floating hover:scale-105 transition-all duration-300 ease-out"
               >
                 <img 
-                  src="/images/logo.png" 
+                  src="/images/logo1.png" 
                   alt="Zagro Footwear Logo" 
                   className="h-16 w-auto drop-shadow-lg hover:drop-shadow-xl transition-all duration-300" 
                 />

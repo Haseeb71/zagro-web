@@ -553,10 +553,11 @@ export default function Product() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       AOS.init({
-        duration: 800,
-        once: false,
-        mirror: true,
-        offset: 100,
+        duration: 600,
+        once: true,
+        mirror: false,
+        offset: 50,
+        disable: 'mobile', // Disable on mobile for better performance
       });
     }
   }, []);
@@ -623,7 +624,7 @@ export default function Product() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
               {/* Product Gallery */}
-              <div data-aos="fade-right">
+              <div>
                 <div
                   className={`overflow-hidden rounded-lg border border-gray-200 relative ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
                   onClick={() => setIsZoomed(!isZoomed)}
@@ -703,7 +704,7 @@ export default function Product() {
               </div>
 
               {/* Product Info */}
-              <div data-aos="fade-left">
+              <div>
                 {/* Product badges */}
                 {/* <div className="flex gap-2 mb-3 flex-wrap">
                   {productData.isFeatured === true && (
