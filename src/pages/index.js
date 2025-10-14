@@ -23,6 +23,8 @@ import PromotionModal from "../components/PromotionModal";
 
 import categoriesAPI from "../APIs/categories";
 
+import promotionsAPI from "../APIs/promotions";
+
 import LogoLoop from "../components/LogoLoop";
 
 import { SiNike, SiAdidas, SiPuma, SiAmazon, SiApple, SiGoogle, SiMinds, SiSpotify } from 'react-icons/si';
@@ -121,9 +123,28 @@ export default function Home() {
       }
     }
 
+    // Check for available promotions before showing modal
+    const checkAndShowPromotions = async () => {
+      try {
+        const response = await promotionsAPI.getPromotions();
+        if (response.data && response.data.promotions) {
+          // Filter only active promotions
+          const activePromotions = response.data.promotions.filter(promo => promo.isActive);
+          
+          // Only show modal if there's at least one active promotion
+          if (activePromotions.length > 0) {
+            setIsPromotionModalOpen(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking promotions:', error);
+        // Don't show modal if there's an error fetching promotions
+      }
+    };
+
     // Show promotion modal after a short delay to ensure page is loaded
     const timer = setTimeout(() => {
-      setIsPromotionModalOpen(true);
+      checkAndShowPromotions();
     }, 1000); // 1 second delay
 
     return () => clearTimeout(timer);

@@ -42,17 +42,28 @@ const PromotionModal = ({ isOpen, onClose, onMaybeLater }) => {
           const activePromotions = response.data.promotions.filter(promo => promo.isActive);
           setPromotions(activePromotions);
           setIsLoading(false);
+          
+          // If no active promotions, close the modal
+          if (activePromotions.length === 0) {
+            onClose();
+          }
+        } else {
+          setIsLoading(false);
+          // If no promotions data, close the modal
+          onClose();
         }
       } catch (error) {
         console.error('Error fetching promotions:', error);
         setIsLoading(false);
+        // If error fetching promotions, close the modal
+        onClose();
       }
     };
 
     if (isOpen) {
       fetchPromotions();
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   // Animation states
   useEffect(() => {

@@ -30,6 +30,45 @@ export default function Navigation() {
     fetchCategories();
   }, []);
 
+  // Pre-fetch subcategories for visible categories to reduce loading glitch
+  useEffect(() => {
+    if (categories.length > 0) {
+      const visibleCategories = categories.slice(0, MAX_VISIBLE_CATEGORIES);
+      visibleCategories.forEach((category) => {
+        const categoryId = category.id || category._id;
+        // Only fetch if not already loaded or loading
+        if (!subCategories[categoryId] && !isLoadingSubCategories[categoryId]) {
+          fetchSubCategories(categoryId);
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
+
+  // Helper function to get promotional image based on category
+  const getPromotionalImage = (category) => {
+    const categoryName = category?.name?.toLowerCase() || '';
+    
+    // Map category names to promotional images
+    const imageMap = {
+      'men': '/formal.png',
+      'women': '/banner1.jpg',
+      'shoes': '/formal2.jpeg',
+      'accessories': '/formal3.jpg',
+      'padel': '/banner2.jpg',
+      'default': '/formal.png'
+    };
+
+    // Find matching image or return default
+    for (const [key, imagePath] of Object.entries(imageMap)) {
+      if (categoryName.includes(key)) {
+        return imagePath;
+      }
+    }
+    
+    return imageMap.default;
+  };
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -270,6 +309,44 @@ export default function Navigation() {
           }
         }
         
+        /* Mega Menu Dropdown Animations */
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .mega-menu-dropdown {
+          animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
         .dropdown-enter {
           opacity: 0;
           transform: translateY(-10px);
@@ -392,6 +469,30 @@ export default function Navigation() {
         
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        
+        /* Enhanced subcategory card styles */
+        .subcategory-card {
+          position: relative;
+          background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .subcategory-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(66, 220, 0, 0.15);
+        }
+        
+        /* Promotional image styles */
+        .promo-image-wrapper {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+        }
+        
+        .promo-image-wrapper:hover {
+          box-shadow: 0 12px 24px rgba(141, 159, 133, 0.2);
+          transform: translateY(-2px);
         }
         
          .scrollbar-hide {
@@ -655,7 +756,7 @@ export default function Navigation() {
 
       </nav>
 
-      {/* Secondary Navigation Bar - Show Subcategories when Category is Hovered */}
+      {/* Mega Menu Dropdown - Show Subcategories when Category is Hovered */}
       {hoveredCategory && (() => {
         const categoryId = hoveredCategory.id || hoveredCategory._id;
         const categorySubCategories = subCategories[categoryId] || [];
@@ -663,89 +764,137 @@ export default function Navigation() {
 
         return (
           <div
-            className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm transition-all duration-300"
+            className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg transition-all duration-300 ease-in-out mega-menu-dropdown"
             onMouseEnter={handleDropdownHover}
             onMouseLeave={handleDropdownLeave}
+            style={{
+              opacity: 1,
+              transform: 'translateY(0)',
+              animation: 'slideDown 0.3s ease-out'
+            }}
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center justify-center space-x-8 py-3">
-                {isLoadingSubs ? (
-                  // Loading skeleton for subcategories
-                  <div className="flex items-center justify-center w-full py-4">
-                    <div className="loading-spinner"></div>
-                    <span className="ml-3 text-gray-500 text-sm">Loading subcategories...</span>
-                  </div>
-                ) : categorySubCategories.length > 0 ? (
-                  <>
-                    {/* Show subcategories */}
-                    {categorySubCategories.slice(0, MAX_VISIBLE_CATEGORIES).map((subCategory, index) => (
-                      <Link
-                        key={subCategory.id || subCategory._id || index}
-                        href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
-                        className="secondary-nav-item text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-sm uppercase tracking-wide"
-                        onMouseEnter={handleDropdownHover}
-                        onMouseLeave={handleDropdownLeave}
-                      >
-                        {subCategory.name}
-                      </Link>
-                    ))}
-                    {/* Special highlight items */}
-                    {/* <Link 
-                      href="/categories/sale" 
-                      className="text-white hover:text-gray-100 transition-colors duration-300 font-bold text-sm uppercase tracking-wide bg-gradient-to-r from-red-500 to-red-600 px-4 py-2 rounded-full shadow-lg hover:shadow-xl"
-                      onMouseEnter={handleDropdownHover}
-                      onMouseLeave={handleDropdownLeave}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {/* Desktop Mega Menu */}
+              <div className="hidden md:grid md:grid-cols-12 gap-8">
+                {/* Left side - Subcategories (takes 8 columns) */}
+                <div className="col-span-8">
+                  {isLoadingSubs ? (
+                    // Loading skeleton for subcategories
+                    <div className="grid grid-cols-3 gap-4">
+                      {[...Array(6)].map((_, index) => (
+                        <div 
+                          key={index}
+                          className="p-4 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 animate-pulse"
+                          style={{
+                            animationDelay: `${index * 0.1}s`
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                            <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : categorySubCategories.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-4">
+                      {categorySubCategories.map((subCategory, index) => (
+                        <Link
+                          key={subCategory.id || subCategory._id || index}
+                          href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
+                          className="group relative p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 hover:border-green-600 rounded-xl transition-all duration-300 hover:shadow-md overflow-hidden"
+                          style={{
+                            opacity: 0,
+                            animation: `fadeInUp 0.3s ease-out ${index * 0.05}s forwards`
+                          }}
+                        >
+                          {/* Animated background gradient on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          
+                          {/* Content */}
+                          <div className="relative flex items-center justify-between">
+                            <span className="text-gray-800 font-semibold text-sm uppercase tracking-wider group-hover:text-green-700 transition-colors duration-200">
+                              {subCategory.name}
+                            </span>
+                            
+                            {/* Arrow icon */}
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              className="h-5 w-5 text-gray-400 group-hover:text-green-600 transform group-hover:translate-x-1 transition-all duration-200" 
+                              fill="none" 
+                              viewBox="0 0 24 24" 
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                          
+                          {/* Bottom accent line */}
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    // No subcategories available
+                    <div className="flex items-center justify-center w-full py-12">
+                      <span className="text-gray-500 text-sm">No subcategories available for {hoveredCategory.name}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right side - Promotional Image (takes 4 columns) */}
+                <div className="col-span-4">
+                  {isLoadingSubs ? (
+                    // Skeleton loader for promotional image
+                    <div className="relative h-full min-h-[300px] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse border-2 border-gray-200 shadow-xl">
+                    </div>
+                  ) : (
+                    <Link 
+                      href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}`}
+                      className="block relative h-full min-h-[300px] rounded-xl overflow-hidden shadow-xl group cursor-pointer border-2 border-gray-200 hover:border-green-600"
+                      style={{
+                        opacity: 0,
+                        animation: 'fadeInRight 0.4s ease-out 0.2s forwards'
+                      }}
                     >
-                      SALE
-                    </Link> */}
-                  </>
-                ) : (
-                  // No subcategories available
-                  <div className="flex items-center justify-center w-full py-4">
-                    <span className="text-gray-500 text-sm">No subcategories available for {hoveredCategory.name}</span>
-                  </div>
-                )}
+                      <img 
+                        src={getPromotionalImage(hoveredCategory)} 
+                        alt={`${hoveredCategory.name} Promotion`}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      {/* Subtle overlay on hover */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-300"></div>
+                    </Link>
+                  )}
+                </div>
               </div>
 
               {/* Mobile Navigation */}
-              <div className="md:hidden py-3">
-                <div className="flex items-center justify-between space-x-2 overflow-x-auto scrollbar-hide">
+              <div className="md:hidden">
+                <div className="flex flex-col space-y-2">
                   {isLoadingSubs ? (
                     // Loading skeleton for mobile
-                    <div className="flex items-center justify-center w-full py-2">
+                    <div className="flex items-center justify-center w-full py-4">
                       <div className="loading-spinner"></div>
                       <span className="ml-2 text-gray-500 text-sm">Loading...</span>
                     </div>
                   ) : categorySubCategories.length > 0 ? (
                     <>
                       {/* Show subcategories for mobile */}
-                      {categorySubCategories.slice(0, MAX_VISIBLE_CATEGORIES).map((subCategory, index) => (
+                      {categorySubCategories.map((subCategory, index) => (
                         <Link
                           key={subCategory.id || subCategory._id || index}
                           href={`/categories/${hoveredCategory.slug || hoveredCategory.name?.toLowerCase()}/${subCategory.slug || subCategory.name?.toLowerCase()}`}
-                          className="secondary-nav-item text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-xs uppercase tracking-wide whitespace-nowrap px-2 py-1 flex-shrink-0"
-                          onMouseEnter={handleDropdownHover}
-                          onMouseLeave={handleDropdownLeave}
+                          className="p-3 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors duration-200 font-medium text-sm uppercase tracking-wide"
                         >
                           {subCategory.name}
                         </Link>
                       ))}
-
-                      {/* Special highlight items for mobile */}
-                      <Link
-                        href="/categories/sale"
-                        className="text-white hover:text-gray-100 transition-colors duration-300 font-bold text-xs uppercase tracking-wide whitespace-nowrap px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex-shrink-0"
-                        onMouseEnter={handleDropdownHover}
-                        onMouseLeave={handleDropdownLeave}
-                      >
-                        SALE
-                      </Link>
                     </>
                   ) : (
                     // No subcategories available for mobile
-                    <div className="flex items-center justify-center w-full py-2">
-                      <span className="text-gray-500 text-xs">No subcategories available</span>
+                    <div className="flex items-center justify-center w-full py-4">
+                      <span className="text-gray-500 text-sm">No subcategories available</span>
                     </div>
                   )}
                 </div>
