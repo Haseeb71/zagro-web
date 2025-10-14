@@ -118,8 +118,32 @@ export default function Footer() {
                 placeholder="Enter your email"
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300"
               />
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-300 whitespace-nowrap">
-                Subscribe
+              <button 
+                className="relative px-6 py-2 text-white font-medium rounded-lg whitespace-nowrap overflow-hidden"
+                style={{
+                  background: 'linear-gradient(to right, #000 0%, transparent 100%)',
+                  color: '#fff',
+                  position: 'relative',
+                }}
+              >
+                <span
+                  className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
+                  style={{
+                    background: 'linear-gradient(to left, #000 0%, transparent 100%)',
+                    width: '0%',
+                    left: '100%',
+                    top: 0,
+                    bottom: 0,
+                    transition: 'all 0.7s cubic-bezier(0.4,0,0.2,1)',
+                    borderRadius: '0.5rem',
+                    pointerEvents: 'none',
+                  }}
+                  aria-hidden="true"
+                  id="liquid-gradient"
+                />
+                <span className="relative z-10 transition-colors duration-500">
+                  Subscribe
+                </span>
               </button>
             </div>
           </div>
@@ -157,6 +181,17 @@ export default function Footer() {
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        button[style] {
+          position: relative;
+          overflow: hidden;
+        }
+        button[style]:hover #liquid-gradient {
+          width: 100%;
+          left: 0;
+        }
+      `}</style>
     </footer>
   );
 } 

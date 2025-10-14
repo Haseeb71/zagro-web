@@ -27,7 +27,7 @@ export default function Newsletter() {
             <span
               className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
               style={{
-                background: 'linear-gradient(to right, #000 0%, #fff 100%)',
+                background: 'linear-gradient(to left, #000 0%, #fff 100%)',
                 width: '0%',
                 left: '100%',
                 top: 0,
@@ -37,7 +37,7 @@ export default function Newsletter() {
                 pointerEvents: 'none',
               }}
               aria-hidden="true"
-              id="newsletter-liquid-gradient"
+              id="liquid-gradient"
             />
             <span className="relative z-10 transition-colors duration-500">
               Subscribe
@@ -53,7 +53,7 @@ export default function Newsletter() {
           background: linear-gradient(to right, #000 0%, #fff 100%);
           color: #fff;
         }
-        button:hover #newsletter-liquid-gradient {
+        button:hover #liquid-gradient {
           width: 100%;
           left: 0;
         }

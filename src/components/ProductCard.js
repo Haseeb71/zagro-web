@@ -534,16 +534,16 @@ const ProductCard = ({
         <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
           isHovered || isTapped ? 'opacity-100' : 'opacity-0'
         }`}>
-          <div className="flex space-x-2 action-buttons">
+          <div className="flex space-x-2 sm:space-x-3 action-buttons">
             {/* Add to Cart Button */}
             <button
               onClick={handleCartIconClick}
               onTouchEnd={handleCartIconClick}
               disabled={product.quantity === 0}
-              className="bg-white/90 text-gray-800 w-8 h-8 sm:w-10 sm:h-10 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="bg-white/90 text-gray-800 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               aria-label={`Add ${product.name} to cart`}
             >
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
               </svg>
             </button>
@@ -609,40 +609,40 @@ const ProductCard = ({
 
       {/* Cart Modal - Size and Color Selection */}
       {showCartModal && (
-        <div className="absolute inset-0 bg-white z-50 rounded-3xl animate-fadeIn">
+        <div className="absolute inset-0 bg-white z-50 rounded-2xl sm:rounded-3xl animate-fadeIn">
           <div className="h-full flex flex-col">
             {/* Close Button - Fixed at top */}
-            <div className="flex justify-end p-6 pb-4">
+            <div className="flex justify-end p-3 sm:p-4 md:p-6 pb-2 sm:pb-3 md:pb-4">
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleCloseModal(e);
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto px-6 pb-4">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 pb-3 sm:pb-4">
               {/* Price Display */}
-              <div className="mb-6 animate-slideUp">
+              <div className="mb-4 sm:mb-6 animate-slideUp">
                 <div className="flex items-center space-x-2">
                   {product.discountPercentage > 0 ? (
                     <>
-                      <span className="text-sm text-gray-500 line-through font-alumni">
+                      <span className="text-xs sm:text-sm text-gray-500 line-through font-alumni">
                         Rs {formatPrice(Math.floor(product.price / (1 - product.discountPercentage / 100)))}
                       </span>
-                      <span className="text-lg font-product font-bold text-red-600">
+                      <span className="text-base sm:text-lg font-product font-bold text-red-600">
                         <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>
                       </span>
                     </>
                   ) : (
-                    <span className="text-lg font-product font-bold text-gray-900">
+                    <span className="text-base sm:text-lg font-product font-bold text-gray-900">
                       <span className="font-alumni-lg">Rs {formatPrice(product.price)}</span>
                     </span>
                   )}
@@ -653,9 +653,9 @@ const ProductCard = ({
               {(() => {
                 const parsedSizes = parseSizes(product.sizes);
                 return parsedSizes.length > 0 && (
-                  <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.1s' }}>
-                    <label className="block text-sm font-semibold text-gray-900 mb-3">SIZE:</label>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mb-4 sm:mb-6 animate-slideUp" style={{ animationDelay: '0.1s' }}>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3">SIZE:</label>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {parsedSizes.map((size, index) => (
                       <button
                         key={size}
@@ -664,7 +664,7 @@ const ProductCard = ({
                           e.stopPropagation();
                           setSelectedSize(size);
                         }}
-                        className={`px-4 py-2 rounded border font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
+                        className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded border font-medium text-xs sm:text-sm transition-all duration-300 transform hover:scale-105 ${
                           selectedSize === size
                             ? 'border-black bg-black text-white scale-105'
                             : 'border-gray-300 text-gray-700 hover:border-gray-400 bg-white'
@@ -683,9 +683,9 @@ const ProductCard = ({
               {(() => {
                 const colorQuantities = getColorQuantities(product.colorQuantities);
                 return colorQuantities && colorQuantities.length > 0 && (
-                  <div className="mb-6 animate-slideUp" style={{ animationDelay: '0.2s' }}>
-                    <label className="block text-sm font-semibold text-gray-900 mb-3">COLOR:</label>
-                    <div className="flex flex-wrap gap-3">
+                  <div className="mb-4 sm:mb-6 animate-slideUp" style={{ animationDelay: '0.2s' }}>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3">COLOR:</label>
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                       {colorQuantities.map((colorItem, index) => {
                         const colorHex = getColorHex(colorItem.color);
                         const isSelected = selectedColor === colorItem.color;
@@ -702,7 +702,7 @@ const ProductCard = ({
                               }
                             }}
                             disabled={isDisabled}
-                            className={`relative w-12 h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                               isSelected
                                 ? 'border-gray-800 scale-110 shadow-lg'
                                 : isDisabled
@@ -719,7 +719,7 @@ const ProductCard = ({
                             {/* Selection indicator - Simple white dot */}
                             {isSelected && (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-3 h-3 rounded-full bg-transparent shadow-lg"></div>
+                                <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-transparent shadow-lg"></div>
                               </div>
                             )}
                             
@@ -739,7 +739,7 @@ const ProductCard = ({
             </div>
 
             {/* Add to Cart Button - Fixed at bottom */}
-            <div className="p-6 pt-4 border-t border-gray-100">
+            <div className="p-3 sm:p-4 md:p-6 pt-2 sm:pt-3 md:pt-4 border-t border-gray-100">
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -747,7 +747,7 @@ const ProductCard = ({
                   handleAddToCart(e);
                 }}
                 disabled={product.quantity === 0}
-                className="w-full bg-black text-white py-3 px-4 rounded font-semibold text-sm hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full bg-black text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded font-semibold text-xs sm:text-sm hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 ADD TO CART
               </button>
