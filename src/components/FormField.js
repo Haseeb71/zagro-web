@@ -9,6 +9,7 @@ const FormField = ({
   className = '', 
   fieldClassName = '',
   showSuccess = true,
+  onFieldChange,
   ...props 
 }) => {
   const [hasError, setHasError] = useState(false);
@@ -43,6 +44,12 @@ const FormField = ({
                 type={type}
                 placeholder={placeholder || label}
                 className={getFieldClasses(field, meta)}
+                onChange={(e) => {
+                  field.onChange(e);
+                  if (onFieldChange) {
+                    onFieldChange();
+                  }
+                }}
                 onBlur={(e) => {
                   field.onBlur(e);
                   setIsTouched(true);

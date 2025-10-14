@@ -240,6 +240,9 @@ const CheckoutPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  
+  // Custom dirty state tracking for mobile compatibility
+  const [customDirty, setCustomDirty] = useState(false);
 
   // Redirect to home if cart is empty (but not if modal is showing)
   useEffect(() => {
@@ -513,7 +516,6 @@ const CheckoutPage = () => {
                 onSubmit={handleSubmit}
               >
                 {({ isSubmitting, isValid, dirty, values, errors, touched }) => (
-                  
                   <Form className="space-y-8">
                     {/* Error Summary */}
                     <ErrorSummary 
@@ -531,6 +533,7 @@ const CheckoutPage = () => {
                           type="email"
                           label="Email"
                           placeholder="Email"
+                          onFieldChange={() => setCustomDirty(true)}
                         />
                         <div className="flex items-center">
                           <input
@@ -555,12 +558,14 @@ const CheckoutPage = () => {
                           type="text"
                             label="First name"
                           placeholder="First name"
+                          onFieldChange={() => setCustomDirty(true)}
                         />
                         <FormField
                           name="lastName"
                           type="text"
                             label="Last name"
                           placeholder="Last name"
+                          onFieldChange={() => setCustomDirty(true)}
                         />
                         </div>
                         <FormField
@@ -568,12 +573,14 @@ const CheckoutPage = () => {
                           type="text"
                           label="Address"
                           placeholder="Address"
+                          onFieldChange={() => setCustomDirty(true)}
                         />
                         <FormField
                           name="apartment"
                           type="text"
                           label="Apartment, suite, etc. (optional)"
                           placeholder="Apartment, suite, etc. (optional)"
+                          onFieldChange={() => setCustomDirty(true)}
                         />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
@@ -581,12 +588,14 @@ const CheckoutPage = () => {
                             type="text"
                             label="City"
                             placeholder="City"
+                            onFieldChange={() => setCustomDirty(true)}
                           />
                           <FormField
                             name="zipCode"
                             type="text"
                             label="Postal code (optional)"
                             placeholder="Postal code (optional)"
+                            onFieldChange={() => setCustomDirty(true)}
                           />
                         </div>
                         <FormField
@@ -594,6 +603,7 @@ const CheckoutPage = () => {
                           type="tel"
                           label="Phone"
                           placeholder="Phone"
+                          onFieldChange={() => setCustomDirty(true)}
                         />
                         <div className="flex items-center">
                           <input
@@ -655,21 +665,21 @@ const CheckoutPage = () => {
                     <div className="flex flex-col sm:flex-row gap-3 mb-8">
                       <button
                         type="submit"
-                        disabled={isSubmitting || isProcessing || !isValid || !dirty || cartItems.some(item => !item.selectedSize || !item.selectedColor)}
+                        disabled={isSubmitting || isProcessing || !isValid || (!dirty && !customDirty) || cartItems.some(item => !item.selectedSize || !item.selectedColor)}
                         className={`relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md overflow-hidden transition-colors duration-500
-                          ${!isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor)
+                          ${!isSubmitting && !isProcessing && isValid && (dirty || customDirty) && !cartItems.some(item => !item.selectedSize || !item.selectedColor)
                             ? 'cursor-pointer'
                             : 'bg-gray-400 cursor-not-allowed'
                           }`}
                         style={{
-                          background: !isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor)
+                          background: !isSubmitting && !isProcessing && isValid && (dirty || customDirty) && !cartItems.some(item => !item.selectedSize || !item.selectedColor)
                             ? 'linear-gradient(to right, #000 0%, #fff 100%)'
                             : undefined,
-                          color: !isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor) ? '#fff' : undefined,
+                          color: !isSubmitting && !isProcessing && isValid && (dirty || customDirty) && !cartItems.some(item => !item.selectedSize || !item.selectedColor) ? '#fff' : undefined,
                           position: 'relative',
                         }}
                       >
-                        {!isSubmitting && !isProcessing && isValid && dirty && !cartItems.some(item => !item.selectedSize || !item.selectedColor) && (
+                        {!isSubmitting && !isProcessing && isValid && (dirty || customDirty) && !cartItems.some(item => !item.selectedSize || !item.selectedColor) && (
                           <span
                             className="absolute inset-0 z-0 transition-all duration-700 ease-in-out"
                             style={{
@@ -688,7 +698,7 @@ const CheckoutPage = () => {
                         )}
                         <span className="relative z-10 transition-colors duration-500">
                           {isSubmitting || isProcessing ? 'Processing...' : 
-                           !isValid || !dirty ? 'Fill in all required fields' :
+                           !isValid || (!dirty && !customDirty) ? 'Fill in all required fields' :
                            cartItems.some(item => !item.selectedSize || !item.selectedColor) ? 'Complete product selection' :
                            'Place Order'}
                         </span>
