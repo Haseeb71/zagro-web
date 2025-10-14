@@ -1113,156 +1113,128 @@ export default function Home() {
 
         </section>
 
-        {/* New Featured Product Section like the image */}
+        {/* Promotional Images Section */}
+        <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Section Title */}
+            <div className="text-center mb-8 sm:mb-12" data-aos="fade-up">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+                Exclusive Offers
+              </h2>
+              <p className="text-gray-600 text-base sm:text-lg">
+                Limited time deals you don't want to miss
+              </p>
+            </div>
 
-        <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-r from-gray-900 to-black relative overflow-hidden">
-
-          {/* Diagonal geometric elements */}
-
-          <div className="absolute inset-0 overflow-hidden">
-
-            <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[80%] bg-gray-800 transform rotate-12 z-0"></div>
-
-            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[70%] bg-gray-800 transform -rotate-12 z-0"></div>
-
-          </div>
-
-
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center">
-
-              {/* Product Image */}
-
-              <div
-
-                className="relative px-4 sm:px-0"
-
-                data-aos="fade-right"
-
+            {/* Promotional Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+              
+              {/* Promo Card 1 - Angular Cut Top Right */}
+              <div 
+                className="group relative overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 transform hover:scale-105 hover:-translate-y-3"
+                data-aos="fade-up"
                 data-aos-delay="100"
-
+                style={{
+                  clipPath: 'polygon(0 0, 100% 8%, 100% 100%, 0 100%)',
+                }}
               >
-
-                <div className="absolute -bottom-4 sm:-bottom-8 left-1/2 transform -translate-x-1/2 w-[90%] h-[15px] sm:h-[20px] bg-gradient-to-r from-yellow-400 to-yellow-200 filter blur-xl opacity-70 rounded-full"></div>
-
-
-
-                <Image
-                  src="/formal.png"
-                  alt="EVAPOR8 2.0"
-                  width={600}
-                  height={400}
-                  className="relative z-10 w-full h-auto"
-
-                />
-
+                <div className="relative h-[400px] sm:h-[450px] overflow-hidden">
+                  <img
+                    src="/prom1.jpeg"
+                    alt="Promotional Banner 1"
+                    className="w-full h-full object-cover transition-all duration-1000 ease-out group-hover:scale-125 group-hover:rotate-2 brightness-95 group-hover:brightness-110"
+                  />
+                  {/* Subtle Overlay with animated gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+                  
+                  {/* Animated shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+                </div>
               </div>
 
-
-
-              {/* Product Info */}
-
-              <div className="text-white" data-aos="fade-left" data-aos-delay="300">
-
-                <div className="mb-2">
-
-                  <span className="text-xs sm:text-sm text-yellow-400 font-medium tracking-wider">REVOLUTIONARY TECHNOLOGY</span>
-
+              {/* Promo Card 2 - Diagonal Cut Bottom */}
+              <div 
+                className="group relative overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 transform hover:scale-105 hover:translate-y-2"
+                data-aos="fade-up"
+                data-aos-delay="200"
+                style={{
+                  clipPath: 'polygon(0 0, 100% 0, 100% 92%, 0 100%)',
+                }}
+              >
+                <div className="relative h-[400px] sm:h-[450px] overflow-hidden">
+                  <img
+                    src="/prom2.jpeg"
+                    alt="Promotional Banner 2"
+                    className="w-full h-full object-cover transition-all duration-1000 ease-out group-hover:scale-125 group-hover:-rotate-2 brightness-95 group-hover:brightness-110"
+                  />
+                  {/* Subtle Overlay with animated gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-tl from-pink-500/20 via-transparent to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+                  
+                  {/* Animated shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/30 to-transparent translate-x-full group-hover:-translate-x-full transition-transform duration-1000 ease-out delay-100"></div>
                 </div>
+              </div>
 
-
-
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 tracking-tight">
-
-                  EVAPOR8 2.0 – STAY COOL, <br />
-
-                  <span className="text-yellow-400">MOVE FAST</span>
-
-                </h2>
-
-
-
-                <div className="w-16 sm:w-20 h-1 bg-yellow-400 mb-4 sm:mb-6 mt-2 sm:mt-4"></div>
-
-
-
-                <p className="text-gray-300 mb-6 sm:mb-8 text-sm sm:text-base lg:text-lg">
-
-                  Engineered for peak breathability and all-day comfort, Evapor8 2.0
-
-                  keeps you light on your feet with its ultra-breathable design and
-
-                  dynamic support.
-
-                </p>
-
-
-
-                <div className="flex flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
-
-                  <div className="flex items-center gap-2">
-
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400"></div>
-
-                    <span className="text-sm sm:text-base">Ultra-lightweight</span>
-
-                  </div>
-
-                  <div className="flex items-center gap-2">
-
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400"></div>
-
-                    <span className="text-sm sm:text-base">Breathable mesh</span>
-
-                  </div>
-
-                  <div className="flex items-center gap-2">
-
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-400"></div>
-
-                    <span className="text-sm sm:text-base">Dynamic support</span>
-
-                  </div>
-
+              {/* Promo Card 3 - Angular Cut Top Left */}
+              <div 
+                className="group relative overflow-hidden rounded-2xl shadow-2xl transition-all duration-700 transform hover:scale-105 hover:-translate-y-3"
+                data-aos="fade-up"
+                data-aos-delay="300"
+                style={{
+                  clipPath: 'polygon(0 8%, 100% 0, 100% 100%, 0 100%)',
+                }}
+              >
+                <div className="relative h-[400px] sm:h-[450px] overflow-hidden">
+                  <img
+                    src="/prom3.jpeg"
+                    alt="Promotional Banner 3"
+                    className="w-full h-full object-cover transition-all duration-1000 ease-out group-hover:scale-125 group-hover:rotate-2 brightness-95 group-hover:brightness-110"
+                  />
+                  {/* Subtle Overlay with animated gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-green-500/20 via-transparent to-orange-500/20 opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+                  
+                  {/* Animated shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out delay-200"></div>
                 </div>
-
-
-
-                <div className="mb-4 sm:mb-6">
-
-                  <span className="text-2xl sm:text-3xl font-bold font-alumni-xl">Rs 149.99</span>
-
-                  <span className="ml-2 text-lg sm:text-xl text-gray-400 line-through font-alumni">Rs 189.99</span>
-
-                  <span className="ml-2 sm:ml-3 bg-yellow-400 text-black px-2 py-1 text-xs font-bold rounded">SAVE 20%</span>
-
-                </div>
-
-
-
-                <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-yellow-400 hover:bg-yellow-300 text-black text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-yellow-400/30 transition transform hover:scale-105">
-
-                  SHOP NOW
-
-                </button>
-
-
-
-                <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-400">
-
-                  *Now available in 3 colors
-
-                </div>
-
               </div>
 
             </div>
-
           </div>
 
+          {/* Decorative Elements */}
+          <div className="absolute top-10 left-10 w-20 h-20 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+          <div className="absolute top-20 right-20 w-20 h-20 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-10 left-1/2 w-20 h-20 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
         </section>
+
+        <style jsx>{`
+          @keyframes blob {
+            0%, 100% {
+              transform: translate(0, 0) scale(1);
+            }
+            25% {
+              transform: translate(20px, -20px) scale(1.1);
+            }
+            50% {
+              transform: translate(-20px, 20px) scale(0.9);
+            }
+            75% {
+              transform: translate(20px, 20px) scale(1.05);
+            }
+          }
+          
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
+        `}</style>
 
 
 

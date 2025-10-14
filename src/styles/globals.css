@@ -151,6 +151,15 @@ body {
   z-index: 1;
 }
 
+/* On small screens, rely on native text-decoration to avoid layout bugs
+   where the custom pseudo-element can extend across the container */
+@media (max-width: 640px) {
+  .font-alumni[class*="line-through"]::after,
+  [class*="line-through"].font-alumni::after {
+    display: none;
+  }
+}
+
 /* Custom animations for ProductCard */
 @keyframes fadeOutLeft {
   0% {
