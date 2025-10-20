@@ -1137,15 +1137,6 @@ export default function Home() {
         {/* Promotional Images Section */}
         <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Section Title */}
-            <div className="text-center mb-8 sm:mb-12" data-aos="fade-up">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-                Exclusive Offers
-              </h2>
-              <p className="text-gray-600 text-base sm:text-lg">
-                Limited time deals you don't want to miss
-              </p>
-            </div>
 
             {/* Promotional Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">

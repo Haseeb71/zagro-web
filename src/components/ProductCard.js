@@ -307,7 +307,7 @@ const ProductCard = ({
   
   const variants = {
     default: {
-      imageSize: 'w-full h-48 xs:h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96',
+      imageSize: 'w-full h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px] lg:h-[290px] xl:h-[290px]',
       cardPadding: 'p-0',
       titleSize: 'text-xs sm:text-sm md:text-base lg:text-lg',
       priceSize: 'text-sm sm:text-base md:text-lg lg:text-xl',
@@ -453,7 +453,7 @@ const ProductCard = ({
             <img 
               src={getImageUrl(product.images[0])} 
               alt={product.name}
-              className={`${currentVariant.imageSize} object-cover group-hover:scale-110 transition-transform duration-300`}
+              className={`${currentVariant.imageSize} object-contain group-hover:scale-110 transition-transform duration-300`}
             />
           ) : (
             <div className={`${currentVariant.imageSize} bg-gray-200 flex items-center justify-center`}>
@@ -484,7 +484,7 @@ const ProductCard = ({
 
   return (
     <div 
-      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group bg-transparent cursor-pointer ${className}`}
+      className={`relative overflow-hidden rounded-xl sm:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 group bg-transparent cursor-pointer max-w-[280px] sm:max-w-[320px] md:max-w-[340px] lg:max-w-[360px] ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
@@ -492,26 +492,26 @@ const ProductCard = ({
       onClick={handleProductClick}
     >
       {/* Product Image Container */}
-      <div className={`relative ${currentVariant.imageSize} overflow-hidden rounded-t-2xl`}>
+      <div className={`relative ${currentVariant.imageSize} overflow-hidden rounded-t-xl sm:rounded-t-2xl`}>
         {product.images && product.images.length > 0 ? (
           <div className="relative w-full h-full overflow-hidden">
             {/* Current Image */}
             <img 
               src={getImageUrl(product.images[currentImageIndex])} 
               alt={product.name}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
+              className={`absolute inset-0 w-full h-full object-contain transition-all duration-500 ease-in-out group-hover:scale-105 ${
                 isTransitioning && showNextImage ? 'animate-slideOutToLeft' : ''
               }`}
               loading="lazy"
               decoding="async"
             />
-            
+              
             {/* Next Image - only shown during transition */}
             {isTransitioning && showNextImage && (
               <img 
                 src={getImageUrl(product.images[nextImageIndex])} 
                 alt={product.name}
-                className="absolute inset-0 w-full h-full object-cover animate-slideInFromRight group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-contain animate-slideInFromRight group-hover:scale-105"
                 loading="lazy"
                 decoding="async"
               />
@@ -525,7 +525,7 @@ const ProductCard = ({
 
         {/* Discount Badge */}
         {product.discountPercentage > 0 && (
-          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md font-product font-bold shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 md:top-3 md:left-3 bg-red-500 text-white text-[9px] sm:text-[10px] md:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-product font-bold shadow-md">
             {product.discountPercentage}% OFF
           </div>
         )}
@@ -540,10 +540,10 @@ const ProductCard = ({
               onClick={handleCartIconClick}
               onTouchEnd={handleCartIconClick}
               disabled={product.quantity === 0}
-              className="bg-white/90 text-gray-800 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="bg-white/90 text-gray-800 w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 lg:w-14 lg:h-14 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               aria-label={`Add ${product.name} to cart`}
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
               </svg>
             </button>
@@ -552,7 +552,7 @@ const ProductCard = ({
       </div>
 
       {/* Product Info - Below Image */}
-      <div className="p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2">
+      <div className="p-2 sm:p-3 md:p-3 lg:p-4 space-y-1 sm:space-y-1.5 md:space-y-2">
         {/* Brand */}
         {product.brand && (
           <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-500">
@@ -609,7 +609,7 @@ const ProductCard = ({
 
       {/* Cart Modal - Size and Color Selection */}
       {showCartModal && (
-        <div className="absolute inset-0 bg-white z-50 rounded-2xl sm:rounded-3xl animate-fadeIn">
+        <div className="absolute inset-0 bg-white z-50 rounded-xl sm:rounded-2xl md:rounded-3xl animate-fadeIn">
           <div className="h-full flex flex-col">
             {/* Close Button - Fixed at top */}
             <div className="flex justify-end p-3 sm:p-4 md:p-6 pb-2 sm:pb-3 md:pb-4">
