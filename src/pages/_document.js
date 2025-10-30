@@ -4,9 +4,9 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="icon" href="/images/logo.png" />
-        <link rel="shortcut icon" href="/images/logo.png" />
-        <link rel="apple-touch-icon" href="/images/logo.png" />
+        <link rel="icon" type="image/jpeg" href="/favicon.jpeg" />
+        <link rel="shortcut icon" type="image/jpeg" href="/favicon.jpeg" />
+        <link rel="apple-touch-icon" href="/favicon.jpeg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />

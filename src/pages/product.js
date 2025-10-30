@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from 'next/router';
@@ -235,6 +236,7 @@ export default function Product() {
   const [similarProducts, setSimilarProducts] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(true);
   const [displayedImages, setDisplayedImages] = useState([]);
+  const [touchStartX, setTouchStartX] = useState(null);
 
 
   const getSimilarProductsSettings = (productCount) => {
@@ -549,6 +551,17 @@ export default function Product() {
     }
   }, [selectedColor, productData]);
 
+  // Navigation helpers for image slider
+  const showPrevImage = () => {
+    if (!displayedImages || displayedImages.length === 0) return;
+    setCurrentImageIndex((prev) => (prev - 1 + displayedImages.length) % displayedImages.length);
+  };
+
+  const showNextImage = () => {
+    if (!displayedImages || displayedImages.length === 0) return;
+    setCurrentImageIndex((prev) => (prev + 1) % displayedImages.length);
+  };
+
   // Initialize AOS animations
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -596,6 +609,12 @@ export default function Product() {
 
   return (
     <Layout>
+      <Head>
+        <title>{productData?.name ? `${productData.name} - Zagro Footwear` : 'Product - Zagro Footwear'}</title>
+        {productData?.description && (
+          <meta name="description" content={String(productData.description).slice(0, 160)} />
+        )}
+      </Head>
       <div className="min-h-screen bg-white">
 
         {/* Breadcrumbs */}
@@ -631,10 +650,25 @@ export default function Product() {
                   onMouseMove={handleMouseMove}
                   onMouseLeave={() => setIsZoomed(false)}
                 >
-                  <div className="relative aspect-square overflow-hidden">
+                  <div
+                    className="relative aspect-[4/3] max-h-[520px] md:max-h-[560px] overflow-hidden"
+                    onTouchStart={(e) => setTouchStartX(e.changedTouches[0].clientX)}
+                    onTouchEnd={(e) => {
+                      if (touchStartX === null) return;
+                      const deltaX = e.changedTouches[0].clientX - touchStartX;
+                      if (Math.abs(deltaX) > 40) {
+                        if (deltaX > 0) {
+                          setCurrentImageIndex((prev) => (prev - 1 + (displayedImages?.length || 1)) % (displayedImages?.length || 1));
+                        } else {
+                          setCurrentImageIndex((prev) => (prev + 1) % (displayedImages?.length || 1));
+                        }
+                      }
+                      setTouchStartX(null);
+                    }}
+                  >
                     {displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0 ? (
                       <div
-                        className={`absolute inset-0 bg-gray-200 flex items-center justify-center ${isZoomed ? 'scale-150' : 'scale-100'} transition-all duration-500 ease-in-out`}
+                        className={`absolute inset-0 bg-white flex items-center justify-center px-2 sm:px-4 ${isZoomed ? 'scale-150' : 'scale-100'} transition-all duration-500 ease-in-out`}
                         style={isZoomed ? {
                           transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
                         } : {}}
@@ -643,22 +677,47 @@ export default function Product() {
                           key={`${currentImageIndex}-${selectedColor}`} 
                           src={getImageUrl(displayedImages[currentImageIndex])}
                           alt={productData.name}
-                          className="w-full h-full object-cover transition-opacity duration-300"
+                          className="w-full h-full object-contain transition-opacity duration-300"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
                           }}
                         />
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center" style={{ display: 'none' }}>
+                        <div className="w-full h-full bg-white flex items-center justify-center" style={{ display: 'none' }}>
                           <span className="text-gray-500">No Image</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-white flex items-center justify-center">
                         <span className="text-gray-500">No Images Available</span>
                       </div>
                     )}
 
+                    {/* Prev/Next Controls */}
+                    {displayedImages && displayedImages.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Previous image"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-gray-800 rounded-full w-9 h-9 flex items-center justify-center shadow"
+                          onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev - 1 + displayedImages.length) % displayedImages.length); }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path fillRule="evenodd" d="M15.78 4.22a.75.75 0 010 1.06L9.06 12l6.72 6.72a.75.75 0 11-1.06 1.06l-7.25-7.25a.75.75 0 010-1.06l7.25-7.25a.75.75 0 011.06 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Next image"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-gray-800 rounded-full w-9 h-9 flex items-center justify-center shadow"
+                          onClick={(e) => { e.stopPropagation(); setCurrentImageIndex((prev) => (prev + 1) % displayedImages.length); }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path fillRule="evenodd" d="M8.22 19.78a.75.75 0 010-1.06L14.94 12 8.22 5.28a.75.75 0 111.06-1.06l7.25 7.25a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* 360 View Button */}
@@ -666,7 +725,7 @@ export default function Product() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                     </svg>
-                    360° View
+                    
                   </button>
                 </div>
 
@@ -766,7 +825,7 @@ export default function Product() {
                 </div>
 
                 {/* Price */}
-                <div className="mb-6">
+                <div className="mb-3">
                   <div className="flex flex-col sm:flex-row sm:items-end gap-2">
                     <span className="text-2xl sm:text-3xl font-bold text-gray-900 font-alumni-xl">Rs {productData.price || 0}</span>
                     {productData.isDiscounted === true && productData.discountPercentage > 0 && (
@@ -776,7 +835,6 @@ export default function Product() {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Includes taxes and free shipping on orders over Rs 75</p>
                 </div>
 
                 {/* Color Selection */}
@@ -784,7 +842,7 @@ export default function Product() {
                   try {
                     const colors = JSON.parse(productData.colorQuantities);
                     return Array.isArray(colors) && colors.length > 0 ? (
-                      <div className="mb-6">
+                      <div className="mb-4">
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-medium text-gray-900">Available Colors <span className="text-red-500">*</span></h3>
                         </div>
@@ -799,7 +857,7 @@ export default function Product() {
                                 key={index}
                                 onClick={() => !isOutOfStock && setSelectedColor(index)}
                                 disabled={isOutOfStock}
-                                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                                   isSelected
                                     ? 'border-gray-800 scale-110 shadow-lg'
                                     : isOutOfStock
@@ -850,7 +908,7 @@ export default function Product() {
                     isArray: Array.isArray(productData.sizes)
                   });
                   return parsedSizes.length > 0 && (
-                    <div className="mb-6">
+                    <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <h3 className="text-sm font-medium text-gray-900">Size <span className="text-red-500">*</span></h3>
                         <button
@@ -933,7 +991,7 @@ export default function Product() {
                 )}
 
                 {/* Quantity */}
-                <div className="mb-6">
+                <div className="mb-4">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Quantity <span className="text-red-500">*</span></h3>
                   <div className="flex items-center w-28 sm:w-32">
                     <button
@@ -966,11 +1024,11 @@ export default function Product() {
                 </div>
 
                 {/* Add to Cart & Buy Now */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-8">
+                <div className="flex flex-col sm:flex-row gap-2 mb-4">
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddToCart()}
-                    className={`relative flex-1 py-3 px-4 sm:px-8 text-white text-sm sm:text-base font-semibold rounded-full shadow-md overflow-hidden transition-colors duration-500
+                    className={`relative flex-1 py-2 px-4 sm:px-6 text-white text-sm sm:text-base font-semibold rounded-full shadow-md overflow-hidden transition-colors duration-500
                       ${canAddToCart()
                         ? 'cursor-pointer'
                         : 'bg-gray-400 cursor-not-allowed'
@@ -1016,39 +1074,20 @@ export default function Product() {
                   `}</style>
                 </div>
 
-                {/* Shipping & Returns */}
-                <div className="border-t border-gray-200 pt-4 sm:pt-6">
-                  <div className="mb-3 sm:mb-4">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                      </svg>
-                      <p className="text-xs sm:text-sm text-gray-600">Free shipping on orders over Rs 75</p>
-                    </div>
-                  </div>
-                  <div className="mb-3 sm:mb-4">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                      </svg>
-                      <p className="text-xs sm:text-sm text-gray-600">Free returns within 30 days</p>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-                      </svg>
-                      <p className="text-xs sm:text-sm text-gray-600">1-year manufacturer warranty</p>
-                    </div>
-                  </div>
+                {/* Product Description (replaces Shipping & Returns) */}
+                <div className="border-t border-gray-200 pt-3">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">Product Description</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    {productData.description || 'No description available.'}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Product Details Tabs */}
+        {/* Product Details Tabs - removed */}
+        {false && (
         <section className="bg-gray-50 py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Tabs */}
@@ -1231,6 +1270,7 @@ export default function Product() {
             </div>
           </div>
         </section>
+        )}
 
         {/* You May Also Like Section */}
         <section className="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
