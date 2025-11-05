@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Image from "next/image";
 import Link from "next/link";
@@ -18,9 +18,27 @@ import { toast } from 'react-hot-toast';
 
   // Helper function to get proper image URL
 const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
+  if (!imagePath) {
+    console.warn('getImageUrl: imagePath is null or undefined');
+    return null;
+  }
   if (imagePath.startsWith('http')) return imagePath;
-  return `${process.env.NEXT_PUBLIC_API_URL}/${imagePath.replace(/\\/g, '/')}`;
+  
+  // Clean up the path (remove leading/trailing slashes, normalize separators)
+  const cleanPath = imagePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  
+  // If API URL is set, use it; otherwise use relative path
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (apiUrl) {
+    const url = `${apiUrl.replace(/\/+$/, '')}/${cleanPath}`;
+    console.log('Image URL constructed:', url);
+    return url;
+  } else {
+    // Fallback to relative path
+    const url = `/${cleanPath}`;
+    console.warn('NEXT_PUBLIC_API_URL not set, using relative path:', url);
+    return url;
+  }
 };
 
 // Helper function to get ALL images (general + all colors)
@@ -237,6 +255,7 @@ export default function Product() {
   const [loadingSimilar, setLoadingSimilar] = useState(true);
   const [displayedImages, setDisplayedImages] = useState([]);
   const [touchStartX, setTouchStartX] = useState(null);
+  const isInitialLoadRef = useRef(true);
 
 
   const getSimilarProductsSettings = (productCount) => {
@@ -486,6 +505,9 @@ export default function Product() {
     const fetchProduct = async () => {
       if (!id) return;
 
+      // Reset initial load flag when product ID changes
+      isInitialLoadRef.current = true;
+
       try {
         setLoading(true);
         setError(null);
@@ -536,20 +558,65 @@ export default function Product() {
   useEffect(() => {
     if (productData) {
       const images = getAllImages(productData);
-      setDisplayedImages(images);
+      console.log('Setting displayed images:', images);
+      console.log('Images count:', images?.length);
+      
+      // Always show first image on initial load
+      if (images && Array.isArray(images) && images.length > 0) {
+        console.log('Setting currentImageIndex to 0, images length:', images.length);
+        // Set both states together to avoid race conditions
+        setDisplayedImages(images);
+        setCurrentImageIndex(0);
+      } else {
+        // If no images, reset to 0
+        setDisplayedImages([]);
+        setCurrentImageIndex(0);
+      }
     }
   }, [productData]);
 
-  // Handle color selection - slide to specific color images
+  // Ensure currentImageIndex is always valid when displayedImages changes
   useEffect(() => {
-    if (productData && selectedColor !== null && selectedColor !== undefined) {
+    if (displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0) {
+      // If current index is out of bounds, reset to 0
+      if (currentImageIndex < 0 || currentImageIndex >= displayedImages.length) {
+        console.log('currentImageIndex out of bounds, resetting to 0', {
+          currentImageIndex,
+          displayedImagesLength: displayedImages.length
+        });
+        setCurrentImageIndex(0);
+      }
+    }
+  }, [displayedImages]); // Only depend on displayedImages to avoid loops
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('Image state update:', {
+      currentImageIndex,
+      displayedImagesLength: displayedImages?.length,
+      displayedImages: displayedImages,
+      hasImageAtIndex: displayedImages && displayedImages[currentImageIndex] ? displayedImages[currentImageIndex] : null,
+      imageUrl: displayedImages && displayedImages[currentImageIndex] ? getImageUrl(displayedImages[currentImageIndex]) : null
+    });
+  }, [currentImageIndex, displayedImages]);
+
+  // Handle color selection - slide to specific color images
+  // Only jump to color images if user explicitly changed color (not on initial load)
+  useEffect(() => {
+    // Skip color-based image navigation on initial load
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      return;
+    }
+
+    if (productData && selectedColor !== null && selectedColor !== undefined && selectedColor >= 0) {
       const colorStartIndex = getColorImagesStartIndex(productData, selectedColor);
       setCurrentImageIndex(colorStartIndex);
-    } else if (productData) {
+    } else if (productData && displayedImages && displayedImages.length > 0) {
       // If no color selected, show first general image
       setCurrentImageIndex(0);
     }
-  }, [selectedColor, productData]);
+  }, [selectedColor, productData, displayedImages]);
 
   // Navigation helpers for image slider
   const showPrevImage = () => {
@@ -667,29 +734,62 @@ export default function Product() {
                     }}
                   >
                     {displayedImages && Array.isArray(displayedImages) && displayedImages.length > 0 ? (
-                      <div
-                        className={`absolute inset-0 bg-white flex items-center justify-center px-2 sm:px-4 ${isZoomed ? 'scale-150' : 'scale-100'} transition-all duration-500 ease-in-out`}
-                        style={isZoomed ? {
-                          transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
-                        } : {}}
-                      >
-                        <img
-                          key={`${currentImageIndex}-${selectedColor}`} 
-                          src={getImageUrl(displayedImages[currentImageIndex])}
-                          alt={productData.name}
-                          className="w-full h-full object-contain transition-opacity duration-300"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
+                      (() => {
+                        // Ensure currentImageIndex is within bounds
+                        const safeIndex = Math.max(0, Math.min(currentImageIndex, displayedImages.length - 1));
+                        const imagePath = displayedImages[safeIndex];
+                        const imageUrl = getImageUrl(imagePath);
+                        
+                        console.log('Rendering image:', {
+                          currentImageIndex,
+                          safeIndex,
+                          imagePath,
+                          imageUrl,
+                          displayedImagesLength: displayedImages.length
+                        });
+                        
+                        return (
+                          <div
+                            className={`absolute inset-0 bg-white flex items-center justify-center px-2 sm:px-4 ${isZoomed ? 'scale-150' : 'scale-100'} transition-all duration-500 ease-in-out`}
+                            style={isZoomed ? {
+                              transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
+                            } : {}}
+                          >
+                            <img
+                              key={`${safeIndex}-${selectedColor}-${imagePath}`} 
+                              src={imageUrl || ''}
+                              alt={productData?.name || 'Product image'}
+                              className="w-full h-full object-contain transition-opacity duration-300"
+                              onError={(e) => {
+                                console.error('Image failed to load:', {
+                                  imagePath,
+                                  imageUrl,
+                                  safeIndex,
+                                  currentImageIndex,
+                                  displayedImagesLength: displayedImages.length
+                                });
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) {
+                                  e.target.nextSibling.style.display = 'flex';
+                                }
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully:', imageUrl);
+                              }}
+                            />
                         <div className="w-full h-full bg-white flex items-center justify-center" style={{ display: 'none' }}>
                           <span className="text-gray-500">No Image</span>
                         </div>
                       </div>
+                        );
+                      })()
                     ) : (
                       <div className="absolute inset-0 bg-white flex items-center justify-center">
-                        <span className="text-gray-500">No Images Available</span>
+                        <span className="text-gray-500">
+                          {displayedImages && displayedImages.length > 0 
+                            ? 'Loading image...' 
+                            : 'No Images Available'}
+                        </span>
                       </div>
                     )}
 
@@ -944,7 +1044,7 @@ export default function Product() {
                   <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSizeGuide(false)}>
                     <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Size Guide</h3>
+                        <h3 className="text-lg font-bold text-gray-900">MEN SIZE CHART</h3>
                         <button onClick={() => setShowSizeGuide(false)} className="text-gray-500 hover:text-gray-700">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -955,31 +1055,28 @@ export default function Product() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">US</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Foot length (cm)</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UK</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">US</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EU</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CM</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PK</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
                             {[
-                              [7, 6, 40, 25],
-                              [7.5, 6.5, 40.5, 25.5],
-                              [8, 7, 41, 26],
-                              [8.5, 7.5, 42, 26.5],
-                              [9, 8, 42.5, 27],
-                              [9.5, 8.5, 43, 27.5],
-                              [10, 9, 44, 28],
-                              [10.5, 9.5, 44.5, 28.5],
-                              [11, 10, 45, 29],
-                              [11.5, 10.5, 45.5, 29.5],
-                              [12, 11, 46, 30],
+                              ['24.4-24.8', 6, 7, 40, 39],
+                              ['25.0-25.4', 7, 8, 41, 40],
+                              ['25.7-26.0', 8, 9, 42, 41],
+                              ['26.4-26.8', 9, 10, 43, 42],
+                              ['27.0-27.4', 10, 11, 44, 43],
+                              ['27.7-28.0', 11, 12, 45, 44],
                             ].map((row, i) => (
                               <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                 <td className="px-4 py-2 text-sm text-gray-900">{row[0]}</td>
                                 <td className="px-4 py-2 text-sm text-gray-900">{row[1]}</td>
                                 <td className="px-4 py-2 text-sm text-gray-900">{row[2]}</td>
                                 <td className="px-4 py-2 text-sm text-gray-900">{row[3]}</td>
+                                <td className="px-4 py-2 text-sm text-gray-900">{row[4]}</td>
                               </tr>
                             ))}
                           </tbody>
