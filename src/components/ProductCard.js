@@ -530,29 +530,10 @@ const ProductCard = ({
           </div>
         )}
 
-        {/* Hover/Tap Overlay with Cart Button */}
-        <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-          isHovered || isTapped ? 'opacity-100' : 'opacity-0'
-        }`}>
-          <div className="flex space-x-2 sm:space-x-3 action-buttons">
-            {/* Add to Cart Button */}
-            <button
-              onClick={handleCartIconClick}
-              onTouchEnd={handleCartIconClick}
-              disabled={product.quantity === 0}
-              className="bg-white/90 text-gray-800 w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 lg:w-14 lg:h-14 rounded-full font-semibold shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              aria-label={`Add ${product.name} to cart`}
-            >
-              <svg className="w-5 h-5 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-              </svg>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Product Info - Below Image */}
-      <div className="p-2 sm:p-3 md:p-3 lg:p-4 space-y-1 sm:space-y-1.5 md:space-y-2">
+      <div className="relative p-2 sm:p-3 md:p-3 lg:p-4 space-y-1 sm:space-y-1.5 md:space-y-2">
         {/* Brand */}
         {product.brand && (
           <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-500">
@@ -562,7 +543,7 @@ const ProductCard = ({
 
         {/* Product Name */}
         <h3 
-          className={`${currentVariant.titleSize} font-product font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200 line-clamp-2`}
+          className={`${currentVariant.titleSize} font-product font-bold text-black leading-tight cursor-pointer hover:text-gray-600 transition-colors duration-200 line-clamp-2 pr-10 sm:pr-12`}
           onClick={handleProductClick}
           onKeyDown={handleKeyDown}
           role="button"
@@ -572,6 +553,21 @@ const ProductCard = ({
           {/* {product.name.length > 10 ? product.name.slice(0, 20) + '...' : product.name} */}
           {product.name}
         </h3>
+
+        {/* Cart Button - Bottom Right Corner */}
+        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 z-10 action-buttons">
+          <button
+            onClick={handleCartIconClick}
+            onTouchEnd={handleCartIconClick}
+            disabled={product.quantity === 0}
+            className="bg-white text-gray-800 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full font-semibold shadow-lg hover:bg-gray-50 hover:scale-110 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-gray-200"
+            aria-label={`Add ${product.name} to cart`}
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+            </svg>
+          </button>
+        </div>
 
         {/* Rating */}
         {currentVariant.showRating && (
