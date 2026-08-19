@@ -100,7 +100,7 @@ export const getAllCategoryIds = () => {
 export const getCategoryMetadata = (id) => {
   const category = getCategoryById(id);
   return {
-    title: `${category.title} - Zagro Store`,
+    title: `${category.title} - Khareedo`,
     description: category.description,
     keywords: `${category.title.toLowerCase()}, products, shopping, zagro`,
     ogImage: `/images/categories/${id}.jpg` // You can add category-specific images later

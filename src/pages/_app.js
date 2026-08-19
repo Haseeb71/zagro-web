@@ -7,6 +7,7 @@ import { store } from '@/redux/store';
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/redux/hooks';
 import { loadCart } from '@/redux/slices/cartSlice';
+import { Toaster } from 'react-hot-toast';
 
 // Component to handle cart hydration
 function CartHydration() {
@@ -24,6 +25,7 @@ export default function App({ Component, pageProps }) {
   return (
     <Provider store={store}>
       <CartHydration />
+      <Toaster position="top-right" />
       <ConditionalLayout>
         <Component {...pageProps} />
       </ConditionalLayout>

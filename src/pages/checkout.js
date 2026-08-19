@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
-import { clearCart } from '../redux/slices/cartSlice';
+import { clearCart, setCartItems } from '../redux/slices/cartSlice';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import orderAPI from '../APIs/order/order';
+import API from '../APIs/base';
+import { ENDPOINT } from '../config/constants';
 import OrderConfirmationModal from '../components/OrderConfirmationModal';
+import toast from 'react-hot-toast';
 
 // Helper function to count words
 const countWords = (text) => {
@@ -115,6 +118,34 @@ const CheckoutPage = () => {
     }
   }, [cartItems.length, showOrderModal, router]);
 
+  // Drop cart lines whose products no longer exist (common after in-memory DB restart)
+  useEffect(() => {
+    let cancelled = false;
+    const prune = async () => {
+      if (!cartItems.length) return;
+      const checks = await Promise.all(
+        cartItems.map(async (item) => {
+          const id = item?.product?._id;
+          if (!id) return null;
+          const res = await API.getMethod(`${ENDPOINT.products.getProductById}/${id}`, false, false, false);
+          return res?.data?.product ? item : null;
+        })
+      );
+      if (cancelled) return;
+      const valid = checks.filter(Boolean);
+      if (valid.length !== cartItems.length) {
+        dispatch(setCartItems(valid));
+        toast.error('Some items were removed — catalog was refreshed. Please add products again.');
+      }
+    };
+    prune();
+    return () => {
+      cancelled = true;
+    };
+    // only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
   const [couponStatus, setCouponStatus] = useState(null);
@@ -123,8 +154,10 @@ const CheckoutPage = () => {
   const [orderResult, setOrderResult] = useState({ isSuccess: false, message: '', orderNumber: null });
 
   const subtotal = totalPrice; // Use Redux total price
-  const shipping = 9.99;
-  const tax = subtotal * 0.08; // 8% tax
+  const FREE_SHIPPING_MIN = 15000;
+  const SHIPPING_FEE = 250;
+  const shipping = subtotal >= FREE_SHIPPING_MIN ? 0 : SHIPPING_FEE;
+  const tax = 0;
   const discount = couponDiscount || 0; // Default to 0 if no coupon
   const total = subtotal + shipping + tax - discount;
 
@@ -139,7 +172,7 @@ const CheckoutPage = () => {
       const response = await orderAPI.applyCoupon(couponCode);
       console.log('Coupon API Response:', response);
 
-      if (response.data && response.data.coupon) {
+      if (response?.data?.coupon) {
         const coupon = response.data.coupon;
 
         // Check if coupon is expired first
@@ -194,58 +227,93 @@ const CheckoutPage = () => {
     try {
       setSubmitting(true);
 
-      // Prepare order data
-      const orderData = {
-        customer: {
-          firstName: values.firstName,
-          lastName: values.lastName,
-          email: values.email,
-          phone: values.phone,
-          address: {
-            street: values.address,
-            city: values.city,
-            state: values.state,
-            zipCode: values.zipCode,
-            country: 'Pakistan'
-          }
-        },
-        items: cartItems.map(item => ({
-          productId: item.product._id,
-          size: item.selectedSize,
-          color: item.selectedColor,
-          quantity: item.quantity
-        })),
-        paymentMethod: 'cash_on_delivery',
-        notes: values.notes || `Payment method: ${paymentMethod}`,
-        tax: tax,
-        shipping: shipping,
-        discount: couponDiscount
+      const shippingAddress = {
+        street: values.address,
+        city: values.city,
+        state: values.state,
+        zipCode: values.zipCode,
+        country: 'Pakistan',
       };
 
-      console.log('Order data being sent:', orderData);
+      // 1) Create / update customer
+      const customerRes = await API.postMethod(
+        `${ENDPOINT.order.placeOrder}/customer`,
+        false,
+        {
+          fullName: `${values.firstName} ${values.lastName}`.trim(),
+          email: values.email,
+          phone: values.phone,
+          address: shippingAddress,
+        },
+        false,
+        false
+      );
 
-      // Call place order API
+      const customerId = customerRes?.data?.customer?._id;
+      if (!customerId) {
+        const msg =
+          customerRes?.error?.response?.data?.message ||
+          customerRes?.data?.message ||
+          'Could not save customer details. Please try again.';
+        setOrderResult({ isSuccess: false, message: msg, orderNumber: null });
+        setShowOrderModal(true);
+        return;
+      }
+
+      // 2) Place order
+      const orderData = {
+        customerId,
+        items: cartItems.map((item) => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          size: item.size || undefined,
+          color: item.color || undefined,
+        })),
+        paymentMethod: paymentMethod || 'cash_on_delivery',
+        shippingAddress,
+        billingAddress: shippingAddress,
+        notes: values.notes || '',
+        couponCode: couponStatus === 'applied' ? couponCode : undefined,
+      };
+
       const response = await orderAPI.placeOrder(orderData);
-      console.log('Order placed successfully:', response);
 
-      // Show success modal
+      if (!response?.data?.checkout) {
+        const msg =
+          response?.error?.response?.data?.message ||
+          response?.data?.message ||
+          'Failed to place order. Please try again.';
+
+        if (/product not found/i.test(String(msg))) {
+          dispatch(clearCart());
+          setOrderResult({
+            isSuccess: false,
+            message:
+              'Your cart had old products from before the server restarted. Cart cleared — please add items again and checkout.',
+            orderNumber: null,
+          });
+        } else {
+          setOrderResult({ isSuccess: false, message: msg, orderNumber: null });
+        }
+        setShowOrderModal(true);
+        return;
+      }
+
       setOrderResult({
         isSuccess: true,
         message: 'Your order has been placed successfully!',
-        orderNumber: response.data?.order?.orderNumber || 'ORD-' + Date.now()
+        orderNumber: response.data.checkout.orderNumber || 'ORD-' + Date.now(),
       });
       setShowOrderModal(true);
-
-      // Don't clear cart immediately - let user see the success modal first
-
     } catch (error) {
       console.error('Order placement error:', error);
-
-      // Show error modal
       setOrderResult({
         isSuccess: false,
-        message: error.message || error.response?.data?.message || 'Failed to place order. Please try again.',
-        orderNumber: null
+        message:
+          error?.message ||
+          error?.response?.data?.message ||
+          'Failed to place order. Please try again.',
+        orderNumber: null,
       });
       setShowOrderModal(true);
     } finally {
@@ -293,8 +361,8 @@ const CheckoutPage = () => {
   return (
     <>
       <Head>
-        <title>Checkout - Zagro Footwear</title>
-        <meta name="description" content="Complete your order at Zagro Footwear" />
+        <title>Checkout - Khareedo</title>
+        <meta name="description" content="Complete your order at Khareedo" />
       </Head>
 
       <div className="min-h-screen bg-gray-50 py-8">
@@ -339,14 +407,20 @@ const CheckoutPage = () => {
                           />
                           <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1" />
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email <span className="text-red-500">*</span>
+                          </label>
                           <Field
                             type="email"
                             name="email"
+                            placeholder="you@example.com"
                             className="w-full text-gray-900 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           />
                           <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Order confirmation will be sent to this email
+                          </p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
@@ -557,38 +631,19 @@ const CheckoutPage = () => {
                       </div>
                     </div>
 
-                    {/* Validation Message */}
-                    {cartItems.some(item => !item.selectedSize || !item.selectedColor) && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                        <div className="flex items-center">
-                          <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-yellow-800">Complete Product Selection</p>
-                            <p className="text-xs text-yellow-600">
-                              Please select size and color for all products in your cart before placing the order.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Place Order Button */}
                     <button
                       type="submit"
                       disabled={
                         isSubmitting ||
                         !isValid ||
-                        !dirty ||
-                        cartItems.some(item => !item.selectedSize || !item.selectedColor)
+                        !dirty
                       }
                       className={`w-full py-3 px-4 rounded-lg font-medium transition-colors mt-6 ${isSubmitting ||
                         !isValid ||
-                        !dirty ||
-                        cartItems.some(item => !item.selectedSize || !item.selectedColor)
+                        !dirty
                         ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-[#141210] text-white hover:bg-[#2a2620]'
                         }`}
                     >
                       {isSubmitting ? 'Processing...' : 'Place Order'}
@@ -633,58 +688,26 @@ const CheckoutPage = () => {
                           )}
                           <div className="flex-1">
                             <h3 className="font-medium text-gray-900 text-sm">{productItems[0].product.name}</h3>
-                            <p className="text-xs text-gray-500">${productItems[0].product.price} each</p>
+                            <p className="text-xs text-gray-500">Rs {Number(productItems[0].product.price).toLocaleString()} each</p>
                           </div>
                         </div>
 
-                        {/* Variants */}
                         <div className="space-y-2">
-                          {productItems.map((item, itemIndex) => (
+                          {productItems.map((item) => (
                             <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded p-2">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-4 text-xs">
-                                  <span className="font-medium text-gray-900">
-                                    Size: {item.selectedSize || 'Pending'}
-                                  </span>
-                                  <span className="font-medium text-gray-900">
-                                    Color: {item.selectedColor || 'Pending'}
-                                  </span>
-                                  <span className="text-gray-600">
-                                    Qty: {item.quantity}
-                                  </span>
-                                </div>
-
-                                {/* Warning for missing size/color */}
-                                {(!item.selectedSize || !item.selectedColor) && (
-                                  <div className="mt-1 p-1 bg-red-50 border border-red-200 rounded text-xs">
-                                    <div className="flex items-center text-yellow-800">
-                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="red" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                      </svg>
-                                      <span className="font-medium">Size/Color not selected</span>
-                                    </div>
-                                    <button
-                                      onClick={() => router.push(`/products/${item.product._id}`)}
-                                      className="cursor-pointer mt-1 text-red-600 hover:text-blue-800 underline text-xs"
-                                    >
-                                      Click to select size & color
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
+                              <span className="text-xs text-gray-600">Qty: {item.quantity}</span>
                               <span className="font-semibold text-gray-900 text-sm">
-                                ${(item.product.price * item.quantity).toFixed(2)}
+                                Rs {Number(item.product.price * item.quantity).toLocaleString()}
                               </span>
                             </div>
                           ))}
                         </div>
 
-                        {/* Product Total */}
                         <div className="mt-3 pt-2 border-t border-gray-200">
                           <div className="flex justify-between items-center text-sm font-medium">
-                            <span>Subtotal for this product:</span>
+                            <span>Subtotal</span>
                             <span>
-                              ${productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0).toFixed(2)}
+                              Rs {productItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0).toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -777,25 +800,25 @@ const CheckoutPage = () => {
                 <div className="border-t border-gray-200 pt-4 space-y-2">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>Rs {Number(subtotal).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Shipping</span>
-                    <span>${shipping.toFixed(2)}</span>
+                    <span>{shipping === 0 ? 'Free' : `Rs ${Number(shipping).toLocaleString()}`}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>Rs {Number(tax).toLocaleString()}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Discount ({couponDetails?.code})</span>
-                      <span>-${discount.toFixed(2)}</span>
+                      <span>-Rs {Number(discount).toLocaleString()}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-semibold text-gray-900 border-t border-gray-200 pt-2">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>Rs {Number(total).toLocaleString()}</span>
                   </div>
                 </div>
 

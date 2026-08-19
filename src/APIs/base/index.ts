@@ -41,7 +41,11 @@ const consoleErrorPerformRedirection = (error: Error & { response?: { data?: { m
         toast.error(error?.response?.data?.message || error.message);
     }
     if (error?.response?.status === 401 || error?.response?.status === 403) {
-        redirectToLogin();
+        const onAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+        performLogout();
+        setTimeout(() => {
+            window.location.href = onAdmin ? '/admin/login' : '/';
+        }, 1500);
     }
     if (throwError) {
         throw error;
@@ -84,7 +88,9 @@ const postMethod = async (endpoint: string, authentication = true, data: Record<
         headers["Authorization"] = `Bearer ${bearer_token}`
     }
     if (multipart) {
-        headers['content-type'] = 'multipart/form-data'
+        // Let the browser set multipart boundary for FormData
+        delete headers['Content-Type'];
+        delete headers['content-type'];
     }
     return await axios.post(endpoint, data, { headers })
         .then((res) => {
@@ -92,6 +98,11 @@ const postMethod = async (endpoint: string, authentication = true, data: Record<
         })
         .catch((error) => {
             consoleErrorPerformRedirection(error, throwError, errorToast)
+            return {
+                data: null,
+                error,
+                success: false
+            };
         })
 }
 
@@ -126,7 +137,9 @@ const patchMethod = async (endpoint: string, authentication = true, data: Record
         headers["Authorization"] = `Bearer ${bearer_token}`
     }
     if (multipart) {
-        headers['content-type'] = 'multipart/form-data'
+        // Let the browser set multipart boundary for FormData
+        delete headers['Content-Type'];
+        delete headers['content-type'];
     }
     return await axios.patch(endpoint, data, { headers })
         .then((res) => {
@@ -147,8 +160,9 @@ const putMethod = async (endpoint: string, authentication = true, data: Record<s
         headers["Authorization"] = `Bearer ${bearer_token}`
     }
     if (multipart) {
-        headers['content-type'] = 'multipart/form-data'
-
+        // Let the browser set multipart boundary for FormData
+        delete headers['Content-Type'];
+        delete headers['content-type'];
     }
     return await axios.put(endpoint, data, { headers })
         .then((res) => {

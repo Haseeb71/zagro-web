@@ -138,8 +138,8 @@ const OrderStatusPage = () => {
   return (
     <Layout>
       <Head>
-        <title>Order Status - Zagro Footwear</title>
-        <meta name="description" content="Check your order status at Zagro Footwear" />
+        <title>Order Status - Khareedo</title>
+        <meta name="description" content="Check your order status at Khareedo" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-20 pb-8 px-4">

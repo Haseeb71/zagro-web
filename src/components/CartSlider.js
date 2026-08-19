@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { updateQuantity, removeFromCart, closeCart, clearAutoCloseTimer } from '@/redux/slices/cartSlice';
+import { mediaUrl } from '@/utils/mediaUrl';
+
+const formatRs = (n) => `Rs ${Number(n || 0).toLocaleString()}`;
 
 const CartSlider = ({ isOpen, onClose }) => {
   const router = useRouter();
@@ -9,51 +12,18 @@ const CartSlider = ({ isOpen, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const autoCloseTimeoutRef = useRef(null);
-  
-  // Get cart data from Redux
-  const { items: cartItems, totalItems, totalPrice, autoCloseTimer } = useAppSelector(state => state.cart);
-  
-  // Handle migration of old cart items with object selectedColor
-  const cleanCartItems = cartItems.map(item => ({
-    ...item,
-    selectedColor: typeof item.selectedColor === 'string' 
-      ? item.selectedColor 
-      : item.selectedColor?.name || 'Pending'
-  }));
 
-  // Clear cart if there are any problematic items
-  const clearCartIfNeeded = () => {
-    const hasObjectColors = cartItems.some(item => 
-      item.selectedColor && typeof item.selectedColor === 'object'
-    );
-    
-    if (hasObjectColors) {
-      localStorage.removeItem('cart');
-      window.location.reload();
-    }
-  };
+  const { items: cartItems, totalItems, totalPrice, autoCloseTimer } = useAppSelector((state) => state.cart);
 
-  // Check for problematic items on mount
-  useEffect(() => {
-    clearCartIfNeeded();
-  }, []);
-  
-  // Debug logging
-  console.log('CartSlider props:', { isOpen, cartItems: cartItems.length, onClose: !!onClose });
-  
-  // Close cart when escape key is pressed
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
-      // Delay visibility for smooth animation
-      setTimeout(() => setIsVisible(true), 50);
+      setTimeout(() => setIsVisible(true), 40);
     } else {
       setIsVisible(false);
       document.removeEventListener('keydown', handleEscape);
@@ -66,40 +36,26 @@ const CartSlider = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
-  // Auto-close cart after 5 seconds when a product is added
   useEffect(() => {
     if (autoCloseTimer && isOpen) {
       const timeRemaining = autoCloseTimer - Date.now();
-      
       if (timeRemaining > 0) {
-        // Clear any existing timeout
-        if (autoCloseTimeoutRef.current) {
-          clearTimeout(autoCloseTimeoutRef.current);
-        }
-        
-        // Set new timeout
+        if (autoCloseTimeoutRef.current) clearTimeout(autoCloseTimeoutRef.current);
         autoCloseTimeoutRef.current = setTimeout(() => {
           dispatch(closeCart());
           dispatch(clearAutoCloseTimer());
         }, timeRemaining);
       }
     }
-
-    // Cleanup timeout on unmount or when autoCloseTimer changes
     return () => {
-      if (autoCloseTimeoutRef.current) {
-        clearTimeout(autoCloseTimeoutRef.current);
-      }
+      if (autoCloseTimeoutRef.current) clearTimeout(autoCloseTimeoutRef.current);
     };
   }, [autoCloseTimer, isOpen, dispatch]);
 
-  // Clear auto-close timer when user interacts with cart
   const handleUserInteraction = () => {
     if (autoCloseTimer) {
       dispatch(clearAutoCloseTimer());
-      if (autoCloseTimeoutRef.current) {
-        clearTimeout(autoCloseTimeoutRef.current);
-      }
+      if (autoCloseTimeoutRef.current) clearTimeout(autoCloseTimeoutRef.current);
     }
   };
 
@@ -108,321 +64,183 @@ const CartSlider = ({ isOpen, onClose }) => {
     setTimeout(() => {
       dispatch(closeCart());
       router.push('/checkout');
-    }, 300);
-    
-    // Failsafe: Reset animation state after 2 seconds
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 2000);
+    }, 280);
+    setTimeout(() => setIsAnimating(false), 2000);
   };
 
-  // Reset animation state when cart is closed or opened
   useEffect(() => {
-    if (!isOpen) {
-      setIsAnimating(false);
-    } else {
-      // Reset animation state when cart is opened
-      setIsAnimating(false);
-    }
+    if (!isOpen) setIsAnimating(false);
   }, [isOpen]);
 
-  const handleUpdateQuantity = (itemId, newQuantity) => {
-    dispatch(updateQuantity({ itemId, quantity: newQuantity }));
-  };
-
-  const handleRemoveItem = (itemId) => {
-    dispatch(removeFromCart(itemId));
-  };
-
-  console.log('CartSlider render check:', { isOpen, isVisible });
-  
-  // Add a simple test indicator
-  if (isOpen) {
-    console.log('CartSlider should be visible now');
-  }
-  
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop with fade animation */}
-      <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-[4px] transition-opacity duration-300 ease-in-out z-40 ${
-          isVisible ? 'bg-opacity-50' : 'bg-opacity-0'
+      <div
+        className={`fixed inset-0 bg-black/40 backdrop-blur-md transition-opacity duration-300 z-[9998] ${
+          isVisible ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}
-        style={{ zIndex: 9998 }}
       />
-      
-      {/* Cart Slider with slide and fade animations */}
-      <div 
-        className={`fixed right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 transform transition-all duration-300 ease-in-out flex flex-col ${
+
+      <div
+        className={`fixed right-0 top-0 h-full w-full sm:max-w-md z-[9999] transform transition-all duration-300 ease-out flex flex-col shop-glass-bg border-l border-white/50 shadow-2xl ${
           isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}
-        style={{ zIndex: 9999 }}
         onMouseEnter={handleUserInteraction}
         onTouchStart={handleUserInteraction}
       >
-        {/* Header with gradient background - Fixed height */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold">Shopping Cart</h2>
-              <p className="text-blue-100 text-sm mt-1">
-                {totalItems} item{totalItems !== 1 ? 's' : ''} in cart
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-blue-100 transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-full"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="glass-panel m-3 mb-0 rounded-2xl px-5 py-4 flex items-center justify-between shrink-0">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-[#8a7350]">Bag</p>
+            <h2 className="font-display text-2xl text-[#141210]">Shopping Cart</h2>
+            <p className="text-sm text-[#6b6560] mt-0.5">
+              {totalItems} item{totalItems !== 1 ? 's' : ''}
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 w-10 rounded-full bg-white/70 border border-white/80 flex items-center justify-center hover:bg-white transition"
+            aria-label="Close cart"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        {/* Cart Items Container - Scrollable with proper height */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          {cleanCartItems.length === 0 ? (
-            <div className="h-full flex items-center justify-center p-4">
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        <div className="flex-1 overflow-hidden min-h-0 px-3 py-3">
+          {cartItems.length === 0 ? (
+            <div className="h-full glass-panel rounded-2xl flex items-center justify-center p-6">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-white/70 mx-auto mb-4 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-[#8a7350]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
-                <p className="text-gray-500 text-sm">Add some amazing products to get started</p>
+                <h3 className="font-display text-xl text-[#141210]">Your cart is empty</h3>
+                <p className="text-sm text-[#6b6560] mt-1">Add a watch to get started</p>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="mt-5 rounded-full bg-[#141210] text-white px-5 py-2.5 text-sm"
                 >
-                  Start Shopping
+                  Continue shopping
                 </button>
               </div>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="space-y-4">
-                {(() => {
-                  // Group items by product name for better organization
-                  const groupedItems = cleanCartItems.reduce((groups, item) => {
-                    const productName = item.product.name;
-                    if (!groups[productName]) {
-                      groups[productName] = [];
-                    }
-                    groups[productName].push(item);
-                    return groups;
-                  }, {});
-
-                  return Object.values(groupedItems).map((productItems, groupIndex) => (
-                    <div key={groupIndex} className="space-y-2">
-                      {productItems.map((item, itemIndex) => (
-                        <div 
-                          key={item.id} 
-                          className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-                          style={{
-                            animationDelay: `${(groupIndex * 100) + (itemIndex * 50)}ms`,
-                            animation: 'fadeInUp 0.5s ease-out forwards'
-                          }}
-                          onMouseEnter={handleUserInteraction}
-                          onTouchStart={handleUserInteraction}
-                        >
-                    <div className="flex items-start space-x-3">
-                      <div className="relative">
-                        {item.product.image ? (
-                          <img
-                            src={item.product.image}
-                            alt={item.product.name}
-                            className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 bg-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">No Image</span>
-                          </div>
-                        )}
-                        <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          ${item.product.price}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm truncate mb-1">
-                          {item.product.name}
-                          {productItems.length > 1 && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                              {productItems.length} variants
-                            </span>
-                          )}
-                        </h3>
-                        
-                        {/* Show replacement indicator */}
-                        {item.replaced && (
-                          <div className="mb-2 p-1 bg-green-50 border border-green-200 rounded text-xs">
-                            <div className="flex items-center text-green-700">
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              <span className="font-medium">Updated with size & color</span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Show size and color status */}
-                        <div className="flex items-center space-x-2 mb-2">
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                            Size: {item.selectedSize || 'Pending'}
-                          </span>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                            Color: {item.selectedColor ? (typeof item.selectedColor === 'string' ? item.selectedColor : item.selectedColor?.name) : 'Pending'}
-                          </span>
-                        </div>
-                        
-                        {/* Quantity Controls */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => {
-                                handleUserInteraction();
-                                handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1));
-                              }}
-                              className="w-7 h-7 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                              </svg>
-                            </button>
-                            <span className="text-sm font-medium text-gray-900 w-8 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => {
-                                handleUserInteraction();
-                                handleUpdateQuantity(item.id, item.quantity + 1);
-                              }}
-                              className="w-7 h-7 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </button>
-                          </div>
+            <div className="h-full overflow-y-auto space-y-3 pr-1">
+              {cartItems.map((item) => {
+                const img = mediaUrl(item.product?.image) || item.product?.image;
+                return (
+                  <div key={item.id} className="glass-card p-3.5 flex gap-3">
+                    <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-white/60 shrink-0 border border-white/70">
+                      {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt={item.product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-[10px] text-[#6b6560]">No img</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm text-[#141210] line-clamp-2">{item.product.name}</h3>
+                      {(item.size || item.color) && (
+                        <p className="text-[11px] text-[#6b6560] mt-0.5">
+                          {[item.size && item.size !== 'One Size' ? `Size: ${item.size}` : null, item.color && item.color !== 'Default' ? `Color: ${item.color}` : null]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </p>
+                      )}
+                      <p className="text-sm text-[#9a7a4f] mt-1 font-medium">{formatRs(item.product.price)}</p>
+                      <div className="mt-2.5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
                           <button
+                            type="button"
                             onClick={() => {
                               handleUserInteraction();
-                              handleRemoveItem(item.id);
+                              dispatch(updateQuantity({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) }));
                             }}
-                            className="text-gray-400 hover:text-red-500 transition-colors p-1 hover:bg-red-50 rounded-full"
+                            className="h-7 w-7 rounded-full bg-white/80 border border-black/5 text-[#141210]"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            −
+                          </button>
+                          <span className="text-sm w-6 text-center">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUserInteraction();
+                              dispatch(updateQuantity({ itemId: item.id, quantity: item.quantity + 1 }));
+                            }}
+                            className="h-7 w-7 rounded-full bg-white/80 border border-black/5 text-[#141210]"
+                          >
+                            +
                           </button>
                         </div>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleUserInteraction();
+                            dispatch(removeFromCart(item.id));
+                          }}
+                          className="text-[#6b6560] hover:text-red-600 text-xs"
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
-                      ))}
-                    </div>
-                  ));
-                })()}
-              </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Footer with sticky positioning - Fixed height */}
-        {cleanCartItems.length > 0 && (
-          <div className="border-t border-gray-200 bg-white p-6 flex-shrink-0">
-            {/* Price Summary */}
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">${totalPrice.toFixed(2)}</span>
+        {cartItems.length > 0 && (
+          <div className="glass-panel m-3 mt-0 rounded-2xl p-5 shrink-0">
+            <div className="space-y-2 text-sm mb-4">
+              <div className="flex justify-between text-[#6b6560]">
+                <span>Subtotal</span>
+                <span className="text-[#141210] font-medium">{formatRs(totalPrice)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Shipping</span>
-                <span className="font-medium text-green-600">Free</span>
+              <div className="flex justify-between text-[#6b6560]">
+                <span>Shipping</span>
+                <span className={totalPrice >= 15000 ? 'text-emerald-700 font-medium' : 'text-[#141210] font-medium'}>
+                  {totalPrice >= 15000 ? 'Free' : formatRs(250)}
+                </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-medium text-gray-900">${(totalPrice * 0.08).toFixed(2)}</span>
-              </div>
-              <div className="border-t border-gray-200 pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    ${(totalPrice * 1.08).toFixed(2)}
-                  </span>
-                </div>
+              <div className="flex justify-between pt-2 border-t border-black/5">
+                <span className="font-display text-lg">Total</span>
+                <span className="font-display text-xl text-[#9a7a4f]">
+                  {formatRs(totalPrice + (totalPrice >= 15000 ? 0 : 250))}
+                </span>
               </div>
             </div>
-            
-            {/* Checkout Button */}
             <button
+              type="button"
               onClick={() => {
                 handleUserInteraction();
                 handleCheckout();
               }}
               disabled={isAnimating}
-              className={`cursor-pointer w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                isAnimating ? 'animate-pulse' : ''
-              }`}
+              className="w-full rounded-full bg-[#141210] text-white py-3.5 text-sm font-medium hover:bg-[#2a2620] disabled:opacity-50 transition"
             >
-              {isAnimating ? 'Processing...' : 'Proceed to Checkout'}
+              {isAnimating ? 'Opening checkout…' : 'Proceed to Checkout'}
             </button>
-            
-            {/* Continue Shopping */}
             <button
+              type="button"
               onClick={() => {
                 handleUserInteraction();
                 onClose();
               }}
-              className="cursor-pointer w-full mt-3 text-gray-600 hover:text-blue-800 transition-colors text-sm font-medium"
+              className="w-full mt-3 text-sm text-[#6b6560] hover:text-[#9a7a4f]"
             >
-              Continue Shopping
+              Continue shopping
             </button>
           </div>
         )}
       </div>
-
-      {/* Custom CSS for animations and scrollbar */}
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: #f3f4f6;
-          border-radius: 4px;
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-          background: #d1d5db;
-          border-radius: 4px;
-          transition: background 0.2s ease;
-        }
-        
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-        
-        /* Firefox scrollbar */
-        .scrollbar-thin {
-          scrollbar-width: thin;
-          scrollbar-color: #d1d5db #f3f4f6;
-        }
-      `}</style>
     </>
   );
 };

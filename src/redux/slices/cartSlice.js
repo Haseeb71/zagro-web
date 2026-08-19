@@ -30,76 +30,46 @@ const cartSlice = createSlice({
   reducers: {
     // Add item to cart
     addToCart: (state, action) => {
-      const { 
-        name, 
-        price, 
-        image, 
-        quantity = 1, 
-        selectedSize = null, 
-        selectedColor = null,
-        productId 
+      const {
+        name,
+        price,
+        image,
+        quantity = 1,
+        productId,
+        size = null,
+        color = null,
+        productType = 'simple',
       } = action.payload;
-      
-      // Create essential product data
+
       const essentialProduct = {
         _id: productId,
         name,
         price,
-        image
+        image,
+        productType,
       };
-      
-      // Check if item already exists in cart (same product, size, and color)
-      const existingItemIndex = state.items.findIndex(
-        item => 
-          item.product._id === productId && 
-          item.selectedSize === selectedSize && 
-          item.selectedColor === selectedColor
-      );
+
+      const lineId = `${productId}::${size || '-'}::${color || '-'}`;
+
+      const existingItemIndex = state.items.findIndex((item) => item.id === lineId);
 
       if (existingItemIndex >= 0) {
-        // If exact same item exists (same product, size, and color), increase quantity
         state.items[existingItemIndex].quantity += quantity;
       } else {
-        // Check if there's a previous version of this product without size/color
-        const previousItemIndex = state.items.findIndex(
-          item => 
-            item.product._id === productId && 
-            (!item.selectedSize || !item.selectedColor)
-        );
-
-        if (previousItemIndex >= 0) {
-          // Replace the previous item with the new one (with size/color)
-          state.items[previousItemIndex] = {
-            id: `${productId}_${selectedSize || 'default'}_${selectedColor || 'default'}`,
-            product: essentialProduct,
-            quantity,
-            selectedSize,
-            selectedColor,
-            addedAt: new Date().toISOString(),
-            replaced: true // Flag to indicate this item replaced a previous version
-          };
-        } else {
-          // If no previous version exists, add new item (allows multiple sizes/colors of same product)
-          state.items.push({
-            id: `${productId}_${selectedSize || 'default'}_${selectedColor || 'default'}`,
-            product: essentialProduct,
-            quantity,
-            selectedSize,
-            selectedColor,
-            addedAt: new Date().toISOString()
-          });
-        }
+        state.items.push({
+          id: lineId,
+          product: essentialProduct,
+          quantity,
+          size: size || null,
+          color: color || null,
+          addedAt: new Date().toISOString(),
+        });
       }
 
-      // Update totals
       cartSlice.caseReducers.updateTotals(state);
-      
-      // Save to localStorage
       saveCartToStorage(state.items);
-      
-      // Open cart and set auto-close timer
       state.isOpen = true;
-      state.autoCloseTimer = Date.now() + 5000; // 5 seconds from now
+      state.autoCloseTimer = Date.now() + 5000;
     },
 
     // Remove item from cart
@@ -181,6 +151,13 @@ const cartSlice = createSlice({
       }, 0);
     },
 
+    // Replace cart with a validated list (drops missing products after DB reset)
+    setCartItems: (state, action) => {
+      state.items = Array.isArray(action.payload) ? action.payload : [];
+      cartSlice.caseReducers.updateTotals(state);
+      saveCartToStorage(state.items);
+    },
+
     // Load cart from localStorage (for hydration)
     loadCart: (state) => {
       const cart = getCartFromStorage();
@@ -199,6 +176,7 @@ export const {
   openCart,
   closeCart,
   clearAutoCloseTimer,
+  setCartItems,
   loadCart
 } = cartSlice.actions;
 

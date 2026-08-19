@@ -5,6 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:legacy-api": "npm --prefix server run dev",
+    "server": "npm --prefix server run dev",
+    "server:start": "npm --prefix server start",
+    "seed:permissions": "npm --prefix server run seed:permissions",
+    "seed:admin": "npm --prefix server run seed:admin",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -14,15 +19,26 @@
     "@reduxjs/toolkit": "^2.9.0",
     "aos": "^2.3.4",
     "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.3.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "formik": "^2.4.6",
+    "handlebars": "^4.7.9",
+    "jsonwebtoken": "^9.0.3",
     "libphonenumber-js": "^1.12.15",
+    "mongoose": "^9.9.3",
+    "multer": "^2.2.0",
     "next": "15.3.1",
+    "nodemailer": "^9.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.6.0",
     "react-redux": "^9.2.0",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
+    "slugify": "^1.6.9",
     "three": "^0.175.0",
     "toast": "^0.5.4",
     "yup": "^1.7.0"
@@ -32,6 +48,9 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
-    "tailwindcss": "^4"
+    "mongodb-memory-server": "^11.2.0",
+    "sass": "^1.102.0",
+    "tailwindcss": "^4",
+    "typescript": "^7.0.2"
   }
 }

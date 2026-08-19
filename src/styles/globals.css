@@ -1,51 +1,191 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  font-family: "Google Sans Code", monospace;
+  --ink: #141210;
+  --paper: #f7f5f1;
+  --stone: #ebe7e0;
+  --champagne: #c4a574;
+  --champagne-deep: #9a7a4f;
+  --muted: #6b6560;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
 }
-
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Crystal / glass surfaces */
+.shop-glass-bg {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(196, 165, 116, 0.22), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(255, 255, 255, 0.7), transparent 50%),
+    linear-gradient(165deg, #f4f1eb 0%, #ebe6dd 42%, #f7f5f1 100%);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 10px 40px rgba(20, 18, 16, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 1.15rem;
+  box-shadow:
+    0 12px 36px rgba(20, 18, 16, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 6px 20px rgba(20, 18, 16, 0.06);
+}
+
+.glass-select {
+  appearance: none;
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(20, 18, 16, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.65)) padding-box;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 0.75rem 2.4rem 0.75rem 0.95rem;
+  color: var(--ink);
+  font-size: 0.925rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #8a7350 50%),
+    linear-gradient(135deg, #8a7350 50%, transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.65));
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px),
+    0 0;
+  background-size: 6px 6px, 6px 6px, 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-select:focus {
+  outline: none;
+  border-color: rgba(196, 165, 116, 0.85);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.22);
+}
+
+.store-hero-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.admin-shell {
+  background: linear-gradient(160deg, #f3efe8 0%, #ece7de 45%, #f7f5f1 100%);
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+
+.admin-sidebar {
+  background: linear-gradient(180deg, #1a1814 0%, #12100e 100%);
+}
+
+.admin-topbar {
+  border-bottom: 1px solid rgba(20, 18, 16, 0.08);
+  background: rgba(247, 245, 241, 0.75);
+  backdrop-filter: blur(10px);
+}
+
+.admin-display {
+  font-family: var(--font-display);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+}
+
+.admin-muted {
+  color: var(--muted);
+}
+
+.admin-card {
+  background: #fffdf9;
+  border: 1px solid rgba(20, 18, 16, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(20, 18, 16, 0.04);
+}
+
+.admin-btn-primary {
+  background: var(--ink);
+  color: #f7f5f1;
+  border-radius: 0.65rem;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.admin-btn-primary:hover {
+  background: #2a2622;
+}
+
+.admin-input {
+  border: 1px solid rgba(20, 18, 16, 0.14);
+  border-radius: 0.65rem;
+  background: #fff;
+  padding: 0.55rem 0.8rem;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.2);
 }
 
 /* Alumni Sans Pinstripe font for prices */
 .font-alumni {
-  font-family: 'Alumni Sans Pinstripe', sans-serif;
-  font-weight: 700; /* Bold */
-  font-size: 1.3rem; /* 20px - larger than default */
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
 }
+
 
 /* Extra large price styling */
 .font-alumni-xl {
-  font-family: 'Alumni Sans Pinstripe', sans-serif;
-  font-weight: 800; /* Extra bold */
-  font-size: 2rem; /* 24px */
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
 }
 
 /* Large price styling for main prices */
 .font-alumni-lg {
-  font-family: 'Alumni Sans Pinstripe', sans-serif;
-  font-weight: 700; /* Bold */
-  font-size: 1.6rem; /* 22px */
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
 }
 
 /* Strikethrough price styling */

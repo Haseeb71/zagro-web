@@ -3,9 +3,11 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     domains: ['localhost', '127.0.0.1', 'images.unsplash.com'],
-  },
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    remotePatterns: [
+      { protocol: 'http', hostname: 'localhost', pathname: '/**' },
+      { protocol: 'http', hostname: '127.0.0.1', pathname: '/**' },
+      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+    ],
   },
 };
 

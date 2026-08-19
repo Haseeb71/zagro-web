@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmation</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1eb;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#141210;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1eb;padding:32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e8e2d8;border-radius:12px;overflow:hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="padding:28px 32px;background:#141210;text-align:center;">
+              {{#if logoUrl}}
+              <img src="{{logoUrl}}" alt="{{companyName}}" height="36" style="display:block;margin:0 auto 10px;height:36px;" />
+              {{/if}}
+              <div style="font-size:22px;letter-spacing:0.18em;text-transform:uppercase;color:#f7f5f1;font-weight:600;">{{companyName}}</div>
+              <div style="margin-top:10px;font-size:14px;color:#c4a574;">Order confirmation</div>
+            </td>
+          </tr>
+
+          <!-- Intro -->
+          <tr>
+            <td style="padding:28px 32px 8px;">
+              <p style="margin:0 0 8px;font-size:18px;font-weight:600;">Hi {{customerName}},</p>
+              <p style="margin:0;font-size:14px;line-height:1.6;color:#5c564f;">
+                Thank you for shopping with {{companyName}}. We have received your order and will process it shortly.
+                A full summary is below for your records.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Order meta -->
+          <tr>
+            <td style="padding:16px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;border:1px solid #ebe4d8;border-radius:8px;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:13px;color:#6b6560;width:40%;">Order number</td>
+                  <td style="padding:14px 16px;font-size:13px;font-weight:600;text-align:right;">#{{orderNumber}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 16px 14px;font-size:13px;color:#6b6560;">Order date</td>
+                  <td style="padding:0 16px 14px;font-size:13px;font-weight:600;text-align:right;">{{orderDate}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 16px 14px;font-size:13px;color:#6b6560;">Order status</td>
+                  <td style="padding:0 16px 14px;font-size:13px;font-weight:600;text-align:right;">{{orderStatus}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Payment -->
+          <tr>
+            <td style="padding:8px 32px 4px;">
+              <p style="margin:0 0 10px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a4f;font-weight:600;">Payment</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #ebe4d8;border-radius:8px;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:13px;color:#6b6560;">Method</td>
+                  <td style="padding:14px 16px;font-size:13px;font-weight:600;text-align:right;">{{paymentMethod}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 16px 14px;font-size:13px;color:#6b6560;">Payment status</td>
+                  <td style="padding:0 16px 14px;font-size:13px;font-weight:600;text-align:right;">{{paymentStatus}}</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 16px 14px;font-size:13px;color:#6b6560;">Amount due</td>
+                  <td style="padding:0 16px 14px;font-size:15px;font-weight:700;text-align:right;color:#141210;">{{totalAmount}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Items -->
+          <tr>
+            <td style="padding:20px 32px 8px;">
+              <p style="margin:0 0 10px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a4f;font-weight:600;">Items ordered</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #ebe4d8;border-radius:8px;overflow:hidden;">
+                <tr style="background:#faf8f4;">
+                  <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#6b6560;">Product</td>
+                  <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#6b6560;text-align:center;">Qty</td>
+                  <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#6b6560;text-align:right;">Total</td>
+                </tr>
+                {{#each items}}
+                <tr>
+                  <td style="padding:12px;font-size:13px;border-top:1px solid #ebe4d8;">
+                    <strong style="display:block;margin-bottom:2px;">{{this.productName}}</strong>
+                    {{#if this.meta}}
+                    <span style="font-size:11px;color:#8a8278;">{{this.meta}}</span><br />
+                    {{/if}}
+                    <span style="font-size:11px;color:#8a8278;">{{this.productPrice}} each</span>
+                  </td>
+                  <td style="padding:12px;font-size:13px;text-align:center;border-top:1px solid #ebe4d8;vertical-align:top;">{{this.quantity}}</td>
+                  <td style="padding:12px;font-size:13px;font-weight:600;text-align:right;border-top:1px solid #ebe4d8;vertical-align:top;">{{this.totalPrice}}</td>
+                </tr>
+                {{/each}}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Totals -->
+          <tr>
+            <td style="padding:8px 32px 8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;border:1px solid #ebe4d8;border-radius:8px;">
+                <tr>
+                  <td style="padding:12px 16px 4px;font-size:13px;color:#6b6560;">Subtotal</td>
+                  <td style="padding:12px 16px 4px;font-size:13px;text-align:right;">{{subtotal}}</td>
+                </tr>
+                {{#if hasDiscount}}
+                <tr>
+                  <td style="padding:4px 16px;font-size:13px;color:#2f7a4a;">Discount</td>
+                  <td style="padding:4px 16px;font-size:13px;color:#2f7a4a;text-align:right;">-{{discountAmount}}</td>
+                </tr>
+                {{/if}}
+                <tr>
+                  <td style="padding:4px 16px;font-size:13px;color:#6b6560;">Shipping</td>
+                  <td style="padding:4px 16px;font-size:13px;text-align:right;">{{shippingAmount}}</td>
+                </tr>
+                {{#if hasTax}}
+                <tr>
+                  <td style="padding:4px 16px;font-size:13px;color:#6b6560;">Tax</td>
+                  <td style="padding:4px 16px;font-size:13px;text-align:right;">{{taxAmount}}</td>
+                </tr>
+                {{/if}}
+                <tr>
+                  <td style="padding:10px 16px 14px;font-size:15px;font-weight:700;border-top:1px solid #ebe4d8;">Order total</td>
+                  <td style="padding:10px 16px 14px;font-size:15px;font-weight:700;text-align:right;border-top:1px solid #ebe4d8;">{{totalAmount}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Shipping address -->
+          <tr>
+            <td style="padding:12px 32px 8px;">
+              <p style="margin:0 0 10px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a4f;font-weight:600;">Delivery address</p>
+              <div style="padding:14px 16px;border:1px solid #ebe4d8;border-radius:8px;font-size:13px;line-height:1.55;color:#3d3833;">
+                <strong>{{customerName}}</strong><br />
+                {{#if shippingAddress}}
+                  {{#each shippingAddress.lines}}
+                    {{this}}<br />
+                  {{/each}}
+                {{/if}}
+                {{#if customerPhone}}
+                <span style="color:#6b6560;">Phone: {{customerPhone}}</span><br />
+                {{/if}}
+                <span style="color:#6b6560;">Email: {{customerEmail}}</span>
+              </div>
+            </td>
+          </tr>
+
+          {{#if hasNotes}}
+          <tr>
+            <td style="padding:12px 32px 8px;">
+              <p style="margin:0 0 10px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#9a7a4f;font-weight:600;">Order notes</p>
+              <div style="padding:14px 16px;border:1px solid #ebe4d8;border-radius:8px;font-size:13px;color:#3d3833;">{{notes}}</div>
+            </td>
+          </tr>
+          {{/if}}
+
+          <!-- Help -->
+          <tr>
+            <td style="padding:20px 32px 28px;">
+              <div style="padding:16px;background:#faf8f4;border-radius:8px;text-align:center;font-size:13px;color:#5c564f;line-height:1.55;">
+                Need help with this order?<br />
+                Write to us at <a href="mailto:{{supportEmail}}" style="color:#9a7a4f;font-weight:600;text-decoration:none;">{{supportEmail}}</a>
+              </div>
+              <p style="margin:18px 0 0;text-align:center;font-size:12px;color:#8a8278;">
+                <a href="{{websiteUrl}}" style="color:#9a7a4f;text-decoration:none;">Visit {{companyName}}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:16px 32px;background:#f7f5f1;border-top:1px solid #ebe4d8;text-align:center;font-size:11px;color:#8a8278;">
+              &copy; {{currentYear}} {{companyName}}. Please keep this email for your records.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
