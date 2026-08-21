@@ -14,19 +14,22 @@ const PromotionModal = ({ isOpen, onClose }) => {
     const fetchPromotions = async () => {
       try {
         const response = await promotionsAPI.getPromotions();
-        if (response.data && response.data.promotions) {
-          // Filter only active promotions
-          const activePromotions = response.data.promotions.filter(promo => promo.isActive);
+        if (response?.data?.promotions) {
+          const activePromotions = response.data.promotions.filter((promo) => promo.isActive);
           setPromotions(activePromotions);
-          setIsLoading(false);
+        } else {
+          setPromotions([]);
         }
       } catch (error) {
         console.error('Error fetching promotions:', error);
+        setPromotions([]);
+      } finally {
         setIsLoading(false);
       }
     };
 
     if (isOpen) {
+      setIsLoading(true);
       fetchPromotions();
     }
   }, [isOpen]);

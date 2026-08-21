@@ -1,7 +1,7 @@
 const users = require("../models/user.model.js");
 const UserPermissions = require("../models/userPermissions.model");
 const permissionSchema = require("../models/permission.model");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { log } = require("../services/activityLog.service");
 const { USER_TYPES } = require("../constants/enums");

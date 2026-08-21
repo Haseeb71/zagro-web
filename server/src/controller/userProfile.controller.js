@@ -1,7 +1,7 @@
 const users = require("../models/user.model");
 const UserPermissions = require("../models/userPermissions.model");
 const Notification = require("../models/notification.model");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { validateObjectId } = require("../utils/validators");
 const { USER_TYPES } = require("../constants/enums");
 const { log, fromReq } = require("../services/activityLog.service");

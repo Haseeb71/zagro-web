@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const users = require("../models/user.model.js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const connectToDB = require("../config/db.js");
 const { USER_TYPES } = require("../constants/enums.js");
 const roleSchema = require("../models/role.model");

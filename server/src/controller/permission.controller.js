@@ -6,7 +6,7 @@ const UserPermissions = require("../models/userPermissions.model");
 const Notification = require("../models/notification.model");
 const { log, fromReq } = require("../services/activityLog.service");
 const { USER_TYPES } = require("../constants/enums");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const getPermissions = async (req, res) => {
     const permissions = await permissionSchema.find();
