@@ -102,7 +102,7 @@ export const getCategoryMetadata = (id) => {
   return {
     title: `${category.title} - Khareedo`,
     description: category.description,
-    keywords: `${category.title.toLowerCase()}, products, shopping, zagro`,
+    keywords: `${category.title.toLowerCase()}, products, shopping, khareedo`,
     ogImage: `/images/categories/${id}.jpg` // You can add category-specific images later
   };
 };

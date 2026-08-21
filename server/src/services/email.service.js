@@ -212,7 +212,7 @@ const sendAdminOrderNotification = async (orderData) => {
     try {
         const data = buildTemplateData(orderData);
         const htmlContent = compileTemplate('admin-order-notification', data);
-        const adminTo = process.env.ADMIN_EMAIL || 'admin@zagro.com';
+        const adminTo = process.env.ADMIN_EMAIL || 'admin@khareedo.com';
 
         return await sendMail({
             to: adminTo,

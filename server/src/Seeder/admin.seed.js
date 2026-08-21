@@ -6,8 +6,8 @@ const { USER_TYPES } = require("../constants/enums.js");
 const roleSchema = require("../models/role.model");
 const permissionSchema = require("../models/permission.model");
 
-const ADMIN_EMAIL = "admin@zagro.com";
-const ADMIN_PASSWORD = "admin@123";
+const ADMIN_EMAIL = "admin@khareedo.com";
+const ADMIN_PASSWORD = "khareedo@123";
 
 async function seedingAdmin() {
     await connectToDB();

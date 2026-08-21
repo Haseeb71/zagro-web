@@ -6,7 +6,7 @@ import adminAPI from '../../APIs/admin';
 
 export default function AdminLogin() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@zagro.com');
+  const [email, setEmail] = useState('admin@khareedo.com');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 

@@ -229,8 +229,8 @@ export default function SubCategoryPage() {
   return (
     <>
       <Head>
-        <title>{subCategoryInfo?.name || subcategory} - {categoryInfo?.name || category} - Zagro Footwear</title>
-        <meta name="description" content={`Shop ${subCategoryInfo?.name || subcategory} products in ${categoryInfo?.name || category} at Zagro Footwear`} />
+        <title>{subCategoryInfo?.name || subcategory} - {categoryInfo?.name || category} - Khareedo</title>
+        <meta name="description" content={`Shop ${subCategoryInfo?.name || subcategory} products in ${categoryInfo?.name || category} at Khareedo`} />
       </Head>
       
       <Layout>

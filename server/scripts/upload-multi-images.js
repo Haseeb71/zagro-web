@@ -89,7 +89,7 @@ function multipart(fields, files) {
   const login = await request(
     "POST",
     "/api/user/login",
-    JSON.stringify({ email: "admin@zagro.com", password: "admin@123" }),
+    JSON.stringify({ email: "admin@khareedo.com", password: "khareedo@123" }),
     { "Content-Type": "application/json" }
   );
   const token = JSON.parse(login.body).token;

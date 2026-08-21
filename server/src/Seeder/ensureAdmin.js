@@ -4,8 +4,9 @@ const roleSchema = require("../models/role.model");
 const permissionSchema = require("../models/permission.model");
 const { USER_TYPES } = require("../constants/enums.js");
 
-const ADMIN_EMAIL = "admin@zagro.com";
-const ADMIN_PASSWORD = "admin@123";
+const ADMIN_EMAIL = "admin@khareedo.com";
+const ADMIN_PASSWORD = "khareedo@123";
+const LEGACY_ADMIN_EMAIL = "admin@zagro.com";
 
 const BASE_PERMISSIONS = [
   { name: "User", slug: "user", description: "General user access" },
@@ -14,12 +15,6 @@ const BASE_PERMISSIONS = [
 ];
 
 async function ensureAdminSeed() {
-  const existingAdmin = await users.findOne({ email: ADMIN_EMAIL });
-  if (existingAdmin) {
-    console.log(`Admin already exists: ${ADMIN_EMAIL}`);
-    return;
-  }
-
   for (const permission of BASE_PERMISSIONS) {
     await permissionSchema.findOneAndUpdate(
       { slug: permission.slug },
@@ -40,11 +35,27 @@ async function ensureAdminSeed() {
   );
 
   const hashPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
+
+  // Migrate legacy Zagro admin → Khareedo
+  const legacy = await users.findOne({ email: LEGACY_ADMIN_EMAIL });
+  if (legacy) {
+    legacy.email = ADMIN_EMAIL;
+    legacy.name = "Khareedo Admin";
+    legacy.password = hashPassword;
+    legacy.type = USER_TYPES.ADMIN;
+    legacy.role = role._id;
+    legacy.isActive = true;
+    legacy.updatedAt = new Date();
+    await legacy.save();
+    console.log(`Admin migrated: ${LEGACY_ADMIN_EMAIL} → ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+    return;
+  }
+
   await users.findOneAndUpdate(
     { email: ADMIN_EMAIL },
     {
       $set: {
-        name: "Admin",
+        name: "Khareedo Admin",
         email: ADMIN_EMAIL,
         password: hashPassword,
         type: USER_TYPES.ADMIN,
