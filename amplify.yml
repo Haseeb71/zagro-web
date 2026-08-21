@@ -8,21 +8,11 @@ frontend:
         - yarn install --frozen-lockfile
     build:
       commands:
-        # Amplify SSR needs env vars written into .env.production for runtime
         - echo "__NEXT_PRIVATE_PREBUNDLED_REACT=next" >> .env.production
-        - echo "MONGO_DB_URL=$MONGO_DB_URL" >> .env.production
-        - echo "JWT_SECRET=$JWT_SECRET" >> .env.production
-        - echo "ALLOW_MEMORY_DB=$ALLOW_MEMORY_DB" >> .env.production
-        - echo "FORCE_DEMO_SEED=$FORCE_DEMO_SEED" >> .env.production
-        - echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> .env.production
-        - echo "NEXT_PUBLIC_IMAGE_URL=$NEXT_PUBLIC_IMAGE_URL" >> .env.production
-        - echo "SMTP_HOST=$SMTP_HOST" >> .env.production
-        - echo "SMTP_PORT=$SMTP_PORT" >> .env.production
-        - echo "SMTP_USER=$SMTP_USER" >> .env.production
-        - echo "SMTP_PASS=$SMTP_PASS" >> .env.production
-        - echo "EMAIL_FROM=$EMAIL_FROM" >> .env.production
-        - echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env.production
-        - echo "COMPANY_NAME=$COMPANY_NAME" >> .env.production
+        # Inject Amplify Console env vars into Next.js runtime
+        - env | grep -e MONGO_DB_URL -e JWT_SECRET -e ALLOW_MEMORY_DB -e FORCE_DEMO_SEED >> .env.production || true
+        - env | grep -e NEXT_PUBLIC_ >> .env.production || true
+        - env | grep -e SMTP_ -e EMAIL_FROM -e ADMIN_EMAIL -e COMPANY_NAME -e WEBSITE_URL -e ADMIN_DASHBOARD_URL >> .env.production || true
         - yarn build
   artifacts:
     baseDirectory: .next

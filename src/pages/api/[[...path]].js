@@ -1,14 +1,27 @@
-import { createRequire } from 'module';
+const path = require('path');
+const { createRequire } = require('module');
+const { existsSync } = require('fs');
 
-const require = createRequire(import.meta.url);
+const requireFromHere = createRequire(__filename);
 
 let appPromise;
+
+function loadServerApp() {
+  const candidates = [
+    path.join(process.cwd(), 'server', 'app.js'),
+    path.join(process.cwd(), '..', 'server', 'app.js'),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return requireFromHere(p);
+  }
+  return requireFromHere(path.join(process.cwd(), 'server', 'app.js'));
+}
 
 async function getExpressApp() {
   if (!appPromise) {
     appPromise = (async () => {
       try {
-        const { getApp } = require('../../../server/app');
+        const { getApp } = loadServerApp();
         return await getApp();
       } catch (err) {
         appPromise = null;
@@ -20,36 +33,22 @@ async function getExpressApp() {
 }
 
 function normalizeUrl(req) {
-  // Amplify / Next catch-all sometimes strips or rewrites path
   let url = req.url || '/';
-  if (!url.startsWith('/api') && req.query?.path) {
+  if (!url.startsWith('/api') && req.query && req.query.path) {
     const parts = Array.isArray(req.query.path) ? req.query.path : [req.query.path];
-    url = `/api/${parts.filter(Boolean).join('/')}`;
-    if (url.includes('?')) {
-      /* keep */
-    } else if (req.url?.includes('?')) {
+    url = '/api/' + parts.filter(Boolean).join('/');
+    if (req.url && req.url.includes('?')) {
       url += req.url.slice(req.url.indexOf('?'));
     }
   }
   return url;
 }
 
-export default async function handler(req, res) {
-  // Fast health — works even if Mongo/Express fails (diagnose Amplify env)
-  const raw = req.url || '';
-  if (raw === '/api/health' || raw.startsWith('/api/health?') || raw === '/health' || raw.startsWith('/health?')) {
-    return res.status(200).json({
-      ok: true,
-      service: 'khareedo-api',
-      hasMongoEnv: Boolean(process.env.MONGO_DB_URL),
-      node: process.version,
-    });
-  }
-
+module.exports = async function handler(req, res) {
   try {
     req.url = normalizeUrl(req);
     const app = await getExpressApp();
-    await new Promise((resolve, reject) => {
+    await new Promise(function (resolve, reject) {
       res.on('finish', resolve);
       res.on('close', resolve);
       res.on('error', reject);
@@ -64,14 +63,14 @@ export default async function handler(req, res) {
     if (!res.headersSent) {
       res.status(500).json({
         ok: false,
-        message: err?.message || 'API failed to start',
+        message: (err && err.message) || 'API failed to start',
         hasMongoEnv: Boolean(process.env.MONGO_DB_URL),
       });
     }
   }
-}
+};
 
-export const config = {
+module.exports.config = {
   api: {
     bodyParser: false,
     externalResolver: true,

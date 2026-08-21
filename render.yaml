@@ -1,0 +1,21 @@
+# Render.com — Express API (use if Amplify /api keeps returning 500)
+services:
+  - type: web
+    name: khareedo-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: MONGO_DB_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOW_MEMORY_DB
+        value: "false"
+      - key: FORCE_DEMO_SEED
+        value: "false"
+      - key: API_PORT
+        value: "3006"
+      - key: NODE_VERSION
+        value: "20"
