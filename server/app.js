@@ -22,16 +22,33 @@ async function getApp() {
   if (appPromise) return appPromise;
 
   appPromise = (async () => {
-    await connectToDB();
-
     const app = express();
     app.use(cors());
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
 
+    // Health does not need DB — useful on Amplify cold starts
     app.get("/api/health", (_req, res) => {
-      res.json({ ok: true, service: "khareedo-api" });
+      res.json({
+        ok: true,
+        service: "khareedo-api",
+        hasMongoEnv: Boolean(process.env.MONGO_DB_URL),
+      });
     });
+
+    try {
+      await connectToDB();
+    } catch (err) {
+      console.error("[getApp] MongoDB failed:", err.message);
+      app.use("/api", (_req, res) => {
+        res.status(503).json({
+          ok: false,
+          message: "Database unavailable: " + err.message,
+          hint: "Set MONGO_DB_URL in Amplify environment variables and allow 0.0.0.0/0 in Atlas Network Access",
+        });
+      });
+      return app;
+    }
 
     app.use("/api/user", userRoutes);
     app.use("/api/product", productRoutes);
@@ -43,7 +60,10 @@ async function getApp() {
     app.use("/api/permission", permissionRoutes);
 
     return app;
-  })();
+  })().catch((err) => {
+    appPromise = null;
+    throw err;
+  });
 
   return appPromise;
 }
