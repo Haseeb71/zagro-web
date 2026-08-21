@@ -3,10 +3,26 @@ frontend:
   phases:
     preBuild:
       commands:
-        - nvm use 20 || true
+        - nvm install 20
+        - nvm use 20
         - yarn install --frozen-lockfile
     build:
       commands:
+        # Amplify SSR needs env vars written into .env.production for runtime
+        - echo "__NEXT_PRIVATE_PREBUNDLED_REACT=next" >> .env.production
+        - echo "MONGO_DB_URL=$MONGO_DB_URL" >> .env.production
+        - echo "JWT_SECRET=$JWT_SECRET" >> .env.production
+        - echo "ALLOW_MEMORY_DB=$ALLOW_MEMORY_DB" >> .env.production
+        - echo "FORCE_DEMO_SEED=$FORCE_DEMO_SEED" >> .env.production
+        - echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> .env.production
+        - echo "NEXT_PUBLIC_IMAGE_URL=$NEXT_PUBLIC_IMAGE_URL" >> .env.production
+        - echo "SMTP_HOST=$SMTP_HOST" >> .env.production
+        - echo "SMTP_PORT=$SMTP_PORT" >> .env.production
+        - echo "SMTP_USER=$SMTP_USER" >> .env.production
+        - echo "SMTP_PASS=$SMTP_PASS" >> .env.production
+        - echo "EMAIL_FROM=$EMAIL_FROM" >> .env.production
+        - echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env.production
+        - echo "COMPANY_NAME=$COMPANY_NAME" >> .env.production
         - yarn build
   artifacts:
     baseDirectory: .next

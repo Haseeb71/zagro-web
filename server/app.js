@@ -1,4 +1,5 @@
 const path = require("path");
+require("dotenv").config({ path: path.join(process.cwd(), ".env.production") });
 require("dotenv").config({ path: path.join(process.cwd(), "server", ".env") });
 require("dotenv").config({ path: path.join(process.cwd(), ".env.local") });
 
