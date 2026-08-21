@@ -20,6 +20,13 @@ async function startMemoryMongo() {
   return uri;
 }
 
+function allowMemoryFallback() {
+  if (process.env.NODE_ENV === "production") return false;
+  if (process.env.AWS_EXECUTION_ENV || process.env.AWS_LAMBDA_FUNCTION_NAME) return false;
+  if (process.env.ALLOW_MEMORY_DB === "false") return false;
+  return process.env.ALLOW_MEMORY_DB === "true";
+}
+
 async function connectToDB() {
   if (globalCache.conn) {
     return globalCache.conn;
@@ -27,7 +34,7 @@ async function connectToDB() {
 
   let uri = process.env.MONGO_DB_URL;
   if (!uri) {
-    throw new Error("MONGO_DB_URL is not set");
+    throw new Error("MONGO_DB_URL is not set (check Amplify Environment variables)");
   }
 
   const opts = {
@@ -43,7 +50,7 @@ async function connectToDB() {
         return conn;
       } catch (primaryError) {
         console.warn("Primary MongoDB connection failed:", primaryError.message);
-        if (process.env.ALLOW_MEMORY_DB === "false") {
+        if (!allowMemoryFallback()) {
           throw primaryError;
         }
         console.warn("Falling back to in-memory MongoDB (data resets on restart)...");
@@ -52,7 +59,10 @@ async function connectToDB() {
         console.log("In-memory MongoDB connected");
         return conn;
       }
-    })();
+    })().catch((err) => {
+      globalCache.promise = null;
+      throw err;
+    });
   }
 
   globalCache.conn = await globalCache.promise;

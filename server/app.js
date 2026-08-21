@@ -39,6 +39,18 @@ async function getApp() {
 
     try {
       await connectToDB();
+      try {
+        const ensureAdminSeed = require("./src/Seeder/ensureAdmin");
+        const ensureDefaultCategories = require("./src/Seeder/ensureCategories");
+        await ensureAdminSeed();
+        await ensureDefaultCategories();
+        if (process.env.FORCE_DEMO_SEED === "true") {
+          const ensureDemoCatalog = require("./src/Seeder/ensureDemoCatalog");
+          await ensureDemoCatalog();
+        }
+      } catch (seedErr) {
+        console.error("[getApp] Seed failed:", seedErr.message);
+      }
     } catch (err) {
       console.error("[getApp] MongoDB failed:", err.message);
       app.use("/api", (_req, res) => {

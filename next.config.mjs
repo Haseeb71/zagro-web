@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['mongoose', 'bcryptjs', 'express', 'multer'],
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./server/**/*'],
+    '/api/[[...path]]': ['./server/**/*'],
+  },
+  serverExternalPackages: ['mongoose', 'bcryptjs', 'express', 'multer', 'mongodb-memory-server'],
   images: {
     unoptimized: true,
     domains: ['localhost', '127.0.0.1', 'images.unsplash.com'],
