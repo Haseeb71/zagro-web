@@ -131,7 +131,7 @@ export default function ShopPage() {
           <p className="text-[11px] uppercase tracking-[0.35em] text-[#8a7350]">Boutique</p>
           <h1 className="font-display text-3xl sm:text-5xl mt-2 text-[#141210]">{title}</h1>
           <p className="text-[#6b6560] mt-2 text-sm max-w-xl font-light">
-            Filter by category, brand, or product type — suits, toys, vehicles, watches and more.
+            Filter by category, brand, or product type. With no filters, all brands & products show. Pick a category to narrow brands to that type only.
           </p>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

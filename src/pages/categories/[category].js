@@ -7,6 +7,7 @@ import brandsAPI from '../../APIs/brands';
 import categoriesAPI from '../../APIs/categories';
 import ProductCard from '../../components/ProductCard';
 import { mediaUrl } from '../../utils/mediaUrl';
+import { productTypeForCategory } from '../../config/categoryProductType';
 
 export default function CategoryPage() {
   const router = useRouter();
@@ -25,7 +26,6 @@ export default function CategoryPage() {
   }, [router.isReady, brandQuery]);
 
   useEffect(() => {
-    brandsAPI.getAll().then((res) => setBrands(res?.data?.brands || []));
     categoriesAPI.getAllCategories().then((res) => {
       const list = res?.data?.categories || [];
       if (typeof categorySlug === 'string') {
@@ -35,14 +35,34 @@ export default function CategoryPage() {
   }, [categorySlug]);
 
   useEffect(() => {
+    if (!categorySlug || typeof categorySlug !== 'string') return;
+    const typeFilter = productTypeForCategory(categorySlug) || undefined;
+    brandsAPI.getAll({ productType: typeFilter }).then((res) => {
+      const list = (res?.data?.brands || []).filter((b) => b.isActive !== false);
+      setBrands(list);
+      if (selectedBrand && list.length && !list.some((b) => b.slug === selectedBrand)) {
+        setSelectedBrand('');
+        router.replace(
+          { pathname: `/categories/${categorySlug}`, query: {} },
+          undefined,
+          { shallow: true, scroll: false }
+        );
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categorySlug]);
+
+  useEffect(() => {
     if (!router.isReady || !categorySlug) return;
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       try {
+        const typeFilter = productTypeForCategory(categorySlug) || undefined;
         const res = await productsAPI.getFilteredProducts({
           category: categorySlug,
           brand: selectedBrand || undefined,
+          productType: typeFilter,
           page: 1,
           limit: 24,
         });
@@ -113,25 +133,26 @@ export default function CategoryPage() {
                 <option key={b._id} value={b.slug}>{b.name}</option>
               ))}
             </select>
+            <p className="text-[11px] text-[#8a7350]/80 mt-1">
+              Brands for this category only
+            </p>
           </label>
           <Link href="/shop" className="text-sm text-[#9a7a4f] hover:underline pb-3 shrink-0">
-            Browse all →
+            All shop filters →
           </Link>
         </div>
 
-        <div className={`transition-opacity duration-300 ${busy ? 'opacity-55' : 'opacity-100'}`}>
-          {!loading && products.length === 0 ? (
-            <div className="glass-panel py-20 text-center text-[#6b6560]">No products for this filter.</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {(loading && products.length === 0
-                ? Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="glass-card animate-pulse h-[380px]" />
-                  ))
-                : products.map((p) => <ProductCard key={p._id} product={p} />))}
-            </div>
-          )}
-        </div>
+        {busy ? (
+          <p className="text-center text-[#6b6560] py-16">Loading…</p>
+        ) : products.length === 0 ? (
+          <p className="text-center text-[#6b6560] py-16">No products in this collection.</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {products.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

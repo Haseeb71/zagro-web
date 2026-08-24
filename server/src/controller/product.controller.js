@@ -42,6 +42,10 @@ const createProduct = async (req, res) => {
         
         let parsedColorImages = parseMaybeJson(colorImages) || {};
         let parsedSizeColorQuantities = parseMaybeJson(sizeColorQuantities);
+        let parsedColorQuantities = parseMaybeJson(colorQuantities) || colorQuantities || {};
+        if (typeof parsedColorQuantities !== 'object' || parsedColorQuantities == null) {
+            parsedColorQuantities = {};
+        }
         const typeDefaults = applyProductTypeDefaults(
             productType,
             sizes,
@@ -71,7 +75,7 @@ const createProduct = async (req, res) => {
             brand: brand || null,
             productType: typeDefaults.productType,
             quantity: typeDefaults.quantity, 
-            colorQuantities, 
+            colorQuantities: parsedColorQuantities, 
             colorImages: finalColorImages,
             sizeColorQuantities: parsedSizeColorQuantities,
             sizes: typeDefaults.sizes,
@@ -422,7 +426,11 @@ const updateProduct = async (req, res) => {
         if (category !== undefined) updateData.category = category;
         if (brand !== undefined) updateData.brand = brand || null;
         if (quantity !== undefined) updateData.quantity = quantity;
-        if (colorQuantities !== undefined) updateData.colorQuantities = colorQuantities;
+        if (colorQuantities !== undefined) {
+            const parsedCQ = parseMaybeJson(colorQuantities);
+            updateData.colorQuantities =
+                parsedCQ && typeof parsedCQ === 'object' ? parsedCQ : colorQuantities;
+        }
         if (sizeColorQuantities !== undefined) updateData.sizeColorQuantities = parsedSizeColorQuantities;
         if (sizes !== undefined) updateData.sizes = parsedSizes;
         if (isActive !== undefined) updateData.isActive = isActive;

@@ -9,7 +9,7 @@ import { labelOf } from '../../utils/labelOf';
 import { productImageUrl } from '../../utils/mediaUrl';
 import ProductCard from '../../components/ProductCard';
 import { toast } from 'react-hot-toast';
-import { productRequiresSize, getAvailableSizes } from '../../config/productTypes';
+import { productRequiresSize, productRequiresColor, getAvailableSizes, getAvailableColors } from '../../config/productTypes';
 
 const formatRs = (n) => `Rs ${Number(n || 0).toLocaleString()}`;
 
@@ -26,6 +26,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
 
   useEffect(() => {
     if (!id) return undefined;
@@ -64,7 +65,9 @@ export default function ProductDetailPage() {
           productType: apiProduct.productType || 'simple',
           sizes: Array.isArray(apiProduct.sizes) ? apiProduct.sizes : [],
           sizeQuantities: apiProduct.sizeQuantities || {},
+          colorQuantities: apiProduct.colorQuantities || {},
           requiresSize: productRequiresSize(apiProduct),
+          requiresColor: productRequiresColor(apiProduct),
         };
 
         if (!cancelled) {
@@ -72,6 +75,7 @@ export default function ProductDetailPage() {
           setActiveImage(0);
           setQuantity(1);
           setSelectedSize('');
+          setSelectedColor('');
         }
 
         try {
@@ -108,6 +112,10 @@ export default function ProductDetailPage() {
       toast.error('Please select a size');
       return;
     }
+    if (product.requiresColor && !selectedColor) {
+      toast.error('Please select a colour');
+      return;
+    }
     dispatch(
       addToCart({
         productId: product.id,
@@ -116,13 +124,16 @@ export default function ProductDetailPage() {
         image: product.images[0] || null,
         quantity,
         size: selectedSize || null,
+        color: selectedColor || null,
         productType: product.productType,
       })
     );
-    toast.success(`${product.name}${selectedSize ? ` (${selectedSize})` : ''} added to cart`);
+    const extras = [selectedSize, selectedColor].filter(Boolean).join(' / ');
+    toast.success(`${product.name}${extras ? ` (${extras})` : ''} added to cart`);
   };
 
   const availableSizes = product ? getAvailableSizes(product) : [];
+  const availableColors = product ? getAvailableColors(product) : [];
   const sizeStockLeft = selectedSize && product?.sizeQuantities?.[selectedSize] != null
     ? Number(product.sizeQuantities[selectedSize])
     : product?.quantityAvailable;
@@ -306,6 +317,38 @@ export default function ProductDetailPage() {
                         }`}
                       >
                         {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {product.requiresColor && availableColors.length > 0 ? (
+              <div className="mt-6">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-[#8a7350] mb-2">
+                  Colour {selectedColor ? `· ${selectedColor}` : ''}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {availableColors.map((c) => {
+                    const qty = product.colorQuantities?.[c];
+                    const soldOut = qty != null && Number(qty) <= 0;
+                    const active = selectedColor === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        disabled={soldOut}
+                        onClick={() => setSelectedColor(c)}
+                        className={`min-w-[3rem] px-3 py-2 rounded-full text-sm border transition ${
+                          active
+                            ? 'bg-[#141210] text-white border-[#141210]'
+                            : soldOut
+                              ? 'opacity-35 cursor-not-allowed border-black/10 line-through'
+                              : 'border-black/15 hover:border-[#c4a574]'
+                        }`}
+                      >
+                        {c}
                       </button>
                     );
                   })}

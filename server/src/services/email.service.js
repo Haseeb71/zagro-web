@@ -50,7 +50,9 @@ const formatItemsForEmail = (items = []) =>
         quantity: item.quantity,
         productPrice: formatRs(item.productPrice),
         totalPrice: formatRs(item.totalPrice),
-        meta: [item.brandName, item.categoryName].filter(Boolean).join(' · '),
+        meta: [item.brandName, item.categoryName, item.size, item.color]
+            .filter(Boolean)
+            .join(' · '),
     }));
 
 const getSmtpConfig = () => {
@@ -71,8 +73,8 @@ const createTransporter = async () => {
 
     if (!user || !pass) {
         throw new Error(
-            'Mailtrap credentials missing. Set MAILTRAP_USER and MAILTRAP_PASS in server/.env or .env.local ' +
-                '(Mailtrap → Email Testing → Sandboxes → Integration → SMTP).'
+            'SMTP credentials missing. Set SMTP_USER and SMTP_PASS (or MAILTRAP_USER / MAILTRAP_PASS) ' +
+                'plus SMTP_HOST / SMTP_PORT for production mail delivery.'
         );
     }
 
