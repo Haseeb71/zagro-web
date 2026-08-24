@@ -3,7 +3,7 @@
  * Example: 923001234567
  */
 export default function WhatsAppButton() {
-  const raw = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '923000000000';
+  const raw = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '923238428998';
   const phone = String(raw).replace(/[^\d]/g, '');
   const href = `https://wa.me/${phone}`;
 
