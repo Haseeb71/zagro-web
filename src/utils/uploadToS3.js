@@ -2,8 +2,7 @@ import API from '../APIs/base';
 import { ENDPOINT } from '../config/constants';
 
 /**
- * Upload a file directly to S3 (browser → S3). Avoids Amplify 413 body-size limit.
- * @returns {Promise<string>} public URL stored in MongoDB
+ * Upload file browser → S3 via presigned PUT. Returns S3 object key for MongoDB storage.
  */
 export async function uploadFileToS3(file, folder = 'products') {
   const presignRes = await API.postMethod(
@@ -13,27 +12,27 @@ export async function uploadFileToS3(file, folder = 'products') {
       filename: file.name,
       contentType: file.type || 'application/octet-stream',
       folder,
+      sizeBytes: file.size,
     },
     true,
     true
   );
 
-  const { uploadUrl, publicUrl } = presignRes?.data || {};
-  if (!uploadUrl || !publicUrl) {
+  const { uploadUrl, key, contentType } = presignRes?.data || {};
+  if (!uploadUrl || !key) {
     throw new Error(presignRes?.data?.message || 'Could not get upload URL');
   }
 
+  const mime = contentType || file.type || 'application/octet-stream';
   const putRes = await fetch(uploadUrl, {
     method: 'PUT',
     body: file,
-    headers: {
-      'Content-Type': file.type || 'application/octet-stream',
-    },
+    headers: { 'Content-Type': mime },
   });
 
   if (!putRes.ok) {
-    throw new Error(`S3 upload failed (${putRes.status}). Check bucket CORS settings.`);
+    throw new Error(`Upload failed (${putRes.status}). Check S3 bucket CORS settings.`);
   }
 
-  return publicUrl;
+  return key;
 }

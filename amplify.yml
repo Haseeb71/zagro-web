@@ -12,7 +12,7 @@ frontend:
         - env | grep -e MONGO_DB_URL -e JWT_SECRET -e ALLOW_MEMORY_DB -e FORCE_DEMO_SEED >> .env.production || true
         - env | grep -e NEXT_PUBLIC_ >> .env.production || true
         - env | grep -e SMTP_ -e EMAIL_FROM -e ADMIN_EMAIL -e COMPANY_NAME -e WEBSITE_URL -e ADMIN_DASHBOARD_URL -e SUPPORT_EMAIL >> .env.production || true
-        - env | grep -e AWS_ >> .env.production || true
+        - env | grep -e S3_ >> .env.production || true
         - yarn build
         # Ship Express sources inside the SSR artifact (Amplify compute cwd)
         - cp -R server .next/server/server

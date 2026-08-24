@@ -35,7 +35,7 @@ export default function AdminProductForm() {
   const [typeList, setTypeList] = useState(PRODUCT_TYPE_LIST);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  /** New uploads: { id, url, publicUrl?, uploading?, error? } */
+  /** New uploads: { id, url, key?, uploading?, error? } */
   const [imageItems, setImageItems] = useState([]);
   /** Already saved images on edit */
   const [existingImages, setExistingImages] = useState([]);
@@ -187,10 +187,10 @@ export default function AdminProductForm() {
       setImageItems((prev) => [...prev, { id, url: previewUrl, uploading: true }]);
 
       try {
-        const publicUrl = await uploadFileToS3(file, 'products');
+        const key = await uploadFileToS3(file, 'products');
         setImageItems((prev) =>
           prev.map((item) =>
-            item.id === id ? { ...item, publicUrl, uploading: false, error: null } : item
+            item.id === id ? { ...item, key, uploading: false, error: null } : item
           )
         );
       } catch (err) {
@@ -260,7 +260,7 @@ export default function AdminProductForm() {
         quantity = Object.values(colorQuantities).reduce((s, n) => s + n, 0) || quantity;
       }
 
-      const uploadedUrls = imageItems.filter((i) => i.publicUrl).map((i) => i.publicUrl);
+      const uploadedKeys = imageItems.filter((i) => i.key).map((i) => i.key);
       const stillUploading = imageItems.some((i) => i.uploading);
       const failed = imageItems.some((i) => i.error);
 
@@ -284,7 +284,7 @@ export default function AdminProductForm() {
         sizes: JSON.stringify(sizes),
         sizeQuantities: JSON.stringify(sizeQuantities),
         colorQuantities: JSON.stringify(colorQuantities),
-        imageUrls: JSON.stringify(uploadedUrls),
+        imageKeys: JSON.stringify(uploadedKeys),
       };
 
       const fd = new FormData();
@@ -300,7 +300,7 @@ export default function AdminProductForm() {
         await adminAPI.updateProduct(id, fd);
         toast.success('Product updated');
       } else {
-        const totalImages = uploadedUrls.length;
+        const totalImages = uploadedKeys.length + visibleExisting.length;
         if (!totalImages) {
           toast.error('Add at least one product image');
           setSaving(false);

@@ -5,6 +5,12 @@ export function mediaUrl(path) {
     return raw;
   }
 
+  /** Private S3 object key — served via backend redirect to presigned GET */
+  if (raw.startsWith('uploads/')) {
+    const base = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/$/, '');
+    return `${base}/upload/media?key=${encodeURIComponent(raw)}`;
+  }
+
   let clean = raw.replace(/\\/g, '/');
   const uploadsIdx = clean.toLowerCase().lastIndexOf('/uploads/');
   if (uploadsIdx >= 0) {

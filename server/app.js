@@ -36,7 +36,7 @@ async function getApp() {
         ok: true,
         service: "khareedo-api",
         hasMongoEnv: Boolean(process.env.MONGO_DB_URL),
-        hasS3: Boolean(process.env.AWS_S3_BUCKET && process.env.AWS_ACCESS_KEY_ID),
+        hasS3: Boolean(process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET),
       });
     });
 

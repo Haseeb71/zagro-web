@@ -65,6 +65,8 @@ export const ENDPOINT = {
   },
   upload: {
     presign: `${BASE_URL}/upload/presign`,
+    sign: `${BASE_URL}/upload/sign`,
+    media: `${BASE_URL}/upload/media`,
   },
 };
 
