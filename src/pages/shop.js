@@ -4,6 +4,7 @@ import Link from 'next/link';
 import productsAPI from '../APIs/eproducts';
 import categoriesAPI from '../APIs/categories';
 import brandsAPI from '../APIs/brands';
+import adminAPI from '../APIs/admin';
 import ProductCard from '../components/ProductCard';
 import { PRODUCT_TYPE_LIST } from '../config/productTypes';
 import { productTypeForCategory } from '../config/categoryProductType';
@@ -16,6 +17,7 @@ export default function ShopPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [typeList, setTypeList] = useState(PRODUCT_TYPE_LIST);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
   const [brand, setBrand] = useState('');
@@ -32,11 +34,19 @@ export default function ShopPage() {
     categoriesAPI.getAllCategories().then((c) => {
       setCategories(c?.data?.categories || []);
     });
+    adminAPI.getProductTypes().then((res) => {
+      const list = res?.data?.types || [];
+      if (list.length) setTypeList(list);
+    });
   }, []);
 
-  // Brands depend on selected type / category — Rolex won't show under Suits
+  const resolveTypeForCategory = (slug) => {
+    const cat = categories.find((c) => c.slug === slug || c._id === slug);
+    return productTypeForCategory(cat) || productTypeForCategory(slug) || null;
+  };
+
   useEffect(() => {
-    const typeFilter = productType || productTypeForCategory(category) || undefined;
+    const typeFilter = productType || resolveTypeForCategory(category) || undefined;
     brandsAPI.getAll({ productType: typeFilter }).then((b) => {
       const list = (b?.data?.brands || []).filter((x) => x.isActive !== false);
       setBrands(list);
@@ -49,7 +59,7 @@ export default function ShopPage() {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, productType]);
+  }, [category, productType, categories]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -57,7 +67,7 @@ export default function ShopPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const effectiveType = productType || productTypeForCategory(category) || undefined;
+        const effectiveType = productType || resolveTypeForCategory(category) || undefined;
         const res = await productsAPI.getFilteredProducts({
           category: category || undefined,
           brand: brand || undefined,
@@ -78,7 +88,8 @@ export default function ShopPage() {
     return () => {
       cancelled = true;
     };
-  }, [router.isReady, category, brand, productType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady, category, brand, productType, categories]);
 
   const syncUrl = (nextCategory, nextBrand, nextType) => {
     const query = {};
@@ -90,7 +101,7 @@ export default function ShopPage() {
 
   const onCategoryChange = (value) => {
     setCategory(value);
-    const mapped = productTypeForCategory(value);
+    const mapped = resolveTypeForCategory(value);
     if (mapped) setProductType(mapped);
     syncUrl(value, '', mapped || productType);
     setBrand('');
@@ -171,7 +182,7 @@ export default function ShopPage() {
                 className="glass-select mt-1.5 w-full"
               >
                 <option value="">All types</option>
-                {PRODUCT_TYPE_LIST.map((t) => (
+                {typeList.map((t) => (
                   <option key={t.key} value={t.key}>{t.label}</option>
                 ))}
               </select>

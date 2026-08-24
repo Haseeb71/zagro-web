@@ -1,4 +1,4 @@
-/** Keep in sync with server/src/constants/productTypes.js */
+/** Fallback catalogue — live list comes from /api/product-type */
 export const PRODUCT_TYPES = {
   simple: {
     key: 'simple',
@@ -45,6 +45,15 @@ export const PRODUCT_TYPES = {
     sizePreset: [],
     colorPreset: ['Black', 'White', 'Red', 'Blue', 'Silver'],
   },
+  shoes: {
+    key: 'shoes',
+    label: 'Shoes',
+    description: 'Footwear — EU sizes and colours',
+    hasSizes: true,
+    hasColors: true,
+    sizePreset: ['38', '39', '40', '41', '42', '43', '44', '45'],
+    colorPreset: ['Black', 'Brown', 'White', 'Navy'],
+  },
   other: {
     key: 'other',
     label: 'Other (custom)',
@@ -58,25 +67,27 @@ export const PRODUCT_TYPES = {
 
 export const PRODUCT_TYPE_LIST = Object.values(PRODUCT_TYPES);
 
-export function getProductTypeConfig(type) {
+export function getProductTypeConfig(type, typesList) {
+  if (Array.isArray(typesList) && typesList.length) {
+    const found = typesList.find((t) => t.key === type);
+    if (found) return found;
+  }
   return PRODUCT_TYPES[type] || PRODUCT_TYPES.simple;
 }
 
 export function productRequiresSize(product) {
-  const type = getProductTypeConfig(product?.productType);
   const sizes = Array.isArray(product?.sizes) ? product.sizes.filter(Boolean) : [];
-  return Boolean(type.hasSizes && sizes.length > 0);
+  return sizes.length > 0;
 }
 
 export function productRequiresColor(product) {
-  const type = getProductTypeConfig(product?.productType);
-  const colors =
+  const qtyMap =
     product?.colorQuantities && typeof product.colorQuantities === 'object'
-      ? Object.keys(product.colorQuantities)
-      : Array.isArray(product?.colors)
-        ? product.colors
-        : [];
-  return Boolean(type.hasColors && colors.filter(Boolean).length > 0);
+      ? product.colorQuantities
+      : {};
+  const keys = Object.keys(qtyMap);
+  if (keys.length) return true;
+  return Array.isArray(product?.colors) && product.colors.filter(Boolean).length > 0;
 }
 
 export function getAvailableSizes(product) {

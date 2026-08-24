@@ -16,6 +16,7 @@ const promotionRoutes = require("./src/routes/promotion.routes");
 const couponRoutes = require("./src/routes/coupon.routes");
 const checkoutRoutes = require("./src/routes/checkout.routes");
 const permissionRoutes = require("./src/routes/perrmission.routes");
+const productTypeRoutes = require("./src/routes/productType.routes");
 
 let appPromise = null;
 
@@ -42,8 +43,10 @@ async function getApp() {
       try {
         const ensureAdminSeed = require("./src/Seeder/ensureAdmin");
         const ensureDefaultCategories = require("./src/Seeder/ensureCategories");
+        const ensureProductTypes = require("./src/Seeder/ensureProductTypes");
         await ensureAdminSeed();
         await ensureDefaultCategories();
+        await ensureProductTypes();
         if (process.env.FORCE_DEMO_SEED === "true") {
           const ensureDemoCatalog = require("./src/Seeder/ensureDemoCatalog");
           await ensureDemoCatalog();
@@ -71,6 +74,7 @@ async function getApp() {
     app.use("/api/coupon", couponRoutes);
     app.use("/api/checkout", checkoutRoutes);
     app.use("/api/permission", permissionRoutes);
+    app.use("/api/product-type", productTypeRoutes);
 
     return app;
   })().catch((err) => {

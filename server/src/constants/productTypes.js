@@ -1,7 +1,8 @@
 /**
- * Shared product-type catalogue — keep FE (src/config/productTypes.js) in sync.
+ * Built-in defaults + in-memory cache of DB product types.
+ * Call refreshProductTypeCache() after connect / after CRUD.
  */
-const PRODUCT_TYPES = {
+const BUILTIN_PRODUCT_TYPES = {
   simple: {
     key: "simple",
     label: "Simple product",
@@ -47,6 +48,15 @@ const PRODUCT_TYPES = {
     sizePreset: [],
     colorPreset: ["Black", "White", "Red", "Blue", "Silver"],
   },
+  shoes: {
+    key: "shoes",
+    label: "Shoes",
+    description: "Footwear — EU sizes and colours",
+    hasSizes: true,
+    hasColors: true,
+    sizePreset: ["38", "39", "40", "41", "42", "43", "44", "45"],
+    colorPreset: ["Black", "Brown", "White", "Navy"],
+  },
   other: {
     key: "other",
     label: "Other (custom)",
@@ -58,21 +68,100 @@ const PRODUCT_TYPES = {
   },
 };
 
-const PRODUCT_TYPE_KEYS = Object.keys(PRODUCT_TYPES);
+/** @type {Record<string, object>} */
+let PRODUCT_TYPES = { ...BUILTIN_PRODUCT_TYPES };
 
-function getProductTypeConfig(type) {
-  return PRODUCT_TYPES[type] || PRODUCT_TYPES.simple;
+function toConfig(doc) {
+  if (!doc) return null;
+  const o = typeof doc.toObject === "function" ? doc.toObject() : doc;
+  return {
+    key: o.key,
+    label: o.label || o.key,
+    description: o.description || "",
+    hasSizes: Boolean(o.hasSizes),
+    hasColors: Boolean(o.hasColors),
+    sizePreset: Array.isArray(o.sizePreset) ? o.sizePreset.map(String).filter(Boolean) : [],
+    colorPreset: Array.isArray(o.colorPreset) ? o.colorPreset.map(String).filter(Boolean) : [],
+    isActive: o.isActive !== false,
+    sortOrder: Number(o.sortOrder) || 100,
+    _id: o._id,
+  };
 }
 
+async function refreshProductTypeCache() {
+  try {
+    const ProductType = require("../models/productType.model");
+    const rows = await ProductType.find({ isActive: { $ne: false } }).sort({ sortOrder: 1, label: 1 }).lean();
+    const map = { ...BUILTIN_PRODUCT_TYPES };
+    for (const row of rows) {
+      const cfg = toConfig(row);
+      if (cfg?.key) map[cfg.key] = cfg;
+    }
+    PRODUCT_TYPES = map;
+  } catch (err) {
+    console.error("[productTypes] cache refresh failed:", err.message);
+  }
+  return PRODUCT_TYPES;
+}
+
+function getProductTypeConfig(type) {
+  const key = type || "simple";
+  if (PRODUCT_TYPES[key]) return PRODUCT_TYPES[key];
+  return {
+    key,
+    label: key,
+    description: "",
+    hasSizes: false,
+    hasColors: false,
+    sizePreset: [],
+    colorPreset: [],
+  };
+}
+
+function listProductTypeConfigs() {
+  const seen = new Set();
+  const list = [];
+  for (const cfg of Object.values(PRODUCT_TYPES)) {
+    if (!cfg?.key || seen.has(cfg.key)) continue;
+    if (cfg.isActive === false) continue;
+    seen.add(cfg.key);
+    list.push(cfg);
+  }
+  return list.sort((a, b) => (a.sortOrder || 100) - (b.sortOrder || 100) || a.label.localeCompare(b.label));
+}
+
+/** Require size when product actually has size variants */
 function productRequiresSize(product) {
-  const type = getProductTypeConfig(product?.productType);
   const sizes = Array.isArray(product?.sizes) ? product.sizes.filter(Boolean) : [];
+  if (sizes.length > 0) return true;
+  const type = getProductTypeConfig(product?.productType);
   return Boolean(type.hasSizes && sizes.length > 0);
 }
 
+function productRequiresColor(product) {
+  const qtyMap =
+    product?.colorQuantities && typeof product.colorQuantities === "object"
+      ? product.colorQuantities
+      : {};
+  const keys = Object.keys(qtyMap);
+  if (keys.length > 0) return true;
+  const colors = Array.isArray(product?.colors) ? product.colors.filter(Boolean) : [];
+  if (colors.length > 0) return true;
+  return false;
+}
+
 module.exports = {
-  PRODUCT_TYPES,
-  PRODUCT_TYPE_KEYS,
+  BUILTIN_PRODUCT_TYPES,
+  get PRODUCT_TYPES() {
+    return PRODUCT_TYPES;
+  },
+  get PRODUCT_TYPE_KEYS() {
+    return Object.keys(PRODUCT_TYPES);
+  },
+  toConfig,
+  refreshProductTypeCache,
   getProductTypeConfig,
+  listProductTypeConfigs,
   productRequiresSize,
+  productRequiresColor,
 };

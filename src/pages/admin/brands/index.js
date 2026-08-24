@@ -7,6 +7,7 @@ import { PRODUCT_TYPE_LIST } from '../../../config/productTypes';
 
 export default function AdminBrands() {
   const [brands, setBrands] = useState([]);
+  const [typeList, setTypeList] = useState(PRODUCT_TYPE_LIST);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [logo, setLogo] = useState(null);
@@ -20,13 +21,17 @@ export default function AdminBrands() {
 
   useEffect(() => {
     load();
+    adminAPI.getProductTypes().then((res) => {
+      const list = res?.data?.types || [];
+      if (list.length) setTypeList(list);
+    });
   }, []);
 
   const reset = () => {
     setName('');
     setDescription('');
     setLogo(null);
-    setProductTypes(['watch']);
+    setProductTypes([typeList[0]?.key || 'watch']);
     setEditingId(null);
   };
 
@@ -39,7 +44,7 @@ export default function AdminBrands() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!productTypes.length) {
-      toast.error('Select at least one product type (Watch / Suit / …)');
+      toast.error('Select at least one product type');
       return;
     }
     const fd = new FormData();
@@ -66,7 +71,7 @@ export default function AdminBrands() {
     setDescription(brand.description || '');
     setProductTypes(Array.isArray(brand.productTypes) && brand.productTypes.length
       ? brand.productTypes
-      : ['watch']);
+      : [typeList[0]?.key || 'watch']);
   };
 
   const onDelete = async (id) => {
@@ -93,7 +98,7 @@ export default function AdminBrands() {
         <div className="sm:col-span-2">
           <label className="text-xs uppercase tracking-wider text-[#8a7350]">Sells which types?</label>
           <div className="mt-2 flex flex-wrap gap-2">
-            {PRODUCT_TYPE_LIST.map((t) => {
+            {typeList.map((t) => {
               const on = productTypes.includes(t.key);
               return (
                 <button

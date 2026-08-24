@@ -36,7 +36,10 @@ export default function CategoryPage() {
 
   useEffect(() => {
     if (!categorySlug || typeof categorySlug !== 'string') return;
-    const typeFilter = productTypeForCategory(categorySlug) || undefined;
+    const typeFilter =
+      productTypeForCategory(categoryMeta) ||
+      productTypeForCategory(categorySlug) ||
+      undefined;
     brandsAPI.getAll({ productType: typeFilter }).then((res) => {
       const list = (res?.data?.brands || []).filter((b) => b.isActive !== false);
       setBrands(list);
@@ -50,7 +53,7 @@ export default function CategoryPage() {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categorySlug]);
+  }, [categorySlug, categoryMeta]);
 
   useEffect(() => {
     if (!router.isReady || !categorySlug) return;
@@ -58,7 +61,10 @@ export default function CategoryPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const typeFilter = productTypeForCategory(categorySlug) || undefined;
+        const typeFilter =
+          productTypeForCategory(categoryMeta) ||
+          productTypeForCategory(categorySlug) ||
+          undefined;
         const res = await productsAPI.getFilteredProducts({
           category: categorySlug,
           brand: selectedBrand || undefined,
@@ -79,7 +85,8 @@ export default function CategoryPage() {
     return () => {
       cancelled = true;
     };
-  }, [router.isReady, categorySlug, selectedBrand]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady, categorySlug, selectedBrand, categoryMeta]);
 
   const applyBrand = (slug) => {
     setSelectedBrand(slug);

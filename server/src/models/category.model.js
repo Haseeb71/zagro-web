@@ -17,6 +17,12 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    /** Links category to a product type key for brand/product filters */
+    productType: {
+        type: String,
+        required: false,
+        default: "",
+    },
     subCategories: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: "subCategory",

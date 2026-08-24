@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import adminAPI from '../../../APIs/admin';
 import brandsAPI from '../../../APIs/brands';
 import { PRODUCT_TYPE_LIST, getProductTypeConfig } from '../../../config/productTypes';
+import { mediaUrl } from '../../../utils/mediaUrl';
 
 const emptyForm = {
   name: '',
@@ -27,18 +28,24 @@ export default function AdminProductForm() {
   const router = useRouter();
   const { id } = router.query;
   const isEdit = Boolean(id) && id !== 'new';
+  const fileInputRef = useRef(null);
+
   const [form, setForm] = useState(emptyForm);
+  const [typeList, setTypeList] = useState(PRODUCT_TYPE_LIST);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  /** { file, url }[] for new uploads with preview */
+  /** New uploads: { id, file, url }[] — append only; never replace on next pick */
   const [imageItems, setImageItems] = useState([]);
+  /** Already saved images on edit */
+  const [existingImages, setExistingImages] = useState([]);
+  const [imagesToRemove, setImagesToRemove] = useState([]);
   const [saving, setSaving] = useState(false);
   const [sizeStock, setSizeStock] = useState({});
   const [colorStock, setColorStock] = useState({});
   const [customSize, setCustomSize] = useState('');
   const [customColor, setCustomColor] = useState('');
 
-  const typeConfig = getProductTypeConfig(form.productType);
+  const typeConfig = getProductTypeConfig(form.productType, typeList);
 
   const computedDiscount = useMemo(() => {
     const sale = Number(form.price);
@@ -57,6 +64,10 @@ export default function AdminProductForm() {
   useEffect(() => {
     adminAPI.getCategories().then((cRes) => {
       setCategories(cRes?.data?.categories || []);
+    });
+    adminAPI.getProductTypes().then((tRes) => {
+      const list = tRes?.data?.types || [];
+      if (list.length) setTypeList(list);
     });
   }, []);
 
@@ -87,6 +98,8 @@ export default function AdminProductForm() {
         isTrending: !!p.isTrending,
         isSpecial: !!p.isSpecial,
       });
+      setExistingImages(Array.isArray(p.images) ? p.images : []);
+      setImagesToRemove([]);
       const sq = p.sizeQuantities && typeof p.sizeQuantities === 'object' ? p.sizeQuantities : {};
       if (Object.keys(sq).length) {
         const mapped = {};
@@ -126,9 +139,9 @@ export default function AdminProductForm() {
   const onProductTypeChange = (nextType) => {
     setField('productType', nextType);
     setField('brand', '');
-    const cfg = getProductTypeConfig(nextType);
+    const cfg = getProductTypeConfig(nextType, typeList);
     if (!cfg.hasSizes) setSizeStock({});
-    else if (cfg.sizePreset.length && Object.keys(sizeStock).length === 0) {
+    else if (cfg.sizePreset?.length && Object.keys(sizeStock).length === 0) {
       const mapped = {};
       cfg.sizePreset.forEach((s) => {
         mapped[s] = '';
@@ -136,7 +149,7 @@ export default function AdminProductForm() {
       setSizeStock(mapped);
     }
     if (!cfg.hasColors) setColorStock({});
-    else if (cfg.colorPreset.length && Object.keys(colorStock).length === 0) {
+    else if (cfg.colorPreset?.length && Object.keys(colorStock).length === 0) {
       const mapped = {};
       cfg.colorPreset.forEach((c) => {
         mapped[c] = '';
@@ -161,11 +174,12 @@ export default function AdminProductForm() {
     clear('');
   };
 
+  /** Append new files — previous previews stay */
   const onImagesPick = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     const next = files.map((file) => ({
-      id: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`,
+      id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
       file,
       url: URL.createObjectURL(file),
     }));
@@ -173,12 +187,17 @@ export default function AdminProductForm() {
     e.target.value = '';
   };
 
-  const removeImage = (id) => {
+  const removeNewImage = (imageId) => {
     setImageItems((prev) => {
-      const target = prev.find((x) => x.id === id);
+      const target = prev.find((x) => x.id === imageId);
       if (target?.url) URL.revokeObjectURL(target.url);
-      return prev.filter((x) => x.id !== id);
+      return prev.filter((x) => x.id !== imageId);
     });
+  };
+
+  const removeExistingImage = (path) => {
+    setExistingImages((prev) => prev.filter((p) => p !== path));
+    setImagesToRemove((prev) => [...prev, path]);
   };
 
   const onSubmit = async (e) => {
@@ -188,13 +207,13 @@ export default function AdminProductForm() {
       const sale = Number(form.price);
       const original = Number(form.originalPrice);
       const hasDiscount = original > sale && sale > 0;
-      const cfg = getProductTypeConfig(form.productType);
+      const cfg = getProductTypeConfig(form.productType, typeList);
 
       const sizes = cfg.hasSizes ? Object.keys(sizeStock) : [];
       const sizeQuantities = {};
       if (cfg.hasSizes) {
         if (!sizes.length) {
-          toast.error('Select at least one size for this product type');
+          toast.error('Add at least one size (e.g. 42 or L)');
           setSaving(false);
           return;
         }
@@ -239,6 +258,9 @@ export default function AdminProductForm() {
         fd.append(key, String(value));
       });
       imageItems.forEach((item) => fd.append('images', item.file));
+      if (isEdit && imagesToRemove.length) {
+        fd.append('imagesToRemove', JSON.stringify(imagesToRemove));
+      }
 
       if (isEdit) {
         await adminAPI.updateProduct(id, fd);
@@ -260,13 +282,15 @@ export default function AdminProductForm() {
     }
   };
 
+  const visibleExisting = existingImages.filter((p) => !imagesToRemove.includes(p));
+
   return (
-    <AdminLayout title={isEdit ? 'Edit product' : 'Add product'} subtitle="Product type controls sizes, colours, and stock fields.">
+    <AdminLayout title={isEdit ? 'Edit product' : 'Add product'} subtitle="Pick a product type — sizes & colours appear when that type has them.">
       <form onSubmit={onSubmit} className="admin-card p-6 max-w-3xl space-y-5">
         <div>
           <label className="text-xs uppercase tracking-wider text-[#8a7350]">Product type</label>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {PRODUCT_TYPE_LIST.map((t) => (
+            {typeList.map((t) => (
               <button
                 key={t.key}
                 type="button"
@@ -278,10 +302,21 @@ export default function AdminProductForm() {
                 }`}
               >
                 <p className="text-sm font-medium text-[#141210]">{t.label}</p>
-                <p className="text-[11px] text-[#6b6560] mt-0.5">{t.description}</p>
+                <p className="text-[11px] text-[#6b6560] mt-0.5">
+                  {t.description || (
+                    <>
+                      {t.hasSizes ? 'Sizes' : 'No sizes'}
+                      {' · '}
+                      {t.hasColors ? 'Colours' : 'No colours'}
+                    </>
+                  )}
+                </p>
               </button>
             ))}
           </div>
+          <p className="text-[11px] text-[#6b6560] mt-2">
+            Need a new type? Create it under Admin → Product types.
+          </p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -331,9 +366,11 @@ export default function AdminProductForm() {
             <div className="sm:col-span-2 rounded-xl border border-[#c4a574]/35 bg-[#c4a574]/5 p-4 space-y-3">
               <div>
                 <p className="text-xs uppercase tracking-wider text-[#8a7350]">Sizes & stock</p>
-                <p className="text-[11px] text-[#6b6560] mt-0.5">Total units: {sizeTotal}</p>
+                <p className="text-[11px] text-[#6b6560] mt-0.5">
+                  Tick presets or type any size (40, 41, 42…). Total: {sizeTotal}
+                </p>
               </div>
-              {typeConfig.sizePreset.length > 0 && (
+              {(typeConfig.sizePreset || []).length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {typeConfig.sizePreset.map((s) => {
                     const on = sizeStock[s] != null;
@@ -355,7 +392,7 @@ export default function AdminProductForm() {
               <div className="flex gap-2">
                 <input
                   className="admin-input flex-1"
-                  placeholder="Custom size"
+                  placeholder="Add size e.g. 42 or XXL"
                   value={customSize}
                   onChange={(e) => setCustomSize(e.target.value)}
                   onKeyDown={(e) => {
@@ -366,13 +403,13 @@ export default function AdminProductForm() {
                   }}
                 />
                 <button type="button" onClick={() => addCustomKey(setSizeStock, customSize, setCustomSize)} className="px-3 py-2 border rounded-lg text-sm">
-                  Add
+                  Add size
                 </button>
               </div>
               {Object.keys(sizeStock).length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {Object.keys(sizeStock).map((s) => (
-                    <label key={s} className="block">
+                    <label key={s} className="block relative">
                       <span className="text-[11px] text-[#6b6560]">Qty — {s}</span>
                       <input
                         type="number"
@@ -381,11 +418,18 @@ export default function AdminProductForm() {
                         value={sizeStock[s]}
                         onChange={(e) => setSizeStock((prev) => ({ ...prev, [s]: e.target.value }))}
                       />
+                      <button
+                        type="button"
+                        className="absolute top-0 right-0 text-xs text-red-600"
+                        onClick={() => toggleKey(setSizeStock, s)}
+                      >
+                        remove
+                      </button>
                     </label>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-[#6b6560]">Select sizes above to enter stock.</p>
+                <p className="text-xs text-[#6b6560]">Add sizes above to enter stock.</p>
               )}
             </div>
           ) : null}
@@ -396,7 +440,7 @@ export default function AdminProductForm() {
                 <p className="text-xs uppercase tracking-wider text-[#8a7350]">Colours & stock</p>
                 <p className="text-[11px] text-[#6b6560] mt-0.5">Optional — leave empty if colour does not apply</p>
               </div>
-              {typeConfig.colorPreset.length > 0 && (
+              {(typeConfig.colorPreset || []).length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {typeConfig.colorPreset.map((c) => {
                     const on = colorStock[c] != null;
@@ -429,13 +473,13 @@ export default function AdminProductForm() {
                   }}
                 />
                 <button type="button" onClick={() => addCustomKey(setColorStock, customColor, setCustomColor)} className="px-3 py-2 border rounded-lg text-sm">
-                  Add
+                  Add colour
                 </button>
               </div>
               {Object.keys(colorStock).length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {Object.keys(colorStock).map((c) => (
-                    <label key={c} className="block">
+                    <label key={c} className="block relative">
                       <span className="text-[11px] text-[#6b6560]">Qty — {c}</span>
                       <input
                         type="number"
@@ -444,6 +488,13 @@ export default function AdminProductForm() {
                         value={colorStock[c]}
                         onChange={(e) => setColorStock((prev) => ({ ...prev, [c]: e.target.value }))}
                       />
+                      <button
+                        type="button"
+                        className="absolute top-0 right-0 text-xs text-red-600"
+                        onClick={() => toggleKey(setColorStock, c)}
+                      >
+                        remove
+                      </button>
                     </label>
                   ))}
                 </div>
@@ -464,17 +515,48 @@ export default function AdminProductForm() {
 
           <div className="sm:col-span-2">
             <label className="text-xs uppercase tracking-wider text-[#8a7350]">Images</label>
-            <input type="file" accept="image/*" multiple className="mt-2 text-sm" onChange={onImagesPick} />
-            <p className="text-[11px] text-[#6b6560] mt-1">Select multiple images. Click × on a preview to remove it.</p>
-            {imageItems.length > 0 && (
+            <p className="text-[11px] text-[#6b6560] mt-1">
+              Add one photo, then click again to add more — previous previews stay. Remove with ×.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={onImagesPick}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-2 px-4 py-2 border border-[#c4a574]/50 rounded-lg text-sm hover:bg-[#c4a574]/10"
+            >
+              {imageItems.length || visibleExisting.length ? 'Add another photo' : 'Add photo'}
+            </button>
+
+            {(visibleExisting.length > 0 || imageItems.length > 0) && (
               <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {visibleExisting.map((path) => (
+                  <div key={path} className="relative aspect-square rounded-lg overflow-hidden border border-black/10 bg-black/5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={mediaUrl(path)} alt="" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(path)}
+                      className="absolute top-1 right-1 h-7 w-7 rounded-full bg-black/75 text-white text-sm leading-none"
+                      aria-label="Remove image"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
                 {imageItems.map((item) => (
                   <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-black/10 bg-black/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.url} alt="" className="h-full w-full object-cover" />
                     <button
                       type="button"
-                      onClick={() => removeImage(item.id)}
+                      onClick={() => removeNewImage(item.id)}
                       className="absolute top-1 right-1 h-7 w-7 rounded-full bg-black/75 text-white text-sm leading-none"
                       aria-label="Remove image"
                     >

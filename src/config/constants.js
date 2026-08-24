@@ -56,6 +56,13 @@ export const ENDPOINT = {
     update: `${BASE_URL}/coupon/update`,
     delete: `${BASE_URL}/coupon/delete`,
   },
+  productTypes: {
+    list: `${BASE_URL}/product-type`,
+    adminList: `${BASE_URL}/product-type/admin`,
+    create: `${BASE_URL}/product-type/create`,
+    update: `${BASE_URL}/product-type/update`,
+    delete: `${BASE_URL}/product-type/delete`,
+  },
 };
 
 export const API_ENDPOINTS = ENDPOINT;

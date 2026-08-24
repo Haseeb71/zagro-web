@@ -112,6 +112,26 @@ const adminAPI = {
   getCustomers: async () => {
     return API.getMethod(`${ENDPOINT.order.getOrders}/customers?perPage=100`, true, false, false);
   },
+
+  getProductTypes: async () => {
+    return API.getMethod(ENDPOINT.productTypes.list, false, false, false);
+  },
+
+  getProductTypesAdmin: async () => {
+    return API.getMethod(ENDPOINT.productTypes.adminList, true, false, false);
+  },
+
+  createProductType: async (data) => {
+    return API.postMethod(ENDPOINT.productTypes.create, true, data, true, true);
+  },
+
+  updateProductType: async (id, data) => {
+    return API.putMethod(`${ENDPOINT.productTypes.update}/${id}`, true, data, true, true);
+  },
+
+  deleteProductType: async (id) => {
+    return API.deleteMethod(`${ENDPOINT.productTypes.delete}/${id}`, true);
+  },
 };
 
 export default adminAPI;

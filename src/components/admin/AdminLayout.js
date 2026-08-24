@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '◆' },
   { href: '/admin/banners', label: 'Banners', icon: '▭' },
+  { href: '/admin/product-types', label: 'Product types', icon: '⬡' },
   { href: '/admin/products', label: 'Products', icon: '▣' },
   { href: '/admin/brands', label: 'Brands', icon: '◎' },
   { href: '/admin/categories', label: 'Categories', icon: '▤' },

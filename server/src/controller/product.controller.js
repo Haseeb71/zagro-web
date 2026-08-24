@@ -11,6 +11,7 @@ const {
     normalizeSizeQuantities,
     parseMaybeJson,
 } = require("../utils/inventory");
+const { refreshProductTypeCache } = require("../constants/productTypes");
 
 const createProduct = async (req, res) => {
     try {
@@ -46,6 +47,7 @@ const createProduct = async (req, res) => {
         if (typeof parsedColorQuantities !== 'object' || parsedColorQuantities == null) {
             parsedColorQuantities = {};
         }
+        await refreshProductTypeCache();
         const typeDefaults = applyProductTypeDefaults(
             productType,
             sizes,
@@ -459,6 +461,7 @@ const updateProduct = async (req, res) => {
             sizeQuantities !== undefined ||
             quantity !== undefined
         ) {
+            await refreshProductTypeCache();
             const typeDefaults = applyProductTypeDefaults(
                 productType !== undefined ? productType : product.productType,
                 sizes !== undefined ? sizes : product.sizes,
@@ -646,7 +649,7 @@ const getAllTypesProducts = async (req, res) => {
 
 const createCategory = async (req, res) => {
     try {
-        const { name, description } = req.body;
+        const { name, description, productType } = req.body;
         if (!name) {
             return res.status(400).json({ message: "Name is required" });
         }
@@ -656,7 +659,13 @@ const createCategory = async (req, res) => {
             return res.status(400).json({ message: "Category already exists" });
         }
         const image = req.file ? req.file.path : null;
-        const newCategory = await categoryModel.create({ name, slug: slugifyName, description, image });
+        const newCategory = await categoryModel.create({
+            name,
+            slug: slugifyName,
+            description,
+            image,
+            productType: productType ? String(productType).trim().toLowerCase() : "",
+        });
         res.status(201).json({ newCategory, message: "Category created successfully" });
     } catch (error) {
         console.error("Error in createCategory:", error);
@@ -698,13 +707,16 @@ const updateCategory = async (req, res) => {
         if (!category) {
             return res.status(404).json({ message: "Category not found" });
         }
-        const { name, description } = req.body;
+        const { name, description, productType } = req.body;
         const updateData = {};
         if (name !== undefined) {
             updateData.name = name;
             updateData.slug = slugify(name, { lower: true });
         }
         if (description !== undefined) updateData.description = description;
+        if (productType !== undefined) {
+            updateData.productType = productType ? String(productType).trim().toLowerCase() : "";
+        }
         if (req.file) updateData.image = req.file.path;
         const updatedCategory = await categoryModel.findByIdAndUpdate(id, updateData, { new: true });
         res.status(200).json({ updatedCategory, message: "Category updated successfully" });
