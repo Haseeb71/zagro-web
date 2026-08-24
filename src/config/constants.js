@@ -63,6 +63,9 @@ export const ENDPOINT = {
     update: `${BASE_URL}/product-type/update`,
     delete: `${BASE_URL}/product-type/delete`,
   },
+  upload: {
+    presign: `${BASE_URL}/upload/presign`,
+  },
 };
 
 export const API_ENDPOINTS = ENDPOINT;

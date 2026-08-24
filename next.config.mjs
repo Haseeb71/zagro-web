@@ -14,7 +14,7 @@ const nextConfig = {
     ],
     '/api/health': [],
   },
-  serverExternalPackages: ['mongoose', 'bcryptjs', 'express', 'multer', 'mongodb-memory-server'],
+  serverExternalPackages: ['mongoose', 'bcryptjs', 'express', 'multer', 'mongodb-memory-server', '@aws-sdk/client-s3', '@aws-sdk/s3-request-presigner'],
   images: {
     unoptimized: true,
     domains: ['localhost', '127.0.0.1', 'images.unsplash.com'],
@@ -22,6 +22,8 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost', pathname: '/**' },
       { protocol: 'http', hostname: '127.0.0.1', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.amazonaws.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.cloudfront.net', pathname: '/**' },
     ],
   },
 };

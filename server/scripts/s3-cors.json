@@ -1,0 +1,12 @@
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedOrigins": [
+      "https://kharedoshop.com",
+      "https://www.kharedoshop.com",
+      "http://localhost:3000"
+    ],
+    "ExposeHeaders": ["ETag"]
+  }
+]

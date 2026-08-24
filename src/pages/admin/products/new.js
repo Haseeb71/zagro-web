@@ -6,6 +6,7 @@ import adminAPI from '../../../APIs/admin';
 import brandsAPI from '../../../APIs/brands';
 import { PRODUCT_TYPE_LIST, getProductTypeConfig } from '../../../config/productTypes';
 import { mediaUrl } from '../../../utils/mediaUrl';
+import { uploadFileToS3 } from '../../../utils/uploadToS3';
 
 const emptyForm = {
   name: '',
@@ -34,7 +35,7 @@ export default function AdminProductForm() {
   const [typeList, setTypeList] = useState(PRODUCT_TYPE_LIST);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  /** New uploads: { id, file, url }[] — append only; never replace on next pick */
+  /** New uploads: { id, url, publicUrl?, uploading?, error? } */
   const [imageItems, setImageItems] = useState([]);
   /** Already saved images on edit */
   const [existingImages, setExistingImages] = useState([]);
@@ -174,17 +175,35 @@ export default function AdminProductForm() {
     clear('');
   };
 
-  /** Append new files — previous previews stay */
-  const onImagesPick = (e) => {
+  /** Upload each photo to S3 immediately — avoids 413 on save */
+  const onImagesPick = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    const next = files.map((file) => ({
-      id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
-      file,
-      url: URL.createObjectURL(file),
-    }));
-    setImageItems((prev) => [...prev, ...next]);
     e.target.value = '';
+
+    for (const file of files) {
+      const id = `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
+      const previewUrl = URL.createObjectURL(file);
+      setImageItems((prev) => [...prev, { id, url: previewUrl, uploading: true }]);
+
+      try {
+        const publicUrl = await uploadFileToS3(file, 'products');
+        setImageItems((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, publicUrl, uploading: false, error: null } : item
+          )
+        );
+      } catch (err) {
+        setImageItems((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? { ...item, uploading: false, error: err?.message || 'Upload failed' }
+              : item
+          )
+        );
+        toast.error(err?.message || 'Image upload failed');
+      }
+    }
   };
 
   const removeNewImage = (imageId) => {
@@ -241,6 +260,21 @@ export default function AdminProductForm() {
         quantity = Object.values(colorQuantities).reduce((s, n) => s + n, 0) || quantity;
       }
 
+      const uploadedUrls = imageItems.filter((i) => i.publicUrl).map((i) => i.publicUrl);
+      const stillUploading = imageItems.some((i) => i.uploading);
+      const failed = imageItems.some((i) => i.error);
+
+      if (stillUploading) {
+        toast.error('Please wait — images are still uploading to S3');
+        setSaving(false);
+        return;
+      }
+      if (failed) {
+        toast.error('Remove failed images or upload again');
+        setSaving(false);
+        return;
+      }
+
       const payload = {
         ...form,
         quantity,
@@ -250,6 +284,7 @@ export default function AdminProductForm() {
         sizes: JSON.stringify(sizes),
         sizeQuantities: JSON.stringify(sizeQuantities),
         colorQuantities: JSON.stringify(colorQuantities),
+        imageUrls: JSON.stringify(uploadedUrls),
       };
 
       const fd = new FormData();
@@ -257,7 +292,6 @@ export default function AdminProductForm() {
         if (value === '' && (key === 'brand' || key === 'originalPrice')) return;
         fd.append(key, String(value));
       });
-      imageItems.forEach((item) => fd.append('images', item.file));
       if (isEdit && imagesToRemove.length) {
         fd.append('imagesToRemove', JSON.stringify(imagesToRemove));
       }
@@ -266,7 +300,8 @@ export default function AdminProductForm() {
         await adminAPI.updateProduct(id, fd);
         toast.success('Product updated');
       } else {
-        if (!imageItems.length) {
+        const totalImages = uploadedUrls.length;
+        if (!totalImages) {
           toast.error('Add at least one product image');
           setSaving(false);
           return;
@@ -516,7 +551,7 @@ export default function AdminProductForm() {
           <div className="sm:col-span-2">
             <label className="text-xs uppercase tracking-wider text-[#8a7350]">Images</label>
             <p className="text-[11px] text-[#6b6560] mt-1">
-              Add one photo, then click again to add more — previous previews stay. Remove with ×.
+              Photos upload to S3 when selected. Add one, then add more — previews stay. Remove with ×.
             </p>
             <input
               ref={fileInputRef}
@@ -554,6 +589,16 @@ export default function AdminProductForm() {
                   <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-black/10 bg-black/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.url} alt="" className="h-full w-full object-cover" />
+                    {item.uploading ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs">
+                        Uploading…
+                      </div>
+                    ) : null}
+                    {item.error ? (
+                      <div className="absolute inset-x-0 bottom-0 bg-red-600/90 text-white text-[10px] p-1 text-center">
+                        Failed
+                      </div>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => removeNewImage(item.id)}

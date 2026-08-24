@@ -12,6 +12,7 @@ const {
     parseMaybeJson,
 } = require("../utils/inventory");
 const { refreshProductTypeCache } = require("../constants/productTypes");
+const { mergeProductImages, removeStoredImages } = require("../utils/images");
 
 const createProduct = async (req, res) => {
     try {
@@ -24,8 +25,7 @@ const createProduct = async (req, res) => {
         console.log("req.body == ", req.body);
         console.log("req.files == ", req.files);
         
-        // Handle general images (if any)
-        const images = req.files ? req.files.filter(file => file.fieldname === 'images').map((file) => file.path) : [];
+        const images = mergeProductImages(req);
         
         // Handle color-specific images
         const colorImagesFromFiles = {};
@@ -253,20 +253,7 @@ const updateProduct = async (req, res) => {
         let updatedImages = [...product.images];
 
         if (imagesToRemove && Array.isArray(imagesToRemove)) {
-          
-            imagesToRemove.forEach(imagePath => {
-                try {
-                    if (fs.existsSync(imagePath)) {
-                        fs.unlinkSync(imagePath);
-                        console.log(`Successfully deleted file: ${imagePath}`);
-                    } else {
-                        console.log(`File not found: ${imagePath}`);
-                    }
-                } catch (fileError) {
-                    console.error(`Error deleting file ${imagePath}:`, fileError);
-                }
-            });
-
+            await removeStoredImages(imagesToRemove);
             updatedImages = updatedImages.filter(image => !imagesToRemove.includes(image));
             console.log("Updated images after removal:", updatedImages);
         } else if (imagesToRemove) {
@@ -277,19 +264,7 @@ const updateProduct = async (req, res) => {
                 console.log("Parsed images to remove:", parsedImagesToRemove);
 
                 if (Array.isArray(parsedImagesToRemove)) {
-                    parsedImagesToRemove.forEach(imagePath => {
-                        try {
-                            if (fs.existsSync(imagePath)) {
-                                fs.unlinkSync(imagePath);
-                                console.log(`Successfully deleted file: ${imagePath}`);
-                            } else {
-                                console.log(`File not found: ${imagePath}`);
-                            }
-                        } catch (fileError) {
-                            console.error(`Error deleting file ${imagePath}:`, fileError);
-                        }
-                    });
-
+                    await removeStoredImages(parsedImagesToRemove);
                     updatedImages = updatedImages.filter(image => !parsedImagesToRemove.includes(image));
                 }
             } catch (parseError) {
@@ -297,10 +272,9 @@ const updateProduct = async (req, res) => {
             }
         }
 
-        // Add new images if any
-        if (req.files && req.files.length > 0) {
-            const newImages = req.files.filter(file => file.fieldname === 'images').map((file) => file.path);
-            updatedImages = [...updatedImages, ...newImages];
+        const newImageUrls = mergeProductImages(req);
+        if (newImageUrls.length > 0) {
+            updatedImages = [...updatedImages, ...newImageUrls];
         }
         
         // Handle color-specific images

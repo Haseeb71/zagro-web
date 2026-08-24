@@ -17,6 +17,7 @@ const couponRoutes = require("./src/routes/coupon.routes");
 const checkoutRoutes = require("./src/routes/checkout.routes");
 const permissionRoutes = require("./src/routes/perrmission.routes");
 const productTypeRoutes = require("./src/routes/productType.routes");
+const uploadRoutes = require("./src/routes/upload.routes");
 
 let appPromise = null;
 
@@ -35,6 +36,7 @@ async function getApp() {
         ok: true,
         service: "khareedo-api",
         hasMongoEnv: Boolean(process.env.MONGO_DB_URL),
+        hasS3: Boolean(process.env.AWS_S3_BUCKET && process.env.AWS_ACCESS_KEY_ID),
       });
     });
 
@@ -75,6 +77,7 @@ async function getApp() {
     app.use("/api/checkout", checkoutRoutes);
     app.use("/api/permission", permissionRoutes);
     app.use("/api/product-type", productTypeRoutes);
+    app.use("/api/upload", uploadRoutes);
 
     return app;
   })().catch((err) => {
