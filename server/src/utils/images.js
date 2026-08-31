@@ -1,17 +1,28 @@
 const fs = require("fs");
 const { parseMaybeJson } = require("./inventory");
-const s3 = require("../services/s3.service");
+
+function getS3() {
+  try {
+    return require("../services/s3.service");
+  } catch (err) {
+    console.error("[images] S3 module unavailable:", err.message);
+    return null;
+  }
+}
 
 function collectImageKeys(req, fieldName = "imageKeys") {
+  const s3 = getS3();
+  const normalize = (v) => (s3 ? s3.normalizeStoredMediaValue(String(v)) : String(v));
+
   const parsed = parseMaybeJson(req.body?.[fieldName]);
   if (Array.isArray(parsed)) {
-    return parsed.map((v) => s3.normalizeStoredMediaValue(String(v))).filter(Boolean);
+    return parsed.map(normalize).filter(Boolean);
   }
 
-  /** Backward compat: accept legacy imageUrls and normalize to keys where possible */
+  /** Backward compat: accept legacy imageUrls */
   const legacy = parseMaybeJson(req.body?.imageUrls);
   if (Array.isArray(legacy)) {
-    return legacy.map((v) => s3.normalizeStoredMediaValue(String(v))).filter(Boolean);
+    return legacy.map(normalize).filter(Boolean);
   }
   return [];
 }
@@ -33,14 +44,17 @@ function mergeProductImages(req) {
 async function removeStoredImage(storedValue) {
   if (!storedValue) return;
 
-  const normalized = s3.normalizeStoredMediaValue(storedValue);
-  if (s3.isS3ObjectKey(normalized) || s3.isS3Url(storedValue)) {
-    try {
-      await s3.deleteStoredMedia(storedValue);
-    } catch (err) {
-      console.error("[images] S3 delete failed:", storedValue, err.message);
+  const s3 = getS3();
+  if (s3) {
+    const normalized = s3.normalizeStoredMediaValue(storedValue);
+    if (s3.isS3ObjectKey(normalized) || s3.isS3Url(storedValue)) {
+      try {
+        await s3.deleteStoredMedia(storedValue);
+      } catch (err) {
+        console.error("[images] S3 delete failed:", storedValue, err.message);
+      }
+      return;
     }
-    return;
   }
 
   try {

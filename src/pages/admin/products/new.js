@@ -280,33 +280,32 @@ export default function AdminProductForm() {
         quantity,
         isDiscounted: hasDiscount,
         discountPercentage: hasDiscount ? computedDiscount : 0,
-        originalPrice: hasDiscount ? original : '',
-        sizes: JSON.stringify(sizes),
-        sizeQuantities: JSON.stringify(sizeQuantities),
-        colorQuantities: JSON.stringify(colorQuantities),
-        imageKeys: JSON.stringify(uploadedKeys),
+        originalPrice: hasDiscount ? original : undefined,
+        sizes,
+        sizeQuantities,
+        colorQuantities,
+        imageKeys: uploadedKeys,
       };
-
-      const fd = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-        if (value === '' && (key === 'brand' || key === 'originalPrice')) return;
-        fd.append(key, String(value));
-      });
-      if (isEdit && imagesToRemove.length) {
-        fd.append('imagesToRemove', JSON.stringify(imagesToRemove));
-      }
+      if (!payload.brand) delete payload.brand;
+      if (payload.originalPrice === '' || payload.originalPrice == null) delete payload.originalPrice;
 
       if (isEdit) {
-        await adminAPI.updateProduct(id, fd);
+        if (imagesToRemove.length) payload.imagesToRemove = imagesToRemove;
+        const remaining = existingImages.filter((p) => !imagesToRemove.includes(p)).length + uploadedKeys.length;
+        if (!remaining) {
+          toast.error('Product needs at least one image');
+          setSaving(false);
+          return;
+        }
+        await adminAPI.updateProduct(id, payload);
         toast.success('Product updated');
       } else {
-        const totalImages = uploadedKeys.length + visibleExisting.length;
-        if (!totalImages) {
+        if (!uploadedKeys.length) {
           toast.error('Add at least one product image');
           setSaving(false);
           return;
         }
-        await adminAPI.createProduct(fd);
+        await adminAPI.createProduct(payload);
         toast.success('Product created');
       }
       router.push('/admin/products');

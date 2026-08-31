@@ -17,12 +17,14 @@ const adminAPI = {
     return API.getMethod(`${ENDPOINT.products.getProductById}/${id}`, true, false, false);
   },
 
-  createProduct: async (formData) => {
-    return API.postMethod(ENDPOINT.products.create, true, formData, true, true, true);
+  createProduct: async (data) => {
+    const multipart = typeof FormData !== 'undefined' && data instanceof FormData;
+    return API.postMethod(ENDPOINT.products.create, true, data, true, true, multipart);
   },
 
-  updateProduct: async (id, formData) => {
-    return API.postMethod(`${ENDPOINT.products.update}/${id}`, true, formData, true, true, true);
+  updateProduct: async (id, data) => {
+    const multipart = typeof FormData !== 'undefined' && data instanceof FormData;
+    return API.postMethod(`${ENDPOINT.products.update}/${id}`, true, data, true, true, multipart);
   },
 
   deleteProduct: async (id) => {

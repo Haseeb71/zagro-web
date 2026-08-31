@@ -14,6 +14,15 @@ const {
 const { refreshProductTypeCache } = require("../constants/productTypes");
 const { mergeProductImages, removeStoredImages } = require("../utils/images");
 
+function parseBool(v, fallback = false) {
+    if (v === undefined || v === null || v === "") return fallback;
+    if (typeof v === "boolean") return v;
+    const s = String(v).toLowerCase();
+    if (s === "true" || s === "1" || s === "yes") return true;
+    if (s === "false" || s === "0" || s === "no") return false;
+    return fallback;
+}
+
 const createProduct = async (req, res) => {
     try {
         const {
@@ -22,81 +31,107 @@ const createProduct = async (req, res) => {
             productType, isActive, isFeatured, isNew, isBestSeller, isTrending,
             isSpecial, isDiscounted, discountPercentage,
         } = req.body;
-        console.log("req.body == ", req.body);
-        console.log("req.files == ", req.files);
-        
+
+        if (!name || !String(name).trim()) {
+            return res.status(400).json({ message: "Product name is required" });
+        }
+        if (!category) {
+            return res.status(400).json({ message: "Category is required" });
+        }
+        const categoryExists = await categoryModel.findById(category).select("_id").lean();
+        if (!categoryExists) {
+            return res.status(400).json({
+                message: "Selected category was not found. Open Admin → Categories and add one, then try again.",
+            });
+        }
+        if (description == null || !String(description).trim()) {
+            return res.status(400).json({ message: "Description is required" });
+        }
+
         const images = mergeProductImages(req);
-        
-        // Handle color-specific images
+        if (!images.length) {
+            return res.status(400).json({ message: "Add at least one product image" });
+        }
+
         const colorImagesFromFiles = {};
         if (req.files) {
-            req.files.forEach(file => {
-                if (file.fieldname.startsWith('colorImages_')) {
-                    const color = file.fieldname.replace('colorImages_', '');
-                    if (!colorImagesFromFiles[color]) {
-                        colorImagesFromFiles[color] = [];
-                    }
+            req.files.forEach((file) => {
+                if (file.fieldname.startsWith("colorImages_")) {
+                    const color = file.fieldname.replace("colorImages_", "");
+                    if (!colorImagesFromFiles[color]) colorImagesFromFiles[color] = [];
                     colorImagesFromFiles[color].push(file.path);
                 }
             });
         }
-        
+
         let parsedColorImages = parseMaybeJson(colorImages) || {};
         let parsedSizeColorQuantities = parseMaybeJson(sizeColorQuantities);
         let parsedColorQuantities = parseMaybeJson(colorQuantities) || colorQuantities || {};
-        if (typeof parsedColorQuantities !== 'object' || parsedColorQuantities == null) {
+        if (typeof parsedColorQuantities !== "object" || parsedColorQuantities == null) {
             parsedColorQuantities = {};
         }
-        await refreshProductTypeCache();
+
+        try {
+            await refreshProductTypeCache();
+        } catch (cacheErr) {
+            console.error("[createProduct] type cache:", cacheErr.message);
+        }
+
         const typeDefaults = applyProductTypeDefaults(
             productType,
             sizes,
             sizeQuantities,
             quantity
         );
-        
-        // Merge uploaded color images with existing color images
-        const finalColorImages = { ...(typeof parsedColorImages === 'object' ? parsedColorImages : {}) };
-        Object.keys(colorImagesFromFiles).forEach(color => {
+
+        const finalColorImages = {
+            ...(typeof parsedColorImages === "object" && parsedColorImages && !Array.isArray(parsedColorImages)
+                ? parsedColorImages
+                : {}),
+        };
+        Object.keys(colorImagesFromFiles).forEach((color) => {
             if (finalColorImages[color]) {
                 finalColorImages[color] = [...finalColorImages[color], ...colorImagesFromFiles[color]];
             } else {
                 finalColorImages[color] = colorImagesFromFiles[color];
             }
         });
-        
-        const pricing = applyPricingFields(price, originalPrice, isDiscounted, discountPercentage);
 
-        const product = await productModel.create({ 
-            name, 
+        const pricing = applyPricingFields(price, originalPrice, isDiscounted, discountPercentage);
+        const brandId = brand && String(brand) !== "null" && String(brand).trim() ? brand : null;
+
+        const product = await productModel.create({
+            name: String(name).trim(),
             price: pricing.price,
             originalPrice: pricing.originalPrice,
-            description, 
-            images, 
+            description: String(description).trim(),
+            images,
             category,
-            brand: brand || null,
-            productType: typeDefaults.productType,
-            quantity: typeDefaults.quantity, 
-            colorQuantities: parsedColorQuantities, 
+            brand: brandId,
+            productType: typeDefaults.productType || "simple",
+            quantity: typeDefaults.quantity,
+            colorQuantities: parsedColorQuantities,
             colorImages: finalColorImages,
             sizeColorQuantities: parsedSizeColorQuantities,
             sizes: typeDefaults.sizes,
-            sizeQuantities: typeDefaults.sizeQuantities,
-            isActive, 
-            isFeatured, 
-            isNew, 
-            isBestSeller, 
-            isTrending, 
-            isSpecial, 
-            isDiscounted: pricing.isDiscounted, 
+            sizeQuantities: typeDefaults.sizeQuantities || {},
+            isActive: parseBool(isActive, true),
+            isFeatured: parseBool(isFeatured, false),
+            isNew: parseBool(isNew, false),
+            isBestSeller: parseBool(isBestSeller, false),
+            isTrending: parseBool(isTrending, false),
+            isSpecial: parseBool(isSpecial, false),
+            isDiscounted: pricing.isDiscounted,
             discountPercentage: pricing.discountPercentage,
         });
         res.status(201).json({ product, message: "Product created successfully" });
     } catch (error) {
         console.error("Error in createProduct:", error);
-        res.status(500).json({ message: "Error creating product: " + error.message });
+        const msg = error?.message || "Error creating product";
+        const status = error?.name === "ValidationError" ? 400 : 500;
+        res.status(status).json({ message: msg });
     }
-}
+};
 
 const getProducts = async (req, res) => {
     try {
