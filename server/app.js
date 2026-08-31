@@ -27,8 +27,8 @@ async function getApp() {
   appPromise = (async () => {
     const app = express();
     app.use(cors());
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true, limit: "2mb" }));
+    app.use(bodyParser.json({ limit: "2mb" }));
 
     // Health does not need DB — useful on Amplify cold starts
     app.get("/api/health", (_req, res) => {
@@ -37,6 +37,7 @@ async function getApp() {
         service: "khareedo-api",
         hasMongoEnv: Boolean(process.env.MONGO_DB_URL),
         hasS3: Boolean(process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET),
+        build: "s3-json-create-v2",
       });
     });
 

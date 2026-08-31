@@ -58,5 +58,7 @@ export const config = {
   api: {
     bodyParser: false,
     externalResolver: true,
+    // Amplify/CloudFront — keep responses unbounded; request body stays small (JSON keys only)
+    responseLimit: false,
   },
 };

@@ -5,6 +5,7 @@ import AdminLayout from '../../../components/admin/AdminLayout';
 import adminAPI from '../../../APIs/admin';
 import brandsAPI from '../../../APIs/brands';
 import { PRODUCT_TYPE_LIST, getProductTypeConfig } from '../../../config/productTypes';
+import { ENDPOINT } from '../../../config/constants';
 import { mediaUrl } from '../../../utils/mediaUrl';
 import { uploadFileToS3 } from '../../../utils/uploadToS3';
 
@@ -260,7 +261,9 @@ export default function AdminProductForm() {
         quantity = Object.values(colorQuantities).reduce((s, n) => s + n, 0) || quantity;
       }
 
-      const uploadedKeys = imageItems.filter((i) => i.key).map((i) => i.key);
+      const uploadedKeys = imageItems
+        .filter((i) => i.key && !i.uploading && !i.error)
+        .map((i) => String(i.key));
       const stillUploading = imageItems.some((i) => i.uploading);
       const failed = imageItems.some((i) => i.error);
 
@@ -274,20 +277,51 @@ export default function AdminProductForm() {
         setSaving(false);
         return;
       }
+      if (
+        !uploadedKeys.every(
+          (k) => typeof k === 'string' && (k.startsWith('uploads/') || k.startsWith('products/') || k.startsWith('http'))
+        )
+      ) {
+        toast.error('Images did not finish uploading to S3. Remove them and add again.');
+        setSaving(false);
+        return;
+      }
 
+      // Minimal JSON only — never FormData / never binary (avoids CloudFront 413)
       const payload = {
-        ...form,
-        quantity,
+        name: String(form.name || '').trim(),
+        price: Number(form.price),
+        description: String(form.description || '').trim(),
+        category: String(form.category || ''),
+        productType: String(form.productType || 'simple'),
+        quantity: Number(quantity) || 0,
         isDiscounted: hasDiscount,
         discountPercentage: hasDiscount ? computedDiscount : 0,
-        originalPrice: hasDiscount ? original : undefined,
         sizes,
         sizeQuantities,
         colorQuantities,
         imageKeys: uploadedKeys,
+        isActive: !!form.isActive,
+        isFeatured: !!form.isFeatured,
+        isNew: !!form.isNew,
+        isBestSeller: !!form.isBestSeller,
+        isTrending: !!form.isTrending,
+        isSpecial: !!form.isSpecial,
       };
-      if (!payload.brand) delete payload.brand;
-      if (payload.originalPrice === '' || payload.originalPrice == null) delete payload.originalPrice;
+      if (form.brand) payload.brand = String(form.brand);
+      if (hasDiscount && form.originalPrice) payload.originalPrice = Number(form.originalPrice);
+
+      const jsonBody = JSON.stringify(payload);
+      if (jsonBody.length > 150000) {
+        toast.error(`Save payload too large (${Math.round(jsonBody.length / 1024)}KB). Images must be S3 keys only.`);
+        setSaving(false);
+        return;
+      }
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const url = isEdit
+        ? `${ENDPOINT.products.update}/${id}`
+        : ENDPOINT.products.create;
 
       if (isEdit) {
         if (imagesToRemove.length) payload.imagesToRemove = imagesToRemove;
@@ -297,18 +331,30 @@ export default function AdminProductForm() {
           setSaving(false);
           return;
         }
-        await adminAPI.updateProduct(id, payload);
-        toast.success('Product updated');
-      } else {
-        if (!uploadedKeys.length) {
-          toast.error('Add at least one product image');
-          setSaving(false);
-          return;
-        }
-        await adminAPI.createProduct(payload);
-        toast.success('Product created');
+      } else if (!uploadedKeys.length) {
+        toast.error('Add at least one product image');
+        setSaving(false);
+        return;
       }
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw Object.assign(new Error(data?.message || `Save failed (${res.status})`), {
+          response: { data, status: res.status },
+        });
+      }
+      toast.success(isEdit ? 'Product updated' : 'Product created');
       router.push('/admin/products');
+      return;
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Save failed');
     } finally {
