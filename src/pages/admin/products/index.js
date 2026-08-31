@@ -3,15 +3,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import adminAPI from '../../../APIs/admin';
-
-const imageBase = process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:3006';
-
-function productImage(product) {
-  const img = product?.images?.[0];
-  if (!img) return null;
-  if (img.startsWith('http')) return img;
-  return `${imageBase}/${String(img).replace(/\\/g, '/')}`;
-}
+import { productImageUrl } from '../../../utils/mediaUrl';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -113,7 +105,7 @@ export default function AdminProducts() {
                     <div className="flex items-center gap-3">
                       {productImage(p) ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={productImage(p)} alt="" className="h-11 w-11 rounded object-cover" />
+                        <img src={productImageUrl(p)} alt="" className="h-11 w-11 rounded object-cover" />
                       ) : (
                         <div className="h-11 w-11 rounded bg-[#ebe7e0]" />
                       )}

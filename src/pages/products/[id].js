@@ -6,7 +6,7 @@ import productsAPI from '../../APIs/eproducts';
 import { useAppDispatch } from '../../redux/hooks';
 import { addToCart } from '../../redux/slices/cartSlice';
 import { labelOf } from '../../utils/labelOf';
-import { productImageUrl } from '../../utils/mediaUrl';
+import { productImageUrl, mediaUrl } from '../../utils/mediaUrl';
 import ProductCard from '../../components/ProductCard';
 import { toast } from 'react-hot-toast';
 import { productRequiresSize, productRequiresColor, getAvailableSizes, getAvailableColors } from '../../config/productTypes';
@@ -196,7 +196,7 @@ export default function ProductDetailPage() {
               {mainImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={mainImage}
+                  src={mediaUrl(mainImage) || mainImage}
                   alt={product.name}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -222,7 +222,7 @@ export default function ProductDetailPage() {
                   >
                     {src ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={src} alt="" className="h-full w-full object-cover" />
+                      <img src={mediaUrl(src) || src} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full bg-black/5" />
                     )}

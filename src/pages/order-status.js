@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Layout from '../components/Layout';
 import orderAPI from '../APIs/order/order';
+import { mediaUrl } from '../utils/mediaUrl';
 
 // Helper function to format prices
 const formatPrice = (price) => {
@@ -15,12 +16,7 @@ const formatPrice = (price) => {
   return price;
 };
 
-// Helper function to get image URL
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
-  if (imagePath.startsWith('http')) return imagePath;
-  return `${process.env.NEXT_PUBLIC_IMAGE_URL}/${imagePath.replace(/\\/g, '/')}`;
-};
+const getImageUrl = (imagePath) => mediaUrl(imagePath);
 
 const OrderStatusPage = () => {
   const router = useRouter();

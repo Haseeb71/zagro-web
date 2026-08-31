@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { updateQuantity, removeFromCart, closeCart, clearAutoCloseTimer } from '@/redux/slices/cartSlice';
-import { mediaUrl } from '@/utils/mediaUrl';
+import { mediaUrl, productImageUrl } from '@/utils/mediaUrl';
 
 const formatRs = (n) => `Rs ${Number(n || 0).toLocaleString()}`;
 
@@ -133,7 +133,7 @@ const CartSlider = ({ isOpen, onClose }) => {
           ) : (
             <div className="h-full overflow-y-auto space-y-3 pr-1">
               {cartItems.map((item) => {
-                const img = mediaUrl(item.product?.image) || item.product?.image;
+                const img = productImageUrl(item.product) || mediaUrl(item.product?.image);
                 return (
                   <div key={item.id} className="glass-card p-3.5 flex gap-3">
                     <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-white/60 shrink-0 border border-white/70">

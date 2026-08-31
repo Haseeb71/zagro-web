@@ -11,6 +11,7 @@ import API from '../APIs/base';
 import { ENDPOINT } from '../config/constants';
 import OrderConfirmationModal from '../components/OrderConfirmationModal';
 import toast from 'react-hot-toast';
+import { mediaUrl, productImageUrl } from '../utils/mediaUrl';
 
 // Helper function to count words
 const countWords = (text) => {
@@ -677,7 +678,7 @@ const CheckoutPage = () => {
                         <div className="flex items-center space-x-3 mb-3">
                           {productItems[0].product.image ? (
                             <img
-                              src={productItems[0].product.image}
+                              src={mediaUrl(productItems[0].product.image) || productItems[0].product.image}
                               alt={productItems[0].product.name}
                               className="w-12 h-12 object-cover rounded border border-gray-200"
                             />

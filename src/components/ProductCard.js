@@ -37,7 +37,7 @@ const ProductCard = ({
         productId: product._id,
         name: product.name,
         price: price,
-        image: imageSrc,
+        image: Array.isArray(product.images) ? product.images[0] || null : null,
         quantity: 1,
         productType: product.productType || 'simple',
       })
